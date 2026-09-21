@@ -36,7 +36,7 @@ class BarChart extends Chart<BarChart> {
     chart.valueSeries = valueColumn as List<List<?>>
     chart.chartType = chartType
     chart.direction = direction
-    chart.valueSeriesNames = (1..valueColumn.length).collect { int i -> String.valueOf(i) }
+    chart.valueSeriesNames = (0..<valueColumn.length).collect { int i -> String.valueOf(i + 1) }
     return chart
   }
 

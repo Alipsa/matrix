@@ -158,6 +158,17 @@ class AdditionalChartsTest {
     assertTrue(scale.message.contains('exceeds'))
   }
 
+  @Test
+  void radarFillAlphaKeepsPolygonOutlineVisible() {
+    RadarChart chart = RadarChart.builder(measures()).label('name').values('a', 'b', 'c').fillAlpha(0).build()
+    List polygons = elementsWithClass(Plot.svg(chart), 'charm-polygon')
+
+    assertEquals(3, polygons.size())
+    assertEquals(['0'], polygons*.getAttribute('fill-opacity')*.toString().unique())
+    assertTrue(polygons.every { it.getAttribute('opacity') == null })
+    assertTrue(polygons.every { it.getAttribute('stroke')?.toString()?.startsWith('#') })
+  }
+
   private static List elementsWithClass(Svg svg, String cssClass) {
     svg.descendants().findAll { it.getAttribute('class')?.toString()?.split(' ')?.contains(cssClass) }
   }

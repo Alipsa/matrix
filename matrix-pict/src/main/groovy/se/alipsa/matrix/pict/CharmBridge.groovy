@@ -157,6 +157,7 @@ class CharmBridge {
     List<List<?>> rows = []
     List<?> categories = chart.categorySeries
     List<List<?>> allValues = chart.valueSeries
+    requireSameLength(categories, allValues, 'value series')
     for (int idx = 0; idx < categories.size(); idx++) {
       String category = categories[idx].toString()
       List<Number> values = allValues[idx] as List<Number>
@@ -211,6 +212,7 @@ class CharmBridge {
   private static PlotSpec buildPieSpec(PieChart chart) {
     List<?> categories = chart.categorySeries
     List<?> values = chart.valueSeries[0]
+    requireSameLength(categories, values, 'value series 0')
     List<List<?>> rows = []
     for (int idx = 0; idx < categories.size(); idx++) {
       rows.add([categories[idx].toString(), values[idx]])
@@ -244,8 +246,14 @@ class CharmBridge {
     List<?> xValues = chart.categorySeries
     List<?> yValues = chart.valueSeries[0]
     List<? extends Number> sizeValues = chart.sizeSeries
+    requireSameLength(xValues, yValues, 'value series 0')
+    requireSameLength(xValues, sizeValues, 'size series')
+    boolean grouped = chart.groupColumn != null || chart.groupSeries
+    if (grouped) {
+      requireSameLength(xValues, chart.groupSeries, 'group series')
+    }
 
-    if (chart.groupSeries) {
+    if (grouped) {
       List<List<?>> rows = []
       for (int i = 0; i < xValues.size(); i++) {
         rows.add([xValues[i], yValues[i], sizeValues[i], chart.groupSeries[i]])
@@ -463,6 +471,7 @@ class CharmBridge {
     List<?> categories = chart.categorySeries
     List<List<?>> valueLists = chart.valueSeries
     List<String> seriesNames = chart.valueSeriesNames
+    valueLists.eachWithIndex { List<?> values, int idx -> requireSameLength(categories, values, "value series ${idx}") }
 
     if (valueLists.size() == 1) {
       List<List<?>> rows = []
@@ -488,6 +497,15 @@ class CharmBridge {
         .columnNames(AES_X, AES_Y, AES_SERIES)
         .rows(rows)
         .build()
+  }
+
+  /** Rejects a value list whose length differs from the category list. */
+  private static void requireSameLength(List<?> categories, List<?> values, String what) {
+    if (values == null || values.size() != categories.size()) {
+      throw new IllegalArgumentException(
+          "${what} has ${values?.size() ?: 0} values but there are ${categories.size()} categories"
+      )
+    }
   }
 
   /** Applies labels, scales, theme, legend and configured series colours. */
@@ -683,9 +701,20 @@ class CharmBridge {
   }
 
   private static void applyYLabels(Scale scale, Map<String, String> yLabels) {
-    List<String> sortedKeys = yLabels.keySet().sort { String key -> new BigDecimal(key) } as List<String>
-    scale.breaks = sortedKeys.collect { String key -> new BigDecimal(key) }
+    List<String> sortedKeys = yLabels.keySet().sort { String key -> yLabelBreak(key) } as List<String>
+    scale.breaks = sortedKeys.collect { String key -> yLabelBreak(key) }
     scale.labels = sortedKeys.collect { String key -> yLabels[key] }
+  }
+
+  private static BigDecimal yLabelBreak(String key) {
+    if (key == null || key.isBlank()) {
+      throw new IllegalArgumentException("yLabels key '${key}' is not numeric; keys must be axis break values such as '10' or '2.5'")
+    }
+    try {
+      new BigDecimal(key.trim())
+    } catch (NumberFormatException ignored) {
+      throw new IllegalArgumentException("yLabels key '${key}' is not numeric; keys must be axis break values such as '10' or '2.5'")
+    }
   }
 
   /**

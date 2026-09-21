@@ -85,4 +85,41 @@ class BoxChartTest {
     }
   }
 
+  @Test
+  void testBoxChartSkipsNullCategories() {
+    Matrix data = Matrix.builder().columns([
+        group: ['A', 'A', null, 'B', 'B'],
+        value: [1, 2, 3, 4, 5]
+    ]).types([String, Integer]).build()
+
+    BoxChart chart = BoxChart.builder(data).x('group').y('value').build()
+
+    assertEquals(['A', 'B'], chart.categorySeries)
+    assertEquals(['A', 'B'], chart.valueSeriesNames)
+    assertTrue(chart.valueSeries[0] == [1, 2], "got ${chart.valueSeries[0]}")
+    assertTrue(chart.valueSeries[1] == [4, 5], "got ${chart.valueSeries[1]}")
+    assertNotNull(Plot.svg(chart))
+  }
+
+  @Test
+  void testBoxChartRejectsAllNullCategories() {
+    Matrix data = Matrix.builder().columns([group: [null, null], value: [1, 2]]).types([String, Integer]).build()
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      BoxChart.builder(data).x('group').y('value').build()
+    }
+    assertTrue(ex.message.contains("Column 'group' contains no non-null categories"), ex.message)
+  }
+
+  @Test
+  void testBoxChartRejectsMismatchedCategoryAndValueSeriesLengths() {
+    Matrix data = Matrix.builder().columns([first: [1, 2], second: [3, 4]]).types([Integer, Integer]).build()
+    BoxChart chart = BoxChart.create('Mismatched', data, ['first', 'second'])
+    chart.valueSeries = [[1, 2]]
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) { Plot.svg(chart) }
+
+    assertTrue(ex.message.contains('value series has 1 values but there are 2 categories'), ex.message)
+  }
+
 }

@@ -16,10 +16,13 @@ import javafx.scene.Group
 
 /**
  * Primary export API for pict chart types (AreaChart, BarChart, BoxChart, BubbleChart,
- * Histogram, LineChart, PieChart, ScatterChart).
+ * CorrelationHeatmapChart, HeatmapChart, Histogram, LineChart, PieChart, RadarChart, ScatterChart).
  *
  * <p>All methods delegate through {@link CharmBridge} for SVG-first rendering via Charm.
  * For direct Charm API usage, see {@link se.alipsa.matrix.charm.Charts}.</p>
+ *
+ * <p>Unsized overloads render at 800×600; every format also has an overload taking explicit
+ * {@code width} and {@code height} in pixels.</p>
  *
  * <p>Example:
  * <pre>
@@ -106,6 +109,38 @@ class Plot {
     requireChart(chart)
     requireOutputStream(os)
     ChartToJpeg.export(CharmBridge.convert(chart), os, quality)
+  }
+
+  /**
+   * Exports a chart as a JPEG file with explicit dimensions.
+   *
+   * @param chart the chart to export
+   * @param targetFile the file to write
+   * @param width image width in pixels
+   * @param height image height in pixels
+   * @param quality JPEG compression quality (0.0 to 1.0), default 1.0
+   * @throws IllegalArgumentException if chart or targetFile is null
+   */
+  static void jpg(Chart chart, File targetFile, int width, int height, BigDecimal quality = 1.0) {
+    requireChart(chart)
+    requireFile(targetFile)
+    ChartToJpeg.export(CharmBridge.renderSvg(chart, width, height), targetFile, quality)
+  }
+
+  /**
+   * Exports a chart as JPEG to an output stream with explicit dimensions.
+   *
+   * @param chart the chart to export
+   * @param os the output stream to write
+   * @param width image width in pixels
+   * @param height image height in pixels
+   * @param quality JPEG compression quality (0.0 to 1.0), default 1.0
+   * @throws IllegalArgumentException if chart or os is null
+   */
+  static void jpg(Chart chart, OutputStream os, int width, int height, BigDecimal quality = 1.0) {
+    requireChart(chart)
+    requireOutputStream(os)
+    ChartToJpeg.export(CharmBridge.renderSvg(chart, width, height), os, quality)
   }
 
   /**
@@ -204,6 +239,36 @@ class Plot {
   }
 
   /**
+   * Exports a chart to a PDF file with explicit dimensions.
+   *
+   * @param chart the chart to export
+   * @param targetFile the PDF file to write
+   * @param width chart width in pixels
+   * @param height chart height in pixels
+   * @throws IllegalArgumentException if chart or targetFile is null
+   */
+  static void pdf(Chart chart, File targetFile, int width, int height) throws IOException {
+    requireChart(chart)
+    requireFile(targetFile)
+    ChartToPdf.export(CharmBridge.renderSvg(chart, width, height), targetFile)
+  }
+
+  /**
+   * Exports a chart as PDF to an output stream with explicit dimensions.
+   *
+   * @param chart the chart to export
+   * @param os the output stream to write
+   * @param width chart width in pixels
+   * @param height chart height in pixels
+   * @throws IllegalArgumentException if chart or os is null
+   */
+  static void pdf(Chart chart, OutputStream os, int width, int height) throws IOException {
+    requireChart(chart)
+    requireOutputStream(os)
+    ChartToPdf.export(CharmBridge.renderSvg(chart, width, height), os)
+  }
+
+  /**
    * Converts a chart to a JavaFX Node for display.
    *
    * <p><b>Breaking change:</b> Previously returned {@code javafx.scene.chart.Chart}.
@@ -220,6 +285,20 @@ class Plot {
   }
 
   /**
+   * Converts a chart to a JavaFX Node with explicit dimensions.
+   *
+   * @param chart the chart to convert
+   * @param width chart width in pixels
+   * @param height chart height in pixels
+   * @return a JavaFX Node rendering the chart
+   * @throws IllegalArgumentException if chart is null
+   */
+  static Group jfx(Chart chart, int width, int height) {
+    requireChart(chart)
+    ChartToJfx.export(CharmBridge.renderSvg(chart, width, height))
+  }
+
+  /**
    * Create a {@link se.alipsa.matrix.chartexport.SvgPanel} from a legacy {@link Chart} (e.g. BarChart, ScatterChart).
    *
    * @param chart the legacy chart to render
@@ -231,17 +310,36 @@ class Plot {
   }
 
   /**
+   * Creates a Swing panel from a chart with explicit dimensions.
+   *
+   * @param chart the chart to render
+   * @param width chart width in pixels
+   * @param height chart height in pixels
+   * @return a {@link se.alipsa.matrix.chartexport.SvgPanel} displaying the rendered chart
+   * @throws IllegalArgumentException if chart is null
+   */
+  static SvgPanel swing(Chart chart, int width, int height) {
+    requireChart(chart)
+    ChartToSwing.export(CharmBridge.renderSvg(chart, width, height))
+  }
+
+  /**
    * Exports a chart as a base64-encoded PNG data URI.
    *
    * @param chart the chart to export
-   * @param width image width in pixels
-   * @param height image height in pixels
+   * @param width image width in pixels, default 800
+   * @param height image height in pixels, default 600
    * @return data URI string
    * @throws IllegalArgumentException if chart is null
    */
-  static String base64(Chart chart, double width = 800, double height = 600) {
-    Svg svg = CharmBridge.renderSvg(requireChart(chart), width as int, height as int)
-    ChartToImage.base64(svg)
+  static String base64(Chart chart, int width = 800, int height = 600) {
+    ChartToImage.base64(CharmBridge.renderSvg(requireChart(chart), width, height))
+  }
+
+  /** @deprecated Use {@link #base64(Chart, int, int)}. Pixel dimensions must be integers. */
+  @Deprecated
+  static String base64(Chart chart, double width, double height) {
+    base64(chart, (int) width, (int) height)
   }
 
   private static Chart requireChart(Chart chart) {

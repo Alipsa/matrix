@@ -10,6 +10,11 @@ JUnit Jupiter is the primary test framework; tests live in each module's `src/te
 When writing Groovy tests:
 - Do **not** coerce GStrings to `String` just to satisfy `assertEquals` or other JUnit assertions.
 - Do **not** add `.toString()`, `as String`, or `String expected = "..."` workarounds for interpolated values in assertions.
+- `groovier-junit` makes `assertEquals` use Groovy numeric semantics when a `BigDecimal`
+  is involved: numeric values are compared with `compareTo`, ignoring scale. For example,
+  `assertEquals(1.0, actualBigDecimal)` is correct when `actualBigDecimal` is `1`.
+- Do **not** replace numeric `assertEquals` calls with Java/JUnit scale workarounds or
+  `assertTrue` solely to handle `BigDecimal` scale differences.
 - Prefer idiomatic Groovy assertions such as:
 ```groovy
 assertEquals("Cannot auto-detect format for path '$rootPath': no file extension was found", exception.message)

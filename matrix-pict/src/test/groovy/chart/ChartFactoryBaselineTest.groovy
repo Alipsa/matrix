@@ -3,6 +3,7 @@ package chart
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertFalse
+import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertSame
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
@@ -23,6 +24,7 @@ import se.alipsa.matrix.pict.Histogram
 import se.alipsa.matrix.pict.Legend
 import se.alipsa.matrix.pict.LineChart
 import se.alipsa.matrix.pict.PieChart
+import se.alipsa.matrix.pict.Plot
 import se.alipsa.matrix.pict.ScatterChart
 import se.alipsa.matrix.pict.Style
 
@@ -334,6 +336,63 @@ class ChartFactoryBaselineTest {
       Chart.validateSeries([valid, invalidType] as Matrix[])
     }
     assertTrue(typeMismatch.message.contains('Column mismatch in series'))
+  }
+
+  @Test
+  void testBarChartPositionalFactoryNamesSeriesByPosition() {
+    BarChart none = BarChart.create('t', ChartType.BASIC, ChartDirection.VERTICAL, ['a', 'b'])
+    assertEquals([], none.valueSeriesNames)
+
+    BarChart two = BarChart.create('t', ChartType.BASIC, ChartDirection.VERTICAL, ['a', 'b'], [1, 2], [3, 4])
+    assertEquals(['1', '2'], two.valueSeriesNames)
+  }
+
+  @Test
+  void testPositionalFactoriesRejectMismatchedSeriesLengths() {
+    IllegalArgumentException area = assertThrows(IllegalArgumentException) {
+      Plot.svg(AreaChart.create('a', ['x', 'y', 'z'], [1, 2]))
+    }
+    assertTrue(area.message.contains('value series 0 has 2 values but there are 3 categories'), area.message)
+
+    assertThrows(IllegalArgumentException) { Plot.svg(AreaChart.create('a', ['x', 'y'], [1, 2, 3])) }
+    assertThrows(IllegalArgumentException) { Plot.svg(PieChart.create('p', ['x', 'y', 'z'], [1, 2])) }
+    assertThrows(IllegalArgumentException) {
+      Plot.svg(BarChart.create('b', ChartType.BASIC, ChartDirection.VERTICAL, ['x', 'y', 'z'], [1, 2, 3], [1, 2]))
+    }
+  }
+
+  @Test
+  void testBubbleChartRejectsMismatchedSizeAndGroupSeries() {
+    Matrix data = Matrix.builder()
+        .columns([x: [1, 2, 3], y: [4, 5, 6], size: [10, 20, 30], grp: ['a', 'b', 'a']])
+        .types([Integer, Integer, Integer, String])
+        .build()
+
+    BubbleChart shortSize = BubbleChart.builder(data).x('x').y('y').size('size').build()
+    shortSize.sizeSeries = [10, 20]
+    IllegalArgumentException size = assertThrows(IllegalArgumentException) { Plot.svg(shortSize) }
+    assertTrue(size.message.contains('size series has 2 values but there are 3 categories'), size.message)
+
+    BubbleChart shortGroup = BubbleChart.builder(data).x('x').y('y').size('size').group('grp').build()
+    shortGroup.groupSeries = ['a', 'b']
+    IllegalArgumentException group = assertThrows(IllegalArgumentException) { Plot.svg(shortGroup) }
+    assertTrue(group.message.contains('group series has 2 values but there are 3 categories'), group.message)
+
+    BubbleChart emptyGroup = BubbleChart.builder(data).x('x').y('y').size('size').group('grp').build()
+    emptyGroup.groupSeries = []
+    IllegalArgumentException empty = assertThrows(IllegalArgumentException) { Plot.svg(emptyGroup) }
+    assertTrue(empty.message.contains('group series has 0 values but there are 3 categories'), empty.message)
+
+    BubbleChart nullGroup = BubbleChart.builder(data).x('x').y('y').size('size').group('grp').build()
+    nullGroup.groupSeries = null
+    assertThrows(IllegalArgumentException) { Plot.svg(nullGroup) }
+
+    BubbleChart shortValues = BubbleChart.builder(data).x('x').y('y').size('size').build()
+    shortValues.valueSeries = [[4, 5]]
+    IllegalArgumentException values = assertThrows(IllegalArgumentException) { Plot.svg(shortValues) }
+    assertTrue(values.message.contains('value series 0 has 2 values but there are 3 categories'), values.message)
+
+    assertNotNull(Plot.svg(BubbleChart.builder(data).x('x').y('y').size('size').group('grp').build()))
   }
 
 }

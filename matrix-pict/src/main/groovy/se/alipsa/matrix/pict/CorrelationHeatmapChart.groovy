@@ -6,7 +6,13 @@ import se.alipsa.matrix.stats.Correlation
 import java.awt.Color
 import java.math.RoundingMode
 
-/** A heatmap of pairwise correlations between selected complete numeric columns. */
+/**
+ * A heatmap of pairwise correlations between selected complete numeric columns.
+ *
+ * <p>A column with zero variance has no defined correlation with any column (including itself), so
+ * every cell involving it — the diagonal included — is {@code null} and is rendered as an NA tile
+ * without a value label.</p>
+ */
 @SuppressWarnings(['DuplicateNumberLiteral', 'UnnecessaryObjectReferences'])
 class CorrelationHeatmapChart extends HeatmapChart {
 

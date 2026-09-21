@@ -21,7 +21,7 @@ class RadarChart extends Chart<RadarChart> {
   List<List<BigDecimal>> seriesValues = []
   /** Whether source columns were min-max normalized. */
   boolean normalized = false
-  /** Polygon fill opacity. */
+  /** Polygon fill opacity in [0, 1]; the outline keeps full opacity. */
   BigDecimal fillAlpha = DEFAULT_FILL_ALPHA
 
   /**
@@ -145,7 +145,12 @@ class RadarChart extends Chart<RadarChart> {
     /** Enables or disables column normalization. */
     Builder normalize(boolean enabled) { normalize = enabled; this }
 
-    /** Sets the polygon fill opacity. */
+    /**
+     * Sets the polygon fill opacity. The polygon outline is unaffected.
+     *
+     * @param alpha opacity between 0 and 1 (default 0.4)
+     * @return this builder
+     */
     Builder fillAlpha(Number alpha) {
       BigDecimal value = alpha as BigDecimal
       if (value == null || value < 0 || value > 1) {

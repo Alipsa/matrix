@@ -250,6 +250,16 @@ class PlotCompatibilityTest {
   }
 
   @Test
+  void testNonNumericYLabelKeyIsReportedClearly() {
+    LineChart chart = LineChart.builder(sampleNumericData()).x('x').y('y').yLabels([ten: 'Ten']).build()
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      CharmBridge.convert(chart)
+    }
+    assertTrue(ex.message.contains("yLabels key 'ten' is not numeric"), ex.message)
+  }
+
+  @Test
   void testLegacyCssApiInjectsRawCharmCss() {
     Matrix data = sampleData()
     BarChart chart = BarChart.builder(data)

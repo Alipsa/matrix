@@ -53,6 +53,7 @@ dependencies {
 
   testImplementation libs.groovy
   testImplementation libs.groovy.xml
+  testImplementation libs.pdfbox
 
   testImplementation project(':matrix-core')
   testImplementation project(':matrix-stats')

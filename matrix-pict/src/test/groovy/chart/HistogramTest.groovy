@@ -48,4 +48,70 @@ class HistogramTest {
     assertEquals(['0-3', '3-7', '7-10'], chart.ranges.keySet()*.toString())
   }
 
+  @Test
+  void testRangesCountMaxValueWhenChunkRoundsDown() {
+    Histogram chart = Histogram.create([0, 0.5, 1], 3)
+
+    assertEquals(3, chart.ranges.values().sum(), "every value must land in a bin: ${chart.ranges}")
+    assertEquals(1, chart.ranges.values().last())
+    assertEquals(1.0, chart.ranges.keySet().last().maxValue)
+  }
+
+  @Test
+  void testRangesCountMaxValueWithDefaultBins() {
+    Matrix data = Matrix.builder().columns([v: (0..10).toList()]).types([Integer]).build()
+    Histogram chart = Histogram.builder(data).x('v').build()
+
+    assertEquals(11, chart.ranges.values().sum(), "got ${chart.ranges}")
+    assertEquals(10.0, chart.ranges.keySet().last().maxValue)
+  }
+
+  @Test
+  void testHistogramIgnoresNullValues() {
+    Matrix data = Matrix.builder().columns([v: [1, null, 3, 4]]).types([Integer]).build()
+    Histogram chart = Histogram.builder(data).x('v').bins(3).build()
+
+    assertEquals([1, 3, 4], chart.originalData)
+    assertEquals(3, chart.ranges.values().sum())
+    assertEquals(2, Histogram.create([2, null, 5], 2).originalData.size())
+  }
+
+  @Test
+  void testHistogramIgnoresNonFiniteValues() {
+    Histogram chart = Histogram.create([1, Double.NaN, Double.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY, 3], 2)
+
+    assertEquals([1, 3], chart.originalData)
+    assertEquals(2, chart.ranges.values().sum())
+  }
+
+  @Test
+  void testHistogramRejectsColumnWithoutNumericValues() {
+    Matrix data = Matrix.builder().columns([v: [null, null]]).types([Integer]).build()
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      Histogram.builder(data).x('v').build()
+    }
+    assertTrue(ex.message.contains("Column 'v' contains no non-null, finite values"), ex.message)
+  }
+
+  @Test
+  void testHistogramRejectsOnlyNonFiniteValues() {
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      Histogram.create([Double.NaN, Double.POSITIVE_INFINITY], 2)
+    }
+
+    assertEquals("Column 'values' contains no non-null, finite values; a histogram needs at least one", ex.message)
+  }
+
+  @Test
+  void testHistogramRejectsNonPositiveBins() {
+    Matrix data = Matrix.builder().columns([v: [1, 2, 3]]).types([Integer]).build()
+
+    IllegalArgumentException zero = assertThrows(IllegalArgumentException) { Histogram.builder(data).x('v').bins(0) }
+    assertTrue(zero.message.contains('bins must be a positive integer, got 0'), zero.message)
+    assertThrows(IllegalArgumentException) { Histogram.builder(data).x('v').bins(null) }
+    assertThrows(IllegalArgumentException) { Histogram.create([1, 2, 3], -1) }
+    assertThrows(IllegalArgumentException) { Histogram.create('t', data, 'v', 0) }
+  }
+
 }

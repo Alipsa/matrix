@@ -45,6 +45,16 @@ abstract class Chart<T extends Chart> {
 
   private static final int REQUIRED_COLUMN_COUNT = 2
 
+  /**
+   * Validates that every matrix has two columns of compatible types.
+   *
+   * @param series the series to validate; each matrix must have exactly two columns whose
+   *        types fall into the same {@link DataType} categories as those of the first matrix
+   * @throws IllegalArgumentException if the array is null or empty, a matrix does not have two
+   *         columns, or a column's {@link DataType} differs from the first matrix
+   * @deprecated No pict factory accepts {@code Matrix[]} input; series lengths are validated when the chart is rendered.
+   */
+  @Deprecated
   static void validateSeries(Matrix[] series) {
     if (series == null || series.length == 0) {
       throw new IllegalArgumentException('The series contains no data')

@@ -94,7 +94,7 @@ Core style rules — follow the [Groovy style guide](docs/agents/groovy-style-gu
 JUnit Jupiter is the primary test framework. Always create tests for new features and update tests when behavior changes; place them in the relevant module's `src/test` tree. Use `-PrunSlowTests=true`, module-specific external-test tasks (for example `:matrix-bigquery:externalTest`), and `RUN_EXTERNAL_TESTS=true` only when you intend to run the slow or external suites. For chart rendering tests, prefer headless mode in CI: `./gradlew :matrix-charts:test -Pheadless=true` and `./gradlew :matrix-ggplot:test -Pheadless=true`. When a task is done, run the full test suite to guard against regressions (`./gradlew test`). **Always** run tests after a task is complete to ensure no regressions (except for documentation-only tasks).
 
 Key patterns — see [Testing guidelines](docs/agents/testing-guidelines.md) for examples:
-- Groovy test modules must include the `se.alipsa.groovy:groovier-junit` test dependency; never coerce GStrings to String for JUnit assertions.
+- Groovy test modules must include the `se.alipsa.groovy:groovier-junit` test dependency; never coerce GStrings to String for JUnit assertions. Its `assertEquals` uses Groovy numeric semantics for `BigDecimal` values (scale-insensitive `compareTo`), so use it directly for numeric assertions.
 - For SVG chart assertions, prefer direct object access (`svg.descendants().findAll { it instanceof Path }`); use `SvgWriter.toXml()` only for serialized-XML assertions; **never** `svg.toString()`.
 
 ## Commit & Pull Request Guidelines

@@ -9,6 +9,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.Histogram
 import se.alipsa.matrix.pict.LineChart
 import se.alipsa.matrix.pict.Plot
+import se.alipsa.matrix.pict.ScatterChart
 
 import java.awt.Color
 
@@ -33,6 +34,16 @@ class SeriesColorsTest {
     assertEquals(['north'], chart.valueSeriesNames)
     assertEquals(['#0000ff'], classes(Plot.svg(chart), 'charm-histogram')*.getAttribute('fill')*.toString().unique())
     assertEquals([Histogram.DEFAULT_SERIES_NAME], Histogram.create([1, 2, 3]).valueSeriesNames)
+  }
+
+  @Test
+  void scatterFactoryExposesSeriesNameForNamedColours() {
+    Matrix m = Matrix.builder().columns([x: [1, 2, 3], y: [2, 3, 5]]).types([Integer, Integer]).build()
+    ScatterChart chart = ScatterChart.create('s', m, 'x', 'y')
+    chart.style.seriesColorMap = [y: Color.RED]
+
+    assertEquals(['y'], chart.valueSeriesNames)
+    assertEquals(['#ff0000'], classes(Plot.svg(chart), 'charm-point')*.getAttribute('fill')*.toString().unique())
   }
 
   private static List classes(Svg svg, String cssClass) {
