@@ -86,6 +86,11 @@ class GgCharmCompiler {
   private static final String AES_WEIGHT = 'weight'
   private static final String AES_LINEWIDTH = 'linewidth'
 
+  private static final String ADAPTATION_FAILURE = 'Unknown adaptation failure'
+  private static final String FACET_SCALE_FIXED = 'fixed'
+  private static final String MAPPING_SOURCE_PLOT = 'plot'
+  private static final String REASON_SEPARATOR = '; '
+
   private static final String PARAM_STAT = 'stat'
   private static final String PARAM_POSITION = 'position'
   private static final String PARAM_MAPPING = 'mapping'
@@ -132,7 +137,7 @@ class GgCharmCompiler {
     // Guide gate removed in Phase 10 — all guides now delegated to Charm.
     // Theme gate and label gate removed in Phase 9 — all themes and labels now delegated.
 
-    Mapping plotMapping = mapMapping(plotSourceAes, plotData, 'plot', reasons)
+    Mapping plotMapping = mapMapping(plotSourceAes, plotData, MAPPING_SOURCE_PLOT, reasons)
     if (!reasons.isEmpty() || plotMapping == null) {
       return GgCharmCompilation.fallback(reasons)
     }
@@ -214,7 +219,7 @@ class GgCharmCompiler {
   Svg render(GgChart ggChart) {
     GgCharmCompilation adaptation = adapt(ggChart)
     if (!adaptation.delegated || adaptation.charmChart == null) {
-      String reasons = adaptation?.reasons?.join('; ') ?: 'Unknown adaptation failure'
+      String reasons = adaptation?.reasons?.join(REASON_SEPARATOR) ?: ADAPTATION_FAILURE
       throw new IllegalStateException("GG to Charm adaptation failed: ${reasons}")
     }
     RenderConfig config = new RenderConfig(width: ggChart.width, height: ggChart.height)
@@ -230,7 +235,7 @@ class GgCharmCompiler {
   List<Matrix> layerData(GgChart ggChart) {
     GgCharmCompilation adaptation = adapt(ggChart)
     if (!adaptation.delegated || adaptation.charmChart == null) {
-      String reasons = adaptation?.reasons?.join('; ') ?: 'Unknown adaptation failure'
+      String reasons = adaptation?.reasons?.join(REASON_SEPARATOR) ?: ADAPTATION_FAILURE
       throw new IllegalStateException("GG to Charm adaptation failed: ${reasons}")
     }
     RenderConfig config = new RenderConfig(width: ggChart.width, height: ggChart.height)
@@ -393,7 +398,7 @@ class GgCharmCompiler {
         : plotData
     Mapping inheritedMapping = plotMapping
     if (ownData && layer.inheritAes && derivesColumns(plotAes)) {
-      inheritedMapping = mapMapping(plotAes, layerData, 'plot', reasons)
+      inheritedMapping = mapMapping(plotAes, layerData, MAPPING_SOURCE_PLOT, reasons)
     }
     Mapping layerMapping = mapMapping(layer.aes, layerData, "layer ${idx}", reasons)
     if (!reasons.isEmpty() || inheritedMapping == null) {
@@ -748,7 +753,7 @@ class GgCharmCompiler {
 
     if (source instanceof FacetWrap) {
       FacetWrap wrap = source as FacetWrap
-      if (wrap.scales != null && wrap.scales != 'fixed') {
+      if (wrap.scales != null && wrap.scales != FACET_SCALE_FIXED) {
         log.warn("facet_wrap(scales: '${wrap.scales}') is not supported yet; panels share fixed scales")
       }
       return new Facet(
@@ -770,7 +775,7 @@ class GgCharmCompiler {
 
     if (source instanceof FacetGrid) {
       FacetGrid grid = source as FacetGrid
-      if (grid.scales != null && grid.scales != 'fixed') {
+      if (grid.scales != null && grid.scales != FACET_SCALE_FIXED) {
         log.warn("facet_grid(scales: '${grid.scales}') is not supported yet; panels share fixed scales")
       }
       return new Facet(
@@ -832,7 +837,7 @@ class GgCharmCompiler {
 
   private static String normalizeParamKey(CharmGeomType geomType, String key) {
     String normalized = key == 'colour' ? AES_COLOR : key
-    if ((geomType == CharmGeomType.LINE || geomType == CharmGeomType.SMOOTH) && (normalized == AES_SIZE || normalized == 'linewidth')) {
+    if ((geomType == CharmGeomType.LINE || geomType == CharmGeomType.SMOOTH) && (normalized == AES_SIZE || normalized == AES_LINEWIDTH)) {
       return 'lineWidth'
     }
     if ((geomType == CharmGeomType.COL || geomType == CharmGeomType.BAR) && normalized == 'width') {

@@ -9,6 +9,9 @@ import se.alipsa.matrix.charm.Scale as CharmScale
  */
 class ScaleSizeArea extends ScaleSizeContinuous {
 
+  private static final BigDecimal ZERO = 0.0G
+  private static final BigDecimal HALF = 0.5G
+
   /**
    * Create a size-by-area scale with defaults.
    */
@@ -24,7 +27,7 @@ class ScaleSizeArea extends ScaleSizeContinuous {
   ScaleSizeArea(Map params) {
     super(params)
     if (params.max_size != null) {
-      range = [0.0G, params.max_size as BigDecimal]
+      range = [ZERO, params.max_size as BigDecimal]
     }
   }
 
@@ -37,7 +40,7 @@ class ScaleSizeArea extends ScaleSizeContinuous {
   void train(List data) {
     super.train(data)
     if (computedDomain.size() >= 2 && computedDomain[0] > 0) {
-      computedDomain[0] = 0.0G
+      computedDomain[0] = ZERO
     }
   }
 
@@ -54,7 +57,7 @@ class ScaleSizeArea extends ScaleSizeContinuous {
     BigDecimal rMax = range[1]
 
     if (dMax == dMin) {
-      BigDecimal midArea = (rMin * rMin + rMax * rMax) / 2
+      BigDecimal midArea = (rMin * rMin + rMax * rMax) * HALF
       return midArea.sqrt()
     }
 

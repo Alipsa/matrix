@@ -4981,7 +4981,7 @@ class GgPlot {
     if (rawCharts == null) {
       throw new IllegalArgumentException('plot_grid requires a non-null list of charts')
     }
-    se.alipsa.matrix.gg.bridge.GgCharmCompiler compiler = new se.alipsa.matrix.gg.bridge.GgCharmCompiler()
+    GgCharmCompiler compiler = new GgCharmCompiler()
     rawCharts.collect { Object item ->
       if (item instanceof se.alipsa.matrix.charm.Chart) {
         return item as se.alipsa.matrix.charm.Chart

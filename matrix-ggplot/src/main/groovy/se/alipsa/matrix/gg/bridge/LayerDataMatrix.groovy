@@ -30,7 +30,7 @@ class LayerDataMatrix {
         panelIds << index + 1
       }
     }
-    Map<String, List> columns = new LinkedHashMap<>()
+    Map<String, List> columns = [:]
     if (!rows.isEmpty()) {
       columns['PANEL'] = panelIds
     }
