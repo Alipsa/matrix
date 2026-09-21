@@ -22,7 +22,7 @@ fi
 
 ./gradlew :matrix-bigquery:clean :matrix-bigquery:build :matrix-bigquery:release || exit 1
 PROJECT=$(basename "$PWD")
-if grep "version '" build.gradle | grep -q 'SNAPSHOT'; then
+if grep -E '^[[:space:]]*version[[:space:]]*=' build.gradle | grep -q 'SNAPSHOT'; then
   echo "$PROJECT snapshot published"
 else
   echo "$PROJECT uploaded"
