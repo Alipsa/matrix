@@ -18,6 +18,35 @@
   named colour, positional colour, then Charm's default palette.
 - Histograms expose stable value-series names for named colour overrides.
 
+**Bug fixes**
+
+- `Histogram.ranges` no longer drops the maximum value when `(max - min) / bins` rounds down;
+  the last bin's upper bound is now exactly the column maximum.
+- `Histogram` ignores `null` values and rejects `bins` that are `null` or not positive with a
+  clear `IllegalArgumentException` instead of `NumberFormatException` / `ArithmeticException`.
+- `BoxChart` ignores rows whose category is `null` instead of throwing `NullPointerException`.
+- `BarChart.create(title, type, direction, categories)` with no value columns no longer names
+  series `["1", "0"]`.
+- Rendering now rejects value series whose length differs from the category list instead of
+  silently plotting `null`s or dropping values. This affects the deprecated positional factories
+  (`AreaChart.create(title, categories, values...)`, `PieChart.create(title, categories, values)`,
+  `BarChart.create(title, type, direction, categories, values...)`) and charts whose
+  `categorySeries`/`valueSeries` — or, for `BubbleChart`, the `sizeSeries`/`groupSeries`
+  properties — were assigned directly after construction. A grouped `BubbleChart` (built with
+  `group(...)`) whose `groupSeries` is later emptied is rejected instead of silently rendering ungrouped.
+- `ScatterChart.create(title, data, x, y)` now sets `valueSeriesNames` to `[y]`, so named
+  `seriesColors` overrides apply.
+- A non-numeric `yLabels` key is reported as `IllegalArgumentException("yLabels key '…' is not numeric")`.
+- `RadarChart.fillAlpha` affects only the polygon fill (Charm now renders polygon alpha as
+  `fill-opacity`); previously the outline faded too.
+
+**API improvements (continued)**
+
+- `Plot.jpg`, `Plot.pdf`, `Plot.jfx` and `Plot.swing` gained overloads taking explicit
+  `width` and `height`; `Plot.base64(Chart, int, int)` replaces the `double` variant, which is
+  deprecated.
+- `Chart.validateSeries(Matrix[])` is deprecated; no factory accepts `Matrix[]` input.
+
 ## v0.5.0, 2026-06-27
 
 First standalone release of `matrix-pict`. The `se.alipsa.matrix.pict` package

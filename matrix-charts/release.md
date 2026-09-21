@@ -10,6 +10,11 @@ individual entries below.
 
 **Behaviour changes**
 
+- `PolygonBuilder.alpha(...)` / `geom polygon` `alpha` is now the **fill** opacity, rendered as
+  `fill-opacity` instead of `opacity`, so a translucent polygon keeps an opaque outline, consistent
+  with area, histogram, hex and density geoms and with ggplot2's `geom_polygon`. Polygons rendered
+  with `alpha < 1` change appearance: their strokes are no longer faded. Set `color` to the fill
+  colour (or `'none'`) to reproduce the previous fully faded look.
 - Binned colour scales use equal-width bins sampled at gradient centres; steps2 honours
   midpoints, stepsN honours stops/bin counts, and fermenter preserves supplied palette entries.
 - Discrete size and alpha scales interpolate their full endpoints, and size/alpha honour

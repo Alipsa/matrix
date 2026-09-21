@@ -8,7 +8,12 @@ import se.alipsa.matrix.core.Matrix
 class BoxChart extends Chart<BoxChart> {
 
   private static BoxChart fromCategoryValue(String title, Matrix data, String categoryCol, String valueCol) {
-    Map<String, Matrix> groups = data.split(categoryCol).sort() as Map<String, Matrix>
+    Map<?, Matrix> split = data.split(categoryCol)
+    split.remove(null)
+    if (split.isEmpty()) {
+      throw new IllegalArgumentException("Column '${categoryCol}' contains no non-null categories; a box chart needs at least one")
+    }
+    Map<String, Matrix> groups = split.sort() as Map<String, Matrix>
     BoxChart chart = new BoxChart()
     chart.title = title
     chart.categorySeries = ListConverter.toStrings(groups.keySet()) as List<?>
@@ -37,7 +42,8 @@ class BoxChart extends Chart<BoxChart> {
    * @param data chart data
    * @param categoryColumnName category column name
    * @param valueColumn value column name
-   * @return box chart
+   * @return box chart; rows whose category is {@code null} are ignored, as are {@code null}
+   *         values within a category
    * @deprecated Use {@link #builder(Matrix)} for new code.
    */
   @Deprecated
@@ -107,7 +113,8 @@ class BoxChart extends Chart<BoxChart> {
      * <p>If {@link #columns} was called, uses the multi-column variant.
      * Otherwise, uses {@code x} as the category column and {@code y} as the value column.
      *
-     * @return the box chart
+     * @return the box chart; rows whose category is {@code null} are ignored, as are {@code null}
+     *         values within a category
      */
     BoxChart build() {
       if (!columnNames) {

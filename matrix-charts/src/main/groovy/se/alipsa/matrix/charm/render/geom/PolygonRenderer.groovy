@@ -58,7 +58,7 @@ class PolygonRenderer {
         path.addAttribute('stroke-dasharray', dashArray)
       }
       if (alpha < 1.0) {
-        path.addAttribute('opacity', alpha)
+        path.addAttribute('fill-opacity', alpha)
       }
       GeomUtils.applyCssAttributes(path, context, layer.geomType.name(), elementIndex, first)
       elementIndex++

@@ -315,6 +315,7 @@ chart.isStacked()      // true if chartType == ChartType.STACKED
 ### BoxChart
 
 Box-and-whisker plot for showing distributions across categories.
+Rows whose category is `null` are ignored, as are `null` values within a category.
 
 **Builder:**
 
@@ -398,6 +399,10 @@ Histogram chart = Histogram.create([1.2, 2.1, 4.1, 4.3, 5.7, 6.2, 6.9, 8.5, 9.9]
 |---|---|---|
 | `bins` | 9 | Number of bins |
 | `binDecimals` | 1 | Decimal precision for bin boundaries |
+
+`bins` must be a positive integer. Null values in the column are ignored; a column with no
+non-null values is rejected. `chart.ranges` always counts every value, and the last bin's upper
+bound is exactly the column maximum.
 
 **Querying histogram properties:**
 
@@ -641,6 +646,8 @@ Plot.png(chart, new File('heatmap.png'))
 scale fixed to `[-1, 1]`. `method(Correlation.PEARSON)` is the default; Spearman and
 Kendall are also available. Its value labels default to two decimal places; use
 `valueDecimals(int)` to override this. The legend defaults to the selected method name.
+A zero-variance column has no defined correlation, so its row, column and diagonal cell are
+rendered as NA tiles without labels.
 
 ```groovy
 def chart = CorrelationHeatmapChart.builder(data)
@@ -652,7 +659,8 @@ Plot.png(chart, new File('correlation.png'))
 
 `RadarChart` draws one polygon per matrix row. `label(String)` and at least three
 `values(String...)` columns are required. `normalize(true)` independently maps every
-column to `[0, 1]`; `fillAlpha(0.4)` is the default. `yAxisScale(0, end, step)` sets the
+column to `[0, 1]`; `fillAlpha(0.4)` is the default and affects the polygon fill only; the outline
+stays opaque. `yAxisScale(0, end, step)` sets the
 radial extent and ring spacing.
 
 ```groovy
@@ -765,7 +773,8 @@ chart.style.yLabels = ['10000': '10K', '20000': '20K', '30000': '30K']
 ```
 
 Custom y labels are applied by the Charm bridge. Map keys are parsed as numeric axis
-breaks and sorted numerically before rendering.
+breaks and sorted numerically before rendering. A non-numeric key is rejected with
+`IllegalArgumentException("yLabels key '…' is not numeric")`.
 
 ### Fluent Configuration
 
@@ -899,6 +908,10 @@ ChartToJpeg.export(chart, new File('chart.jpg'), 0.9)
 
 // To OutputStream
 ChartToJpeg.export(chart, outputStream, 0.9)
+
+// Plot convenience methods (800x600 unless width/height are given)
+Plot.jpg(chart, new File('chart.jpg'))              // quality 1.0
+Plot.jpg(chart, new File('chart.jpg'), 1200, 900, 0.9)
 ```
 
 ### PDF
@@ -908,6 +921,9 @@ import se.alipsa.matrix.chartexport.ChartToPdf
 
 ChartToPdf.export(chart, new File('chart.pdf'))
 ChartToPdf.export(chart, outputStream)
+
+Plot.pdf(chart, new File('chart.pdf'))
+Plot.pdf(chart, new File('chart.pdf'), 1200, 900)
 ```
 
 PDF page dimensions are written in points. Rasterized chart pixels are scaled from
@@ -919,6 +935,7 @@ PDF page dimensions are written in points. Rasterized chart pixels are scaled fr
 import se.alipsa.matrix.pict.Plot
 
 String dataUri = Plot.base64(chart)
+String sized = Plot.base64(chart, 1200, 900)
 // Returns: "data:image/png;base64,iVBOR..."
 ```
 
@@ -936,6 +953,7 @@ BufferedImage image = ChartToImage.export(chart)
 import se.alipsa.matrix.pict.Plot
 
 javafx.scene.Node node = Plot.jfx(chart)
+javafx.scene.Node sizedNode = Plot.jfx(chart, 1200, 900)
 ```
 
 ### Swing
@@ -944,6 +962,7 @@ javafx.scene.Node node = Plot.jfx(chart)
 import se.alipsa.matrix.chartexport.ChartToSwing
 
 def panel = ChartToSwing.export(chart)
+def sizedPanel = Plot.swing(chart, 1200, 900)
 // Add panel to a Swing container
 ```
 
@@ -964,11 +983,15 @@ IllegalArgumentException: "Column must be numeric in a histogram"
 ### Series Validation
 
 ```groovy
-// Empty series
-IllegalArgumentException: "The series contains no data"
+// Positional factories: every value series must match the category list
+IllegalArgumentException: "value series 0 has 2 values but there are 3 categories"
 
-// Mismatched column types across series
-IllegalArgumentException: "Column mismatch in series..."
+// Histogram
+IllegalArgumentException: "bins must be a positive integer, got 0"
+IllegalArgumentException: "Column 'v' contains no non-null values; a histogram needs at least one"
+
+// BoxChart
+IllegalArgumentException: "Column 'group' contains no non-null categories; a box chart needs at least one"
 ```
 
 ## Relationship to Charm and gg APIs

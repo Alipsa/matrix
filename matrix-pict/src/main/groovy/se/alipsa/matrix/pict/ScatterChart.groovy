@@ -3,6 +3,7 @@ package se.alipsa.matrix.pict
 import se.alipsa.matrix.core.Matrix
 
 /** Scatter chart for visualizing relationships between two numerical variables. */
+@SuppressWarnings('UnnecessaryObjectReferences')
 class ScatterChart extends Chart<ScatterChart> {
 
   /**
@@ -21,6 +22,7 @@ class ScatterChart extends Chart<ScatterChart> {
     chart.title = title
     chart.categorySeries = data.column(xAxis) as List<?>
     chart.valueSeries = [data.column(yAxis) as List<?>]
+    chart.valueSeriesNames = [yAxis]
     chart.xAxisTitle = xAxis
     chart.yAxisTitle = yAxis
     return chart

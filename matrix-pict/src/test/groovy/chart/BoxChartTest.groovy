@@ -85,4 +85,30 @@ class BoxChartTest {
     }
   }
 
+  @Test
+  void testBoxChartSkipsNullCategories() {
+    Matrix data = Matrix.builder().columns([
+        group: ['A', 'A', null, 'B', 'B'],
+        value: [1, 2, 3, 4, 5]
+    ]).types([String, Integer]).build()
+
+    BoxChart chart = BoxChart.builder(data).x('group').y('value').build()
+
+    assertEquals(['A', 'B'], chart.categorySeries)
+    assertEquals(['A', 'B'], chart.valueSeriesNames)
+    assertTrue(chart.valueSeries[0] == [1, 2], "got ${chart.valueSeries[0]}")
+    assertTrue(chart.valueSeries[1] == [4, 5], "got ${chart.valueSeries[1]}")
+    assertNotNull(Plot.svg(chart))
+  }
+
+  @Test
+  void testBoxChartRejectsAllNullCategories() {
+    Matrix data = Matrix.builder().columns([group: [null, null], value: [1, 2]]).types([String, Integer]).build()
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      BoxChart.builder(data).x('group').y('value').build()
+    }
+    assertTrue(ex.message.contains("Column 'group' contains no non-null categories"), ex.message)
+  }
+
 }

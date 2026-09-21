@@ -5,7 +5,10 @@ import se.alipsa.matrix.core.Stat
 
 import java.math.RoundingMode
 
-/** Histogram chart for visualizing the frequency distribution of numerical data. */
+/**
+ * Histogram chart for visualizing the frequency distribution of numerical data.
+ * Null values in the source column are ignored; a column with no non-null values is rejected.
+ */
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('ExplicitCallToCompareToMethod')
 class Histogram extends Chart<Histogram> {
@@ -18,16 +21,17 @@ class Histogram extends Chart<Histogram> {
   Integer numberOfBins = 9
 
   private static Histogram fromData(String title, Matrix data, String columnName, Integer bins, int binDecimals) {
+    requireBins(bins)
+    requireColumn(data, columnName)
+    if (!Number.isAssignableFrom(data.type(columnName))) {
+      throw new IllegalArgumentException('Column must be numeric in a histogram (hint: you can Barplot a Frequency)')
+    }
     Histogram chart = new Histogram()
     chart.title = title
     chart.numberOfBins = bins
     chart.valueSeriesNames = [columnName]
-    if (Number.isAssignableFrom(data.type(columnName))) {
-      chart.originalData = data.column(columnName) as List<? extends Number>
-      chart.ranges = createRanges(chart.originalData, bins, binDecimals)
-    } else {
-      throw new IllegalArgumentException('Column must be numeric in a histogram (hint: you can Barplot a Frequency)')
-    }
+    chart.originalData = nonNullValues(data.column(columnName) as List<? extends Number>, columnName)
+    chart.ranges = createRanges(chart.originalData, bins, binDecimals)
     chart
   }
 
@@ -55,7 +59,7 @@ class Histogram extends Chart<Histogram> {
    * @param title chart title
    * @param data chart data
    * @param columnName numeric column name
-   * @param bins number of bins
+   * @param bins number of bins, must be a positive integer (default 9)
    * @param binDecimals number of decimals for bin boundaries
    * @return histogram
    * @deprecated Use {@link #builder(Matrix)} for new code.
@@ -69,18 +73,39 @@ class Histogram extends Chart<Histogram> {
    * Creates a histogram from numeric values.
    *
    * @param column numeric values
-   * @param bins number of bins
+   * @param bins number of bins, must be a positive integer (default 9)
    * @return histogram
    * @deprecated Use {@link #builder(Matrix)} for new code.
    */
   @Deprecated
   static Histogram create(List<? extends Number> column, Integer bins = 9) {
+    requireBins(bins)
     Histogram chart = new Histogram()
-    chart.originalData = column
+    chart.originalData = nonNullValues(column, DEFAULT_SERIES_NAME)
     chart.numberOfBins = bins
     chart.valueSeriesNames = [DEFAULT_SERIES_NAME]
-    chart.ranges = createRanges(column, bins)
-    return chart
+    chart.ranges = createRanges(chart.originalData, bins)
+    chart
+  }
+
+  /** Rejects a null or non-positive bin count. */
+  private static void requireBins(Integer bins) {
+    if (bins == null || bins < 1) {
+      throw new IllegalArgumentException("bins must be a positive integer, got ${bins}")
+    }
+  }
+
+  /**
+   * Drops null entries from a numeric column.
+   *
+   * @throws IllegalArgumentException if nothing remains
+   */
+  private static List<? extends Number> nonNullValues(List<? extends Number> values, String columnName) {
+    List<? extends Number> kept = values == null ? [] : values.findAll { Number value -> value != null }
+    if (kept.isEmpty()) {
+      throw new IllegalArgumentException("Column '${columnName}' contains no non-null values; a histogram needs at least one")
+    }
+    kept
   }
 
   private static Map<MinMax, Integer> createRanges(List<? extends Number> column, int bins, int binDecimals = 1) {
@@ -91,7 +116,7 @@ class Histogram extends Chart<Histogram> {
     BigDecimal chunkMin = minValue
     BigDecimal chunkMax
     for (int i = 0; i < bins; i++) {
-      chunkMax = chunkMin + chunk
+      chunkMax = i == bins - 1 ? maxValue : chunkMin + chunk
       ranges.add(new MinMax(chunkMin, chunkMax, binDecimals))
       chunkMin = chunkMax
     }
@@ -154,10 +179,10 @@ class Histogram extends Chart<Histogram> {
     /**
      * Sets the number of bins for the histogram.
      *
-     * @param n the number of bins (default 9)
+     * @param n the number of bins, must be a positive integer (default 9)
      * @return this builder
      */
-    Builder bins(Integer n) { this.bins = n; this }
+    Builder bins(Integer n) { Histogram.requireBins(n); this.bins = n; this }
 
     /**
      * Sets the number of decimal places for bin boundaries.

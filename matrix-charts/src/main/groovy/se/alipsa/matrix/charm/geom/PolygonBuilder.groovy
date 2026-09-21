@@ -53,9 +53,10 @@ class PolygonBuilder extends LayerBuilder {
   }
 
   /**
-   * Sets polygon opacity.
+   * Sets the polygon fill opacity. The outline (stroke) keeps full opacity, matching
+   * ggplot2's {@code geom_polygon} and Charm's area, histogram, hex and density geoms.
    *
-   * @param value alpha 0–1
+   * @param value alpha 0–1 (rendered as SVG {@code fill-opacity}; omitted when 1)
    * @return this builder
    */
   PolygonBuilder alpha(Number value) {
