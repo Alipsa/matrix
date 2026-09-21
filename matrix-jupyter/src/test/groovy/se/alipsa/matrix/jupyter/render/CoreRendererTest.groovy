@@ -88,6 +88,21 @@ class CoreRendererTest {
   }
 
   @Test
+  void preservesColumnTypesForRowsAndColumns() {
+    Matrix matrix = Matrix.builder().columns(name: ['Ada'], score: [42]).types(String, Integer).build()
+    CoreRenderer renderer = new CoreRenderer()
+
+    String row = renderer.render(matrix.row(0), new RenderOptions())['text/html']
+    String column = renderer.render(matrix.column('score'), new RenderOptions())['text/html']
+
+    assertTrue(row.contains("<th class='name String'>name</th>"))
+    assertTrue(row.contains("<th class='score Integer' style='text-align: right'>score</th>"))
+    assertTrue(row.contains("<td class='score Integer' style='text-align: right'>42</td>"))
+    assertTrue(column.contains("<th class='score Integer' style='text-align: right'>score</th>"))
+    assertTrue(column.contains("<td class='score Integer' style='text-align: right'>42</td>"))
+  }
+
+  @Test
   void rendersSparseSummaryAndRaggedStructureData() {
     Summary summary = new Summary()
     summary['first'] = [mean: 3, min: 1]

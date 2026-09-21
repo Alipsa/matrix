@@ -64,11 +64,12 @@ class CoreRenderer extends AbstractRenderer {
     if (value instanceof Matrix) return (Matrix) value
     if (value instanceof Row) {
       Row row = (Row) value
-      return Matrix.builder().columns(row.columnNames().withIndex().collectEntries { String name, int index -> [(name): [row[index]]] }).build()
+      Map<String, List> columns = row.columnNames().withIndex().collectEntries { String name, int index -> [(name): [row[index]]] }
+      return Matrix.builder().columns(columns).types(row.types()).build()
     }
     if (value instanceof Column) {
       Column column = (Column) value
-      return Matrix.builder().columns([(column.name ?: 'c1'): column.toList()]).build()
+      return Matrix.builder().columns([(column.name ?: 'c1'): column.toList()]).types([column.type ?: Object]).build()
     }
     if (value instanceof Grid) return Matrix.builder().data((Grid) value).build()
     if (value instanceof Summary) return summaryMatrix((Summary) value)
