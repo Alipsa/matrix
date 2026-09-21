@@ -157,6 +157,7 @@ class CharmBridge {
     List<List<?>> rows = []
     List<?> categories = chart.categorySeries
     List<List<?>> allValues = chart.valueSeries
+    requireSameLength(categories, allValues, 'value series')
     for (int idx = 0; idx < categories.size(); idx++) {
       String category = categories[idx].toString()
       List<Number> values = allValues[idx] as List<Number>

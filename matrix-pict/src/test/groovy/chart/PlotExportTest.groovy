@@ -7,6 +7,7 @@ import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 
 import se.alipsa.matrix.chartexport.SvgPanel
 import se.alipsa.matrix.core.Matrix
@@ -14,7 +15,6 @@ import se.alipsa.matrix.pict.LineChart
 import se.alipsa.matrix.pict.Plot
 
 import java.awt.image.BufferedImage
-import java.nio.file.Files
 import java.nio.file.Path
 import javafx.scene.Group
 
@@ -54,8 +54,7 @@ class PlotExportTest {
   }
 
   @Test
-  void jpgRendersAtRequestedSize() {
-    Path dir = Files.createTempDirectory('pict-export')
+  void jpgRendersAtRequestedSize(@TempDir Path dir) {
     File file = dir.resolve('c.jpg').toFile()
     Plot.jpg(chart(), file, WIDTH, HEIGHT)
     assertSize(ImageIO.read(file), WIDTH, HEIGHT)
@@ -73,8 +72,7 @@ class PlotExportTest {
   }
 
   @Test
-  void pdfRendersAtRequestedSize() {
-    Path dir = Files.createTempDirectory('pict-export')
+  void pdfRendersAtRequestedSize(@TempDir Path dir) {
     File file = dir.resolve('c.pdf').toFile()
     Plot.pdf(chart(), file, WIDTH, HEIGHT)
     assertPdfPage(file.bytes, WIDTH, HEIGHT)

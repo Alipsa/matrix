@@ -77,13 +77,21 @@ class HistogramTest {
   }
 
   @Test
+  void testHistogramIgnoresNaNValues() {
+    Histogram chart = Histogram.create([1, Double.NaN, 3], 2)
+
+    assertEquals([1, 3], chart.originalData)
+    assertEquals(2, chart.ranges.values().sum())
+  }
+
+  @Test
   void testHistogramRejectsColumnWithoutNumericValues() {
     Matrix data = Matrix.builder().columns([v: [null, null]]).types([Integer]).build()
 
     IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
       Histogram.builder(data).x('v').build()
     }
-    assertTrue(ex.message.contains("Column 'v' contains no non-null values"), ex.message)
+    assertTrue(ex.message.contains("Column 'v' contains no non-null, non-NaN values"), ex.message)
   }
 
   @Test

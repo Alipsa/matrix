@@ -22,7 +22,7 @@
 
 - `Histogram.ranges` no longer drops the maximum value when `(max - min) / bins` rounds down;
   the last bin's upper bound is now exactly the column maximum.
-- `Histogram` ignores `null` values and rejects `bins` that are `null` or not positive with a
+- `Histogram` ignores `null` and `NaN` values and rejects `bins` that are `null` or not positive with a
   clear `IllegalArgumentException` instead of `NumberFormatException` / `ArithmeticException`.
 - `BoxChart` ignores rows whose category is `null` instead of throwing `NullPointerException`.
 - `BarChart.create(title, type, direction, categories)` with no value columns no longer names
@@ -31,7 +31,7 @@
   silently plotting `null`s or dropping values. This affects the deprecated positional factories
   (`AreaChart.create(title, categories, values...)`, `PieChart.create(title, categories, values)`,
   `BarChart.create(title, type, direction, categories, values...)`) and charts whose
-  `categorySeries`/`valueSeries` — or, for `BubbleChart`, the `sizeSeries`/`groupSeries`
+  `categorySeries`/`valueSeries` — including `BoxChart` — or, for `BubbleChart`, the `sizeSeries`/`groupSeries`
   properties — were assigned directly after construction. A grouped `BubbleChart` (built with
   `group(...)`) whose `groupSeries` is later emptied is rejected instead of silently rendering ungrouped.
 - `ScatterChart.create(title, data, x, y)` now sets `valueSeriesNames` to `[y]`, so named
