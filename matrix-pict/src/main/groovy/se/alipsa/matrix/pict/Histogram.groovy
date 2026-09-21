@@ -7,7 +7,8 @@ import java.math.RoundingMode
 
 /**
  * Histogram chart for visualizing the frequency distribution of numerical data.
- * Null and NaN values in the source column are ignored; a column with no remaining values is rejected.
+ * Null and non-finite values (NaN or infinity) in the source column are ignored; a column with no
+ * remaining values is rejected.
  */
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('ExplicitCallToCompareToMethod')
@@ -96,23 +97,23 @@ class Histogram extends Chart<Histogram> {
   }
 
   /**
-   * Drops null and NaN entries from a numeric column.
+   * Drops null and non-finite entries from a numeric column.
    *
    * @throws IllegalArgumentException if nothing remains
    */
   private static List<? extends Number> plottableValues(List<? extends Number> values, String columnName) {
     List<? extends Number> kept = values == null ? [] : values.findAll { Number value ->
-      value != null && !isNaN(value)
+      value != null && !isNonFinite(value)
     }
     if (kept.isEmpty()) {
-      throw new IllegalArgumentException("Column '${columnName}' contains no non-null, non-NaN values; a histogram needs at least one")
+      throw new IllegalArgumentException("Column '${columnName}' contains no non-null, finite values; a histogram needs at least one")
     }
     kept
   }
 
-  /** Returns whether a floating-point value is NaN. */
-  private static boolean isNaN(Number value) {
-    (value instanceof Double || value instanceof Float) && Double.isNaN(value.doubleValue())
+  /** Returns whether a floating-point value is NaN or infinite. */
+  private static boolean isNonFinite(Number value) {
+    (value instanceof Double || value instanceof Float) && !Double.isFinite(value.doubleValue())
   }
 
   private static Map<MinMax, Integer> createRanges(List<? extends Number> column, int bins, int binDecimals = 1) {

@@ -400,9 +400,10 @@ Histogram chart = Histogram.create([1.2, 2.1, 4.1, 4.3, 5.7, 6.2, 6.9, 8.5, 9.9]
 | `bins` | 9 | Number of bins |
 | `binDecimals` | 1 | Decimal precision for bin boundaries |
 
-`bins` must be a positive integer. Null values in the column are ignored; a column with no
-non-null values is rejected. `chart.ranges` always counts every value, and the last bin's upper
-bound is exactly the column maximum.
+`bins` must be a positive integer. Null and non-finite (`NaN`, positive infinity, and negative
+infinity) values in the column are ignored; a column with no remaining finite values is rejected.
+`chart.ranges` always counts every remaining value, and the last bin's upper bound is exactly the
+column maximum.
 
 **Querying histogram properties:**
 
@@ -988,7 +989,7 @@ IllegalArgumentException: "value series 0 has 2 values but there are 3 categorie
 
 // Histogram
 IllegalArgumentException: "bins must be a positive integer, got 0"
-IllegalArgumentException: "Column 'v' contains no non-null values; a histogram needs at least one"
+IllegalArgumentException: "Column 'v' contains no non-null, finite values; a histogram needs at least one"
 
 // BoxChart
 IllegalArgumentException: "Column 'group' contains no non-null categories; a box chart needs at least one"

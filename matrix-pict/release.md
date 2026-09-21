@@ -22,7 +22,7 @@
 
 - `Histogram.ranges` no longer drops the maximum value when `(max - min) / bins` rounds down;
   the last bin's upper bound is now exactly the column maximum.
-- `Histogram` ignores `null` and `NaN` values and rejects `bins` that are `null` or not positive with a
+- `Histogram` ignores `null` and non-finite values (`NaN` or infinity) and rejects `bins` that are `null` or not positive with a
   clear `IllegalArgumentException` instead of `NumberFormatException` / `ArithmeticException`.
 - `BoxChart` ignores rows whose category is `null` instead of throwing `NullPointerException`.
 - `BarChart.create(title, type, direction, categories)` with no value columns no longer names

@@ -77,8 +77,8 @@ class HistogramTest {
   }
 
   @Test
-  void testHistogramIgnoresNaNValues() {
-    Histogram chart = Histogram.create([1, Double.NaN, 3], 2)
+  void testHistogramIgnoresNonFiniteValues() {
+    Histogram chart = Histogram.create([1, Double.NaN, Double.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY, 3], 2)
 
     assertEquals([1, 3], chart.originalData)
     assertEquals(2, chart.ranges.values().sum())
@@ -91,7 +91,16 @@ class HistogramTest {
     IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
       Histogram.builder(data).x('v').build()
     }
-    assertTrue(ex.message.contains("Column 'v' contains no non-null, non-NaN values"), ex.message)
+    assertTrue(ex.message.contains("Column 'v' contains no non-null, finite values"), ex.message)
+  }
+
+  @Test
+  void testHistogramRejectsOnlyNonFiniteValues() {
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      Histogram.create([Double.NaN, Double.POSITIVE_INFINITY], 2)
+    }
+
+    assertEquals("Column 'values' contains no non-null, finite values; a histogram needs at least one", ex.message)
   }
 
   @Test
