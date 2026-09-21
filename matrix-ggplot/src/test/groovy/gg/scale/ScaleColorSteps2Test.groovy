@@ -74,7 +74,10 @@ class ScaleColorSteps2Test {
     scale.train([0, 100])
 
     def midColor = scale.transform(50)
+    def quarterColor = scale.transform(25)
     assertEquals('#FFFFFF', midColor)
+    assertNotEquals('#808080', quarterColor)
+    assertEquals('#9999FF', quarterColor)
   }
 
   @Test
