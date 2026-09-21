@@ -11,6 +11,8 @@ class GgCharmCompilation {
   final boolean delegated
   final Chart charmChart
   final List<String> reasons
+  /** Source gg-layer indexes corresponding to delegated Charm layers. */
+  final List<Integer> layerIndexes
 
   /**
    * Creates a new adaptation result.
@@ -19,10 +21,11 @@ class GgCharmCompilation {
    * @param charmChart adapted Charm chart (when delegated)
    * @param reasons fallback reasons (when not delegated)
    */
-  GgCharmCompilation(boolean delegated, Chart charmChart, List<String> reasons = []) {
+  GgCharmCompilation(boolean delegated, Chart charmChart, List<String> reasons = [], List<Integer> layerIndexes = []) {
     this.delegated = delegated
     this.charmChart = charmChart
     this.reasons = Collections.unmodifiableList(new ArrayList<>(reasons ?: []))
+    this.layerIndexes = Collections.unmodifiableList(new ArrayList<>(layerIndexes ?: []))
   }
 
   /**
@@ -31,8 +34,8 @@ class GgCharmCompilation {
    * @param chart adapted chart
    * @return delegated result
    */
-  static GgCharmCompilation delegated(Chart chart) {
-    new GgCharmCompilation(true, chart, [])
+  static GgCharmCompilation delegated(Chart chart, List<Integer> layerIndexes = []) {
+    new GgCharmCompilation(true, chart, [], layerIndexes)
   }
 
   /**

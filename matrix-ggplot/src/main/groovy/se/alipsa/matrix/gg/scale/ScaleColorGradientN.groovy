@@ -122,7 +122,7 @@ class ScaleColorGradientN extends ScaleContinuous {
    * @return charm Scale with multi-stop gradient color configuration
    */
   CharmScale toCharmScale() {
-    CharmScale.gradientN(colors, values)
+    ColorScaleUtil.withNaValue(CharmScale.gradientN(colors, values), naValue)
   }
 
   private List<BigDecimal> resolveStops() {

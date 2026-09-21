@@ -113,6 +113,39 @@ class CharmRenderer {
     svg
   }
 
+  /**
+   * Runs Charm's mapping, stat and position pipeline for every layer in every facet panel
+   * without creating chart geometry.
+   *
+   * @param chart compiled chart
+   * @param config render configuration
+   * @return post-pipeline data in panel-major order
+   */
+  List<LayerPanelData> computeLayerData(Chart chart, RenderConfig config = new RenderConfig()) {
+    if (chart == null) {
+      throw new IllegalArgumentException('chart cannot be null')
+    }
+    RenderContext context = new RenderContext(chart, config ?: new RenderConfig(), new Svg())
+    context.panels = facetRenderer.computePanels(
+        chart.data, chart.facet.type, chart.facet.rows, chart.facet.cols,
+        chart.facet.vars, chart.facet.ncol, chart.facet.nrow, chart.facet.params)
+    if (context.panels == null || context.panels.isEmpty()) {
+      context.panels = [defaultPanel(chart.data.rowCount())]
+    }
+    List<LayerPanelData> result = []
+    context.panels.each { PanelSpec panel ->
+      chart.layers.eachWithIndex { LayerSpec layer, int layerIndex ->
+        Matrix sourceData = resolveLayerData(chart.data, layer)
+        boolean ownData = sourceData != null && !sourceData.is(chart.data)
+        List<Integer> rows = ownData ? defaultRowIndexes(sourceData.rowCount()) : panel.rowIndexes
+        Mapping mapping = effectiveMapping(chart.mapping, layer)
+        result << new LayerPanelData(layerIndex: layerIndex, layer: layer, panel: panel,
+            data: runPipeline(context, layer, sourceData, mapping, rows))
+      }
+    }
+    result
+  }
+
   private void trainScales(RenderContext context) {
     List<Object> xValues = []
     List<Object> yValues = []

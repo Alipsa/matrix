@@ -100,6 +100,71 @@ class ColorScaleUtil {
   }
 
   /**
+   * Resolves a normalized value to an equal-width bin index, keeping the upper endpoint in the
+   * last bin.
+   *
+   * @param normalized value in the normalized [0, 1] interval
+   * @param bins number of bins
+   * @return zero-based bin index
+   */
+  static int binIndex(BigDecimal normalized, int bins) {
+    int count = bins.max(1) as int
+    int index = (normalized.min(1.0G).max(0.0G) * count).setScale(6, RoundingMode.HALF_UP).floor().intValue()
+    index.min(count - 1).max(0) as int
+  }
+
+  /**
+   * Returns the normalized centre of a bin.
+   *
+   * @param idx zero-based bin index
+   * @param bins number of bins
+   * @return bin-centre position in [0, 1]
+   */
+  static BigDecimal binCentre(int idx, int bins) {
+    (idx + 0.5G) / bins.max(1)
+  }
+
+  /**
+   * Interpolates a multi-stop gradient at a normalized position.
+   *
+   * @param colors gradient colors
+   * @param stops optional normalized stop positions
+   * @param t normalized interpolation point
+   * @return interpolated color
+   */
+  static String gradientNColorAt(List<String> colors, List<BigDecimal> stops, BigDecimal t) {
+    if (colors == null || colors.isEmpty()) {
+      return null
+    }
+    if (colors.size() == 1) {
+      return colors[0]
+    }
+    List<BigDecimal> resolved = resolveGradientStops(colors, stops)
+    BigDecimal position = t.min(1.0G).max(0.0G)
+    int idx = 0
+    while (idx < resolved.size() - 1 && position > resolved[idx + 1]) {
+      idx++
+    }
+    if (idx >= resolved.size() - 1) {
+      return colors.last()
+    }
+    BigDecimal start = resolved[idx]
+    BigDecimal end = resolved[idx + 1]
+    BigDecimal local = end > start ? (position - start) / (end - start) : 0.0G
+    interpolateColor(colors[idx], colors[idx + 1], local)
+  }
+
+  private static List<BigDecimal> resolveGradientStops(List<String> colors, List<BigDecimal> stops) {
+    if (stops != null && stops.size() == colors.size()) {
+      return stops.collect { BigDecimal value -> (value ?: 0.0G).min(1.0G).max(0.0G) }
+    }
+    if (colors.size() == 1) {
+      return [0.0G]
+    }
+    (0..<colors.size()).collect { int i -> i / (colors.size() - 1) }
+  }
+
+  /**
    * Parse a color string to RGB values.
    * Supports {@code #RGB}, {@code #RGBA}, {@code #RRGGBB}, {@code #RRGGBBAA},
    * {@code rgb(...)}, {@code rgba(...)}, and named colors. Alpha is not included in the returned

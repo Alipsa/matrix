@@ -1,6 +1,6 @@
 package se.alipsa.matrix.gg.scale
 
-
+import se.alipsa.matrix.charm.Scale as CharmScale
 import se.alipsa.matrix.core.util.Logger
 
 /**
@@ -310,5 +310,12 @@ class ScaleColorFermenter extends ScaleContinuous {
                   nBreaks.min(paletteColors.size()) :
                   paletteColors.size()) as int
     return paletteColors.take(numBins)
+  }
+
+  /** Converts this binned Brewer scale to Charm, preserving selected palette entries. */
+  CharmScale toCharmScale() {
+    CharmScale scale = CharmScale.fermenter(resolvePaletteName(), direction, colors.size())
+    scale.params['paletteColors'] = new ArrayList<String>(colors)
+    ColorScaleUtil.withNaValue(scale, naValue)
   }
 }

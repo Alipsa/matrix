@@ -60,6 +60,10 @@ class ColorCharmScale extends CharmScale {
   List<String> gradientColors = []
   /** For GRADIENT_N: color stop positions. */
   List<BigDecimal> gradientValues
+  /** Optional midpoint used by binned diverging scales. */
+  BigDecimal binMidpoint
+  /** Explicit binned-scale count; zero uses the gradient colour count. */
+  int binCount = 0
   /** For BREWER: palette name. */
   String palette = 'Set1'
   /** For BREWER: direction. */
@@ -368,7 +372,9 @@ class ColorCharmScale extends CharmScale {
     if (breaks < 2) {
       breaks = 6
     }
-    List<String> colors = BrewerPalettes.selectPalette(palette, breaks, direction)
+    List<String> colors = spec.params['paletteColors'] instanceof List
+        ? (spec.params['paletteColors'] as List)*.toString()
+        : BrewerPalettes.selectPalette(palette, breaks, direction)
     this.gradientColors = colors.isEmpty() ? (0..<breaks).collect { int i ->
       DEFAULT_COLORS[i % DEFAULT_COLORS.size()]
     } as List<String> : colors
@@ -419,12 +425,10 @@ class ColorCharmScale extends CharmScale {
     if (breaks < 2) {
       breaks = 6
     }
-    gradientColors = []
-    for (int i = 0; i < breaks; i++) {
-      BigDecimal t = i / (breaks - 1)
-      gradientColors << ColorScaleUtil.interpolateColor(stepLow, stepHigh, t)
-    }
+    gradientColors = [stepLow, stepHigh]
     gradientValues = null
+    binCount = breaks
+    binMidpoint = null
     this.naValue = (spec.params['naValue'] as String) ?: '#999999'
     trainContinuousDomain(dataValues)
   }
@@ -438,15 +442,10 @@ class ColorCharmScale extends CharmScale {
     if (breaks < 3) {
       breaks = 7
     }
-    gradientColors = []
-    for (int i = 0; i < breaks; i++) {
-      BigDecimal t = i / (breaks - 1)
-      String color = t <= 0.5
-          ? ColorScaleUtil.interpolateColor(stepLow, stepMid, t * 2)
-          : ColorScaleUtil.interpolateColor(stepMid, stepHigh, (t - 0.5) * 2)
-      gradientColors << color
-    }
-    gradientValues = null
+    gradientColors = [stepLow, stepMid, stepHigh]
+    gradientValues = [0.0G, 0.5G, 1.0G]
+    binCount = breaks
+    binMidpoint = ValueConverter.asBigDecimal(spec.params['midpoint'])
     this.naValue = (spec.params['naValue'] as String) ?: '#999999'
     trainContinuousDomain(dataValues)
   }
@@ -456,7 +455,10 @@ class ColorCharmScale extends CharmScale {
     if (gradientColors.size() < 2) {
       gradientColors = ['#132B43', '#56B1F7']
     }
-    this.gradientValues = null
+    this.gradientValues = spec.params['gradientValues'] instanceof List
+        ? (spec.params['gradientValues'] as List).collect { ValueConverter.asBigDecimal(it) } : null
+    this.binCount = ValueConverter.asBigDecimal(spec.params['nBreaks'])?.intValue() ?: 0
+    this.binMidpoint = null
     this.naValue = (spec.params['naValue'] as String) ?: '#999999'
     trainContinuousDomain(dataValues)
   }
@@ -548,17 +550,7 @@ class ColorCharmScale extends CharmScale {
 
     if (gradientColors.size() == 1) return gradientColors[0]
 
-    List<BigDecimal> stops = resolveGradientStops()
-    int idx = 0
-    while (idx < stops.size() - 1 && normalized > stops[idx + 1]) {
-      idx++
-    }
-    if (idx >= stops.size() - 1) return gradientColors.last()
-
-    BigDecimal start = stops[idx]
-    BigDecimal end = stops[idx + 1]
-    BigDecimal localT = end > start ? (normalized - start) / (end - start) : 0.0
-    ColorScaleUtil.interpolateColor(gradientColors[idx], gradientColors[idx + 1], localT)
+    ColorScaleUtil.gradientNColorAt(gradientColors, gradientValues, normalized)
   }
 
   private String binnedGradientColor(Object value) {
@@ -568,34 +560,29 @@ class ColorCharmScale extends CharmScale {
     if (domainMax == domainMin) {
       return gradientColors.last()
     }
-    BigDecimal normalized = ((v - domainMin) / (domainMax - domainMin)).min(1.0).max(0.0)
-    int idx = normalized * (gradientColors.size() - 1) as int
-    if (idx < 0) {
-      idx = 0
-    } else if (idx > gradientColors.size() - 1) {
-      idx = gradientColors.size() - 1
+    BigDecimal normalized = binnedPosition(v)
+    int bins = binCount > 0 ? binCount : gradientColors.size()
+    int idx = ColorScaleUtil.binIndex(normalized, bins)
+    if (colorType == 'fermenter') {
+      return gradientColors[idx.min(gradientColors.size() - 1)]
     }
-    gradientColors[idx]
+    ColorScaleUtil.gradientNColorAt(gradientColors, gradientValues, ColorScaleUtil.binCentre(idx, bins))
   }
 
-  private List<BigDecimal> resolveGradientStops() {
-    if (gradientValues != null && gradientValues.size() == gradientColors.size()) {
-      return gradientValues.collect { Number n ->
-        BigDecimal v = n != null ? (n as BigDecimal) : 0.0
-        v.min(1.0).max(0.0)
-      } as List<BigDecimal>
+  /** Normalized binned position, respecting an optional data midpoint. */
+  private BigDecimal binnedPosition(BigDecimal value) {
+    if (domainMax == domainMin) {
+      return 0.5G
     }
-    int n = gradientColors.size()
-    List<BigDecimal> stops = new ArrayList<>(n)
-    if (n == 1) {
-      stops << 0.0
-      return stops
+    if (binMidpoint == null) {
+      return ((value - domainMin) / (domainMax - domainMin)).min(1.0G).max(0.0G)
     }
-    BigDecimal step = 1.0 / (n - 1)
-    for (int i = 0; i < n; i++) {
-      stops << (i * step)
-    }
-    stops
+    BigDecimal lowerSpan = binMidpoint - domainMin
+    BigDecimal upperSpan = domainMax - binMidpoint
+    BigDecimal position = value <= binMidpoint
+        ? (lowerSpan > 0 ? 0.5G * (value - domainMin) / lowerSpan : 0.5G)
+        : (upperSpan > 0 ? 0.5G + 0.5G * (value - binMidpoint) / upperSpan : 1.0G)
+    position.min(1.0G).max(0.0G)
   }
 
   /**

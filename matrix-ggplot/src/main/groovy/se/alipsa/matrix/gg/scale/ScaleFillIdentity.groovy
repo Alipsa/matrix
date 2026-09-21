@@ -47,6 +47,6 @@ class ScaleFillIdentity extends Scale {
    * @return charm Scale with identity color configuration
    */
   CharmScale toCharmScale() {
-    CharmScale.identity(naValue)
+    CharmScale.identity(ColorUtil.normalizeColor(naValue) ?: naValue)
   }
 }

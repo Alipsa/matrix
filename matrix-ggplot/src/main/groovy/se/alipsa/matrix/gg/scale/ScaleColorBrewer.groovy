@@ -119,8 +119,7 @@ class ScaleColorBrewer extends ScaleDiscrete {
    * @return charm Scale with brewer color configuration
    */
   CharmScale toCharmScale() {
-    CharmScale s = CharmScale.brewer(palette, direction)
-    s
+    ColorScaleUtil.withNaValue(CharmScale.brewer(palette, direction), naValue)
   }
 
   private String resolvePaletteName() {

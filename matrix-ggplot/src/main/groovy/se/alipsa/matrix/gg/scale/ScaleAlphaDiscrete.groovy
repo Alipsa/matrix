@@ -1,5 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
+import se.alipsa.matrix.charm.Scale as CharmScale
+
 
 /**
  * Discrete alpha scale.
@@ -81,5 +83,12 @@ class ScaleAlphaDiscrete extends ScaleDiscrete {
       return naValue
     }
     return computedValues[index % computedValues.size()]
+  }
+
+  /** Converts this discrete alpha scale to Charm. */
+  CharmScale toCharmScale() {
+    CharmScale scale = CharmScale.discrete()
+    scale.params['range'] = [range[0], range[1]]
+    scale
   }
 }

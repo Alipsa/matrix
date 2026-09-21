@@ -1,5 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
+import se.alipsa.matrix.charm.Scale as CharmScale
+
 
 /**
  * Binned sequential color scale - divides continuous range into discrete color bins.
@@ -81,13 +83,8 @@ class ScaleColorSteps extends ScaleContinuous {
       return colors[0]
     }
 
-    BigDecimal scaled = normalized * binsCount
-    int binIndex = scaled.floor() as int
-    binIndex = binIndex.min(binsCount - 1) as int
-    binIndex = binIndex.max(0) as int
-
-    // Get color from palette
-    return colors[binIndex]
+    int binIndex = ColorScaleUtil.binIndex(normalized, binsCount)
+    ColorScaleUtil.gradientNColorAt(colors, null, ColorScaleUtil.binCentre(binIndex, binsCount))
   }
 
   private List<String> generateSequentialPalette(String lowColor, String highColor, int n) {
@@ -157,5 +154,14 @@ class ScaleColorSteps extends ScaleContinuous {
       this.colors = generateSequentialPalette(low, high, n)
     }
     return this
+  }
+
+  /** Converts this binned sequential scale to Charm. */
+  CharmScale toCharmScale() {
+    CharmScale scale = customColors ? CharmScale.stepsN(new ArrayList<String>(colors)) : CharmScale.steps(low, high, bins)
+    if (customColors) {
+      scale.params['nBreaks'] = colors.size()
+    }
+    ColorScaleUtil.withNaValue(scale, naValue)
   }
 }

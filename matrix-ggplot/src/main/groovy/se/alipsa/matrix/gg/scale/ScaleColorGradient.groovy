@@ -178,6 +178,6 @@ class ScaleColorGradient extends ScaleContinuous {
    * @return charm Scale with gradient color configuration
    */
   CharmScale toCharmScale() {
-    CharmScale.gradient(low, high, mid, midpoint)
+    ColorScaleUtil.withNaValue(CharmScale.gradient(low, high, mid, midpoint), naValue)
   }
 }

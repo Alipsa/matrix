@@ -198,3 +198,15 @@ class LayerRenderJob {
   List<LayerData> data = []
 
 }
+
+/**
+ * Post-pipeline data for one layer in one facet panel.
+ */
+class LayerPanelData {
+
+  int layerIndex
+  se.alipsa.matrix.charm.LayerSpec layer
+  PanelSpec panel
+  List<LayerData> data = []
+
+}

@@ -82,6 +82,15 @@ class GgChart {
 
   private static final Set<String> REVERSE_ONLY_PARAM_KEYS = [PARAM_REVERSE] as Set<String>
 
+  private static final Map<String, StatType> STAT_ALIASES = [
+      qqline    : StatType.QQ_LINE,
+      sf_coords : StatType.SF_COORDINATES,
+      bin_2d    : StatType.BIN2D,
+      density2d : StatType.DENSITY_2D,
+      summary2d : StatType.SUMMARY_2D,
+      binhex    : StatType.BIN_HEX
+  ].asImmutable()
+
   private static final Map<PositionType, Set<String>> POSITION_PARAM_KEYS = [
       (PositionType.DODGE): [PARAM_WIDTH] as Set<String>,
       (PositionType.DODGE2): [PARAM_WIDTH, 'padding', PARAM_REVERSE] as Set<String>,
@@ -185,26 +194,16 @@ class GgChart {
       return (stat as Stats).statType
     }
     if (stat instanceof CharSequence) {
-      return switch (stat.toString().trim().toLowerCase(Locale.ROOT)) {
-        case 'identity' -> StatType.IDENTITY
-        case 'count' -> StatType.COUNT
-        case 'bin' -> StatType.BIN
-        case 'boxplot' -> StatType.BOXPLOT
-        case 'smooth' -> StatType.SMOOTH
-        case 'summary' -> StatType.SUMMARY
-        case 'density' -> StatType.DENSITY
-        case 'ydensity' -> StatType.YDENSITY
-        case 'bin2d' -> StatType.BIN2D
-        case 'contour' -> StatType.CONTOUR
-        case 'ecdf' -> StatType.ECDF
-        case 'qq' -> StatType.QQ
-        case 'qq_line', 'qqline' -> StatType.QQ_LINE
-        case 'unique' -> StatType.UNIQUE
-        case 'sample' -> StatType.SAMPLE
-        case 'function' -> StatType.FUNCTION
-        case 'sf' -> StatType.SF
-        case 'sf_coordinates', 'sf_coords' -> StatType.SF_COORDINATES
-        default -> throw new IllegalArgumentException("Unsupported stat: ${stat}")
+      String key = stat.toString().trim().toLowerCase(Locale.ROOT)
+      StatType alias = STAT_ALIASES[key]
+      if (alias != null) {
+        return alias
+      }
+      try {
+        return StatType.valueOf(key.toUpperCase(Locale.ROOT))
+      } catch (IllegalArgumentException ignored) {
+        throw new IllegalArgumentException(
+            "Unsupported stat: ${stat}. Known stats: ${StatType.values()*.name()*.toLowerCase(Locale.ROOT).sort()}")
       }
     }
     throw new IllegalArgumentException("Unsupported stat type: ${stat.getClass().name}")
@@ -488,6 +487,13 @@ class GgChart {
         }
       }
     }
+    Object mappingParam = geomParams.remove(PARAM_MAPPING)
+    Aes layerAes = null
+    if (mappingParam instanceof Aes) {
+      layerAes = mappingParam as Aes
+    } else if (mappingParam != null) {
+      throw new IllegalArgumentException("stat mapping must be an aes(), got ${mappingParam.getClass().simpleName}")
+    }
     Geom geom = null
     Object geomParam = statParams.remove(PARAM_GEOM) ?: geomParams.remove(PARAM_GEOM)
     if (geomParam instanceof Geom) {
@@ -500,7 +506,7 @@ class GgChart {
         geom: geom,
         stat: stat.statType ?: StatType.IDENTITY,
         position: geom?.defaultPosition ?: PositionType.IDENTITY,
-        aes: null,
+        aes: layerAes,
         params: geom?.params ?: [:],
         statParams: statParams
     )

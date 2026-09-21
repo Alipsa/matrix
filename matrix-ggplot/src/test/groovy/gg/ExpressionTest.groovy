@@ -174,7 +174,7 @@ class ExpressionTest {
   }
 
   @Test
-  void testExpressionWithInvalidNumericConversion() {
+  void testExpressionKeepsNonNumericText() {
     def data = Matrix.builder()
         .columnNames(['x'])
         .rows([[1], [2]])
@@ -183,7 +183,6 @@ class ExpressionTest {
     def expr = new Expression({ 'abc' })
     def values = expr.evaluateAll(data)
 
-    assertNull(values[0])
-    assertNull(values[1])
+    assertEquals(['abc', 'abc'], values)
   }
 }

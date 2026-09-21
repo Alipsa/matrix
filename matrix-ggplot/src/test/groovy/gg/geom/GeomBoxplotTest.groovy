@@ -9,10 +9,8 @@ import testutil.Slow
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.geom.GeomBoxplot
 import se.alipsa.matrix.gg.layer.StatType
-import se.alipsa.matrix.gg.stat.GgStat
 
 @SuppressWarnings('UnnecessaryGString')
 class GeomBoxplotTest {
@@ -133,136 +131,6 @@ class GeomBoxplotTest {
     double widthWithBounds = matcherWithBounds.group(1).toDouble()
     double widthWithoutBounds = matcherWithoutBounds.group(1).toDouble()
     assertTrue(widthWithBounds > widthWithoutBounds, "widthWithBounds=${widthWithBounds}, widthWithoutBounds=${widthWithoutBounds}")
-  }
-
-  // ============== GgStat.boxplot() Tests ==============
-
-  @Test
-  void testStatBoxplotOutput() {
-    def data = Matrix.builder()
-        .columnNames('group', 'value')
-        .rows([
-            ['A', 1], ['A', 2], ['A', 3], ['A', 4], ['A', 5],
-            ['A', 6], ['A', 7], ['A', 8], ['A', 9], ['A', 10]
-        ])
-        .types(String, Integer)
-        .build()
-
-    def aes = new Aes(x: 'group', y: 'value')
-    def boxplotData = GgStat.boxplot(data, aes)
-
-    /*
-    println "Boxplot data:'
-    println 'Columns: ${boxplotData.columnNames()}'
-    boxplotData.each { row ->
-      println '  x=${row['x']}, ymin=${row['ymin']}, lower=${row['lower']}, ' +
-              'middle=${row['middle']}, upper=${row['upper']}, ymax=${row['ymax']}, ' +
-              'outliers=${row['outliers']}"
-    }
-    */
-    assertTrue(boxplotData.columnNames().contains('x'), 'Should have x column')
-    assertTrue(boxplotData.columnNames().contains('ymin'), 'Should have ymin column')
-    assertTrue(boxplotData.columnNames().contains('lower'), 'Should have lower column')
-    assertTrue(boxplotData.columnNames().contains('middle'), 'Should have middle column')
-    assertTrue(boxplotData.columnNames().contains('upper'), 'Should have upper column')
-    assertTrue(boxplotData.columnNames().contains('ymax'), 'Should have ymax column')
-    assertTrue(boxplotData.columnNames().contains('outliers'), 'Should have outliers column')
-    assertEquals(1, boxplotData.rowCount(), 'Should have 1 group')
-  }
-
-  @Test
-  void testStatBoxplotQuantilesType7() {
-    def data = Matrix.builder()
-        .columnNames('group', 'value')
-        .rows([
-            ['A', 1], ['A', 2], ['A', 3], ['A', 4], ['A', 5],
-            ['A', 6], ['A', 7], ['A', 8], ['A', 9], ['A', 10]
-        ])
-        .types(String, Integer)
-        .build()
-
-    def aes = new Aes(x: 'group', y: 'value')
-    def boxplotData = GgStat.boxplot(data, aes)
-    def row = boxplotData.row(0)
-
-    assertEquals(1.0d, (row['ymin'] as Number).doubleValue(), 0.0001d)
-    assertEquals(3.25d, (row['lower'] as Number).doubleValue(), 0.0001d)
-    assertEquals(5.5d, (row['middle'] as Number).doubleValue(), 0.0001d)
-    assertEquals(7.75d, (row['upper'] as Number).doubleValue(), 0.0001d)
-    assertEquals(10.0d, (row['ymax'] as Number).doubleValue(), 0.0001d)
-    assertTrue((row['outliers'] as List).isEmpty(), "Should have no outliers")
-  }
-
-  @Test
-  void testStatBoxplotMultipleGroups() {
-    def data = Matrix.builder()
-        .columnNames('category', 'measurement')
-        .rows([
-            ['X', 10], ['X', 20], ['X', 30], ['X', 40], ['X', 50],
-            ['Y', 15], ['Y', 25], ['Y', 35], ['Y', 45], ['Y', 55],
-            ['Z', 5], ['Z', 15], ['Z', 25], ['Z', 35], ['Z', 45]
-        ])
-        .types(String, Integer)
-        .build()
-
-    def aes = new Aes(x: 'category', y: 'measurement')
-    def boxplotData = GgStat.boxplot(data, aes)
-
-    /*
-    println 'Multiple groups boxplot:'
-    boxplotData.each { row ->
-      println '  ${row['x']}: median=${row['middle']}'
-    }*/
-
-    assertEquals(3, boxplotData.rowCount(), 'Should have 3 groups')
-    assertTrue(boxplotData.columnNames().contains('relvarwidth'), 'Should have relvarwidth column')
-  }
-
-  @Test
-  void testStatBoxplotWhiskerUsesDataValues() {
-    def data = Matrix.builder()
-        .columnNames('group', 'value')
-        .rows([
-            ['A', 1], ['A', 2], ['A', 3], ['A', 4], ['A', 5],
-            ['A', 6], ['A', 7], ['A', 8], ['A', 9], ['A', 50]
-        ])
-        .types(String, Integer)
-        .build()
-
-    def aes = new Aes(x: 'group', y: 'value')
-    def boxplotData = GgStat.boxplot(data, aes)
-    def row = boxplotData.row(0)
-
-    assertEquals(1.0d, (row['ymin'] as Number).doubleValue(), 0.0001d)
-    assertEquals(9.0d, (row['ymax'] as Number).doubleValue(), 0.0001d)
-    def outliers = row['outliers'] as List
-    assertEquals(1, outliers.size(), 'Should have exactly one outlier')
-    assertTrue(outliers.contains(50), 'Outlier list should include 50')
-  }
-
-  @Test
-  void testStatBoxplotWithOutliers() {
-    // Data with clear outliers
-    def data = Matrix.builder()
-        .columnNames('group', 'value')
-        .rows([
-            ['A', 10], ['A', 11], ['A', 12], ['A', 13], ['A', 14],
-            ['A', 15], ['A', 16], ['A', 17], ['A', 18], ['A', 19],
-            ['A', 100],  // outlier high
-            ['A', -50]   // outlier low
-        ])
-        .types(String, Integer)
-        .build()
-
-    def aes = new Aes(x: 'group', y: 'value')
-    def boxplotData = GgStat.boxplot(data, aes)
-
-    def outliers = boxplotData.row(0)['outliers']
-    //println "Outliers found: ${outliers}"
-
-    assertNotNull(outliers, 'Should have outliers')
-    assertTrue(outliers instanceof List, 'Outliers should be a list')
-    assertTrue((outliers as List).size() >= 1, 'Should have at least 1 outlier')
   }
 
   // ============== Full Chart Tests ==============

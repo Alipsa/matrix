@@ -1,5 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
+import se.alipsa.matrix.charm.Scale as CharmScale
+
 
 /**
  * Evenly spaced colors from the HCL color wheel.
@@ -145,6 +147,11 @@ class ScaleColorHue extends ScaleDiscrete {
   @Override
   Object transform(Object value) {
     return lookupColor(palette, value, naValue)
+  }
+
+  /** Converts the supported hue range and direction to Charm. */
+  CharmScale toCharmScale() {
+    ColorScaleUtil.withNaValue(CharmScale.hue(hueRange[0] as BigDecimal, hueRange[1] as BigDecimal, direction), naValue)
   }
 
   @Override

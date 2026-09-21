@@ -1,5 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
+import se.alipsa.matrix.charm.Scale as CharmScale
+
 
 /**
  * Binned diverging color scale - splits at a midpoint with separate color bins on each side.
@@ -98,12 +100,9 @@ class ScaleColorSteps2 extends ScaleContinuous {
       return colors[0]
     }
 
-    BigDecimal scaled = normalized * binsCount
-    int binIndex = scaled.floor() as int
-    binIndex = binIndex.min(binsCount - 1) as int
-    binIndex = binIndex.max(0) as int
-
-    return colors[binIndex]
+    int binIndex = ColorScaleUtil.binIndex(normalized, binsCount)
+    ColorScaleUtil.gradientNColorAt([low, mid, high] as List<String>, [0.0G, 0.5G, 1.0G] as List<BigDecimal>,
+        ColorScaleUtil.binCentre(binIndex, binsCount))
   }
 
   private List<String> generateDivergingPalette(String lowColor, String midColor, String highColor, int n) {
@@ -176,5 +175,14 @@ class ScaleColorSteps2 extends ScaleContinuous {
   ScaleColorSteps2 midpoint(BigDecimal value) {
     this.midpoint = value
     return this
+  }
+
+  /** Converts this binned diverging scale to Charm. */
+  CharmScale toCharmScale() {
+    CharmScale scale = CharmScale.steps2(low, mid, high, colors.size())
+    if (midpoint != null) {
+      scale.params['midpoint'] = midpoint
+    }
+    ColorScaleUtil.withNaValue(scale, naValue)
   }
 }

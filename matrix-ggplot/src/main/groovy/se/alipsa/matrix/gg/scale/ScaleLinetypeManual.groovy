@@ -1,5 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
+import se.alipsa.matrix.charm.Scale as CharmScale
+
 
 /**
  * Manual discrete linetype scale.
@@ -160,5 +162,12 @@ class ScaleLinetypeManual extends ScaleDiscrete {
   ScaleLinetypeManual values(Map<Object, String> mapping) {
     this.namedValues = mapping
     return this
+  }
+
+  /** Converts this manual linetype scale to Charm's discrete values map. */
+  CharmScale toCharmScale() {
+    CharmScale scale = CharmScale.discrete()
+    scale.params['values'] = namedValues.isEmpty() ? new ArrayList<String>(values) : new LinkedHashMap<Object, String>(namedValues)
+    scale
   }
 }

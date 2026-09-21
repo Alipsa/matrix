@@ -1,5 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
+import se.alipsa.matrix.charm.Scale as CharmScale
+
 
 /**
  * Discrete greyscale for categorical data.
@@ -131,6 +133,18 @@ class ScaleColorGrey extends ScaleDiscrete {
   private static String greyHex(BigDecimal value) {
     BigDecimal clamped = 0.max(value.min(1))
     int v = (clamped * 255).round().intValue()
-    return String.format('#%02X%02X%02X', v, v, v)
+    return String.format(Locale.ROOT, '#%02X%02X%02X', v, v, v)
+  }
+
+  /** Converts this discrete grey palette to Charm. */
+  CharmScale toCharmScale() {
+    BigDecimal startValue = start as BigDecimal
+    BigDecimal endValue = end as BigDecimal
+    if (direction < 0) {
+      BigDecimal tmp = startValue
+      startValue = endValue
+      endValue = tmp
+    }
+    ColorScaleUtil.withNaValue(CharmScale.grey(greyHex(startValue), greyHex(endValue)), naValue)
   }
 }

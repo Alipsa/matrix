@@ -1,5 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
+import se.alipsa.matrix.charm.Scale as CharmScale
+
 
 /**
  * Identity scale for size aesthetic - uses data values directly without mapping.
@@ -46,5 +48,12 @@ class ScaleSizeIdentity extends Scale {
     }
 
     return result
+  }
+
+  /** Converts this identity size scale to Charm. */
+  CharmScale toCharmScale() {
+    CharmScale scale = CharmScale.continuous()
+    scale.params['identity'] = true
+    scale
   }
 }

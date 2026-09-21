@@ -27,6 +27,8 @@ import se.alipsa.matrix.charm.Scale as CharmScale
 import se.alipsa.matrix.charm.ScaleSpec
 import se.alipsa.matrix.charm.StatSpec
 import se.alipsa.matrix.charm.render.CharmRenderer
+import se.alipsa.matrix.charm.render.LayerData
+import se.alipsa.matrix.charm.render.LayerPanelData
 import se.alipsa.matrix.charm.render.RenderConfig
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
@@ -82,6 +84,7 @@ class GgCharmCompiler {
   private static final String AES_LABEL = 'label'
   private static final String AES_TOOLTIP = 'tooltip'
   private static final String AES_WEIGHT = 'weight'
+  private static final String AES_LINEWIDTH = 'linewidth'
 
   private static final String PARAM_STAT = 'stat'
   private static final String PARAM_POSITION = 'position'
@@ -101,7 +104,7 @@ class GgCharmCompiler {
   private static final List<String> AESTHETIC_KEYS = [
       AES_X, AES_Y, AES_COLOR, AES_FILL, AES_SIZE, AES_SHAPE, AES_GROUP,
       AES_XEND, AES_YEND, AES_XMIN, AES_XMAX, AES_YMIN, AES_YMAX,
-      AES_ALPHA, AES_LINETYPE, AES_LABEL, AES_TOOLTIP, AES_WEIGHT
+      AES_ALPHA, AES_LINETYPE, AES_LABEL, AES_TOOLTIP, AES_WEIGHT, AES_LINEWIDTH
   ]
   private static final Set<String> PARAM_COLUMN_AESTHETICS = [
       AES_X, AES_Y, AES_XEND, AES_YEND, AES_XMIN, AES_XMAX, AES_YMIN, AES_YMAX, AES_LABEL, AES_TOOLTIP, AES_WEIGHT
@@ -122,8 +125,10 @@ class GgCharmCompiler {
       reasons << 'Chart is null'
       return GgCharmCompilation.fallback(reasons)
     }
-    Matrix plotData = resolvePlotData(ggChart)
     GgAes plotSourceAes = ggChart.globalAes ?: new GgAes()
+    boolean copyPlotData = derivesColumns(plotSourceAes) ||
+        ggChart.layers.any { Layer layer -> layer?.data == null && derivesColumns(layer?.aes) }
+    Matrix plotData = workingCopy(resolvePlotData(ggChart), copyPlotData)
     // Guide gate removed in Phase 10 — all guides now delegated to Charm.
     // Theme gate and label gate removed in Phase 9 — all themes and labels now delegated.
 
@@ -146,16 +151,18 @@ class GgCharmCompiler {
     List<AnnotationSpec> mappedAnnotations = []
     Set<Layer> annotationLayers = [] as Set<Layer>
     Set<Layer> mappedLayerIdentities = [] as Set<Layer>
+    List<Integer> mappedLayerIndexes = []
     ggChart.layers.eachWithIndex { Layer layer, int idx ->
       List<AnnotationSpec> annotationSpecs = GgCharmAnnotationMapper.mapAnnotationLayer(layer, idx, reasons)
       if (!annotationSpecs.isEmpty()) {
         mappedAnnotations.addAll(annotationSpecs)
         annotationLayers << layer
       } else {
-        LayerSpec mapped = mapLayer(layer, idx, plotMapping, plotData, mappedCoord, reasons)
+        LayerSpec mapped = mapLayer(layer, idx, plotSourceAes, plotMapping, plotData, mappedCoord, reasons)
         if (mapped != null) {
           mappedLayers << mapped
           mappedLayerIdentities << layer
+          mappedLayerIndexes << idx
         }
       }
     }
@@ -198,7 +205,7 @@ class GgCharmCompiler {
         mappedAnnotations,
         mapCssAttributes(ggChart)
     )
-    GgCharmCompilation.delegated(mappedChart)
+    GgCharmCompilation.delegated(mappedChart, mappedLayerIndexes)
   }
 
   /**
@@ -212,6 +219,35 @@ class GgCharmCompiler {
     }
     RenderConfig config = new RenderConfig(width: ggChart.width, height: ggChart.height)
     charmRenderer.render(adaptation.charmChart, config)
+  }
+
+  /**
+   * Computes post-stat/position data for each gg layer through the Charm pipeline.
+   *
+   * @param ggChart source chart
+   * @return one matrix per source layer; non-delegated and annotation layers are empty
+   */
+  List<Matrix> layerData(GgChart ggChart) {
+    GgCharmCompilation adaptation = adapt(ggChart)
+    if (!adaptation.delegated || adaptation.charmChart == null) {
+      String reasons = adaptation?.reasons?.join('; ') ?: 'Unknown adaptation failure'
+      throw new IllegalStateException("GG to Charm adaptation failed: ${reasons}")
+    }
+    RenderConfig config = new RenderConfig(width: ggChart.width, height: ggChart.height)
+    List<LayerPanelData> jobs = charmRenderer.computeLayerData(adaptation.charmChart, config)
+    Map<Integer, List<List<LayerData>>> grouped = [:]
+    jobs.each { LayerPanelData job ->
+      int ggIndex = adaptation.layerIndexes[job.layerIndex]
+      List<List<LayerData>> panels = grouped[ggIndex]
+      if (panels == null) {
+        panels = []
+        grouped[ggIndex] = panels
+      }
+      panels << job.data
+    }
+    (0..<ggChart.layers.size()).collect { int index ->
+      LayerDataMatrix.toMatrix(grouped[index] ?: [], "layer_${index + 1}")
+    }
   }
 
   /**
@@ -326,6 +362,7 @@ class GgCharmCompiler {
   private LayerSpec mapLayer(
       Layer layer,
       int idx,
+      GgAes plotAes,
       Mapping plotMapping,
       Matrix plotData,
       Coord mappedCoord,
@@ -350,18 +387,36 @@ class GgCharmCompiler {
       return null
     }
 
-    Matrix layerData = layer.data ?: plotData
+    boolean ownData = layer.data != null
+    Matrix layerData = ownData
+        ? workingCopy(layer.data, derivesColumns(layer.aes) || (layer.inheritAes && derivesColumns(plotAes)))
+        : plotData
+    Mapping inheritedMapping = plotMapping
+    if (ownData && layer.inheritAes && derivesColumns(plotAes)) {
+      inheritedMapping = mapMapping(plotAes, layerData, 'plot', reasons)
+    }
     Mapping layerMapping = mapMapping(layer.aes, layerData, "layer ${idx}", reasons)
-    if (!reasons.isEmpty()) {
+    if (!reasons.isEmpty() || inheritedMapping == null) {
       return null
     }
 
-    Mapping effectiveMapping = mergeMappings(plotMapping, layerMapping, layer.inheritAes)
+    Mapping effectiveMapping = mergeMappings(inheritedMapping, layerMapping, layer.inheritAes)
     applyParamColumnAesthetics(effectiveMapping, layer.params)
 
     Map<String, Object> layerParams = normalizeLayerParams(geomSpec.type, layer.params)
-    if (layer.data != null) {
-      layerParams[PARAM_LAYER_DATA] = layer.data
+    Map<String, Object> constants = [:]
+    if (layer.inheritAes) {
+      constants.putAll(constantAesthetics(plotAes))
+    }
+    constants.putAll(constantAesthetics(layer.aes))
+    normalizeLayerParams(geomSpec.type, constants).each { String key, Object value ->
+      if (layerParams[key] == null) {
+        layerParams[key] = value
+      }
+    }
+    applyPointFillDefault(geomSpec.type, layerParams, effectiveMapping)
+    if (ownData) {
+      layerParams[PARAM_LAYER_DATA] = layerData
     }
 
     Map<String, Object> statParams = deepCopyMap(layer.statParams)
@@ -619,7 +674,7 @@ class GgCharmCompiler {
       if (simple.contains('date')) {
         return CharmScale.date()
       }
-      return scale instanceof ScaleDiscrete ? CharmScale.discrete() : CharmScale.continuous()
+      return scale instanceof ScaleDiscrete ? CharmScale.discrete() : CharmScale.gradient()
     }
     if (aesthetic == AES_COLOR || aesthetic == AES_FILL) {
       return scale instanceof ScaleDiscrete ? CharmScale.discrete() : CharmScale.continuous()
@@ -693,6 +748,9 @@ class GgCharmCompiler {
 
     if (source instanceof FacetWrap) {
       FacetWrap wrap = source as FacetWrap
+      if (wrap.scales != null && wrap.scales != 'fixed') {
+        log.warn("facet_wrap(scales: '${wrap.scales}') is not supported yet; panels share fixed scales")
+      }
       return new Facet(
           type: FacetType.WRAP,
           vars: (wrap.facets ?: []).collect { String name -> new ColumnRef(name) },
@@ -712,6 +770,9 @@ class GgCharmCompiler {
 
     if (source instanceof FacetGrid) {
       FacetGrid grid = source as FacetGrid
+      if (grid.scales != null && grid.scales != 'fixed') {
+        log.warn("facet_grid(scales: '${grid.scales}') is not supported yet; panels share fixed scales")
+      }
       return new Facet(
           type: FacetType.GRID,
           rows: (grid.rows ?: []).collect { String name -> new ColumnRef(name) },
@@ -822,37 +883,43 @@ class GgCharmCompiler {
       if (value == null) {
         continue
       }
+      String targetKey = key
+      if (key == AES_LINEWIDTH) {
+        if (mapped.containsKey(AES_SIZE)) {
+          continue
+        }
+        targetKey = AES_SIZE
+      }
       if (value instanceof CharSequence) {
-        mapped[key] = value
+        mapped[targetKey] = value
         continue
       }
       if (value instanceof Factor) {
-        mapped[key] = data == null ? null : (value as Factor).addToMatrix(data)
+        mapped[targetKey] = data == null ? null : (value as Factor).addToMatrix(data)
         continue
       }
       if (value instanceof AfterStat) {
-        mapped[key] = (value as AfterStat).stat
+        mapped[targetKey] = (value as AfterStat).stat
         continue
       }
       if (value instanceof AfterScale) {
-        mapped[key] = (value as AfterScale).aesthetic
+        mapped[targetKey] = (value as AfterScale).aesthetic
         continue
       }
       if (value instanceof CutWidth) {
-        mapped[key] = data == null ? null : (value as CutWidth).addToMatrix(data)
+        mapped[targetKey] = data == null ? null : (value as CutWidth).addToMatrix(data)
         continue
       }
       if (value instanceof Expression) {
-        mapped[key] = data == null ? null : (value as Expression).addToMatrix(data)
+        mapped[targetKey] = data == null ? null : (value as Expression).addToMatrix(data)
         continue
       }
       if (value instanceof Closure) {
-        mapped[key] = data == null ? null : new Expression(value as Closure<Number>).addToMatrix(data)
+        mapped[targetKey] = data == null ? null : new Expression(value as Closure).addToMatrix(data)
         continue
       }
       if (value instanceof Identity) {
-        mapped[key] = (value as Identity).value
-        continue
+        continue // Applied as a layer parameter by constantAesthetics().
       }
       reasons.add("Unsupported ${context} aes '${key}' mapping type '${value.getClass().simpleName}'".toString())
     }
@@ -873,6 +940,48 @@ class GgCharmCompiler {
       return layerData
     }
     new Matrix('gg-plot', [], [], [])
+  }
+
+  /** True when an aesthetic mapping creates a derived data column. */
+  private static boolean derivesColumns(GgAes aes) {
+    if (aes == null) {
+      return false
+    }
+    AESTHETIC_KEYS.any { String key ->
+      Object value = aes.getAestheticValue(key)
+      value instanceof Factor || value instanceof CutWidth || value instanceof Expression || value instanceof Closure
+    }
+  }
+
+  /** Returns an isolated working copy when mapping will add derived columns. */
+  private static Matrix workingCopy(Matrix source, boolean needed) {
+    source == null || !needed ? source : source.clone()
+  }
+
+  private static final Set<CharmGeomType> SOLID_POINT_GEOMS = EnumSet.of(
+      CharmGeomType.POINT, CharmGeomType.JITTER, CharmGeomType.POINTRANGE, CharmGeomType.COUNT
+  )
+
+  /** Extracts {@code I(...)} aes constants as layer parameters. */
+  private static Map<String, Object> constantAesthetics(GgAes aes) {
+    Map<String, Object> constants = [:]
+    if (aes == null) {
+      return constants
+    }
+    AESTHETIC_KEYS.each { String key ->
+      Object value = aes.getAestheticValue(key)
+      if (value instanceof Identity) {
+        constants[key] = (value as Identity).value
+      }
+    }
+    constants
+  }
+
+  /** Gives solid point geoms their colour as fill unless fill is independently specified. */
+  private static void applyPointFillDefault(CharmGeomType type, Map<String, Object> params, Mapping mapping) {
+    if (type in SOLID_POINT_GEOMS && params[AES_COLOR] != null && params[AES_FILL] == null && mapping?.fill == null) {
+      params[AES_FILL] = params[AES_COLOR]
+    }
   }
 
   private static Labels mapLabels(Label source, Guides guides, List<GgScale> scales) {
