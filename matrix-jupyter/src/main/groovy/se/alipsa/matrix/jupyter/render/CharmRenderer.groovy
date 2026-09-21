@@ -1,5 +1,6 @@
 package se.alipsa.matrix.jupyter.render
 
+import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.PlotGrid
 import se.alipsa.matrix.jupyter.AbstractRenderer
@@ -13,7 +14,7 @@ class CharmRenderer extends AbstractRenderer {
   @Override Set<Class<?>> supportedTypes() { [Chart, PlotGrid] as LinkedHashSet }
   @Override String preferredMime() { 'image/svg+xml' }
   @Override MimeBundle render(Object value, RenderOptions options) {
-    def svg = value instanceof Chart ? ((Chart) value).render(options.width, options.height) : ((PlotGrid) value).render(options.width, options.height)
+    Svg svg = value instanceof Chart ? ((Chart) value).render(options.width, options.height) : ((PlotGrid) value).render(options.width, options.height)
     MimeBundle.svg(SvgSupport.xml(svg), value.toString())
   }
 }

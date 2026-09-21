@@ -6,7 +6,7 @@ Install `matrix-jupyter` on the kernel launch classpath (the guaranteed deployme
 
 ```groovy
 @Grab('se.alipsa.matrix:matrix-jupyter:0.1.0-SNAPSHOT')
-@Grab('se.alipsa.matrix:matrix-charts:0.5.1-SNAPSHOT')
+@Grab('se.alipsa.matrix:matrix-charts:0.6.0-SNAPSHOT')
 
 import se.alipsa.matrix.core.Matrix
 
@@ -27,12 +27,14 @@ plot(data) {
 
 `RenderOptions.defaults` controls tables and applicable chart sizes: `maxRows` and `maxColumns` default to `50` (use `null` for no limit), `fromHead` is `true`, `attr` is an empty map, and `width`/`height` are `800`/`600`. For example:
 
+Negative `maxRows`/`maxColumns` and non-positive `width`/`height` are rejected with an `IllegalArgumentException`.
+
 ```groovy
 import se.alipsa.matrix.jupyter.RenderOptions
 RenderOptions.defaults = new RenderOptions(20, 10, true, [class: 'matrix-table'], 1000, 700)
 ```
 
-Tables report truncation in a caption. Attribute values other than `caption` are passed through to `Matrix.toHtml` and are not escaped. `GgChart` dimensions are not changed because doing so would mutate the chart object.
+Tables report truncation in a caption. All attribute values, including `caption`, are passed to `Matrix.toHtml`, which HTML-escapes them. `GgChart` dimensions are not changed because doing so would mutate the chart object.
 
 Charm's built-in animation CSS is scoped to its SVG root. A stylesheet supplied through a chart is
 left unchanged, so scope custom rules yourself when several charts share a page:

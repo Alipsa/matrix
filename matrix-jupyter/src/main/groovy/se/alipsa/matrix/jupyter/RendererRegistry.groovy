@@ -30,7 +30,7 @@ class RendererRegistry {
   MimeBundle render(Object value, RenderOptions options = RenderOptions.defaults) {
     if (value == null) return null
     load()
-    MatrixRenderer renderer = findRenderer(value.class)
+    MatrixRenderer renderer = findRenderer(dispatch, value.class)
     if (renderer == null) return null
     try {
       renderer.render(value, options ?: RenderOptions.defaults)
@@ -44,7 +44,7 @@ class RendererRegistry {
   String plainText(Object value, RenderOptions options = RenderOptions.defaults) {
     if (value == null) return null
     load()
-    MatrixRenderer renderer = findRenderer(value.class)
+    MatrixRenderer renderer = findRenderer(dispatch, value.class)
     if (renderer == null) return null
     try {
       renderer.plainText(value, options ?: RenderOptions.defaults)
@@ -148,6 +148,12 @@ class RendererRegistry {
       boolean usable = mimeUsable(mime)
       if (!usable) log.warn("Renderer ${display} declared unsupported preferred MIME '${mime}'")
       Set<Class<?>> types = renderer.supportedTypes()
+      if (types == null || types.contains(null)) {
+        String reason = 'supportedTypes() must not be null or contain null'
+        log.warn("Renderer ${display} skipped: ${reason}")
+        missed << new SkippedRenderer(display, providerName, mime, usable, reason)
+        return
+      }
       Map<Class<?>, String> shadows = [:]
       types.each { Class<?> type ->
         MatrixRenderer winner = routes.putIfAbsent(type, renderer)
@@ -178,23 +184,21 @@ class RendererRegistry {
   private static String normalize(String mime) { mime?.trim() ?: 'text/html' }
   private static boolean mimeUsable(String mime) { mime ==~ '^[^\\s/;]+/[^\\s/;]+$' }
 
-  private MatrixRenderer findRenderer(Class<?> type) {
-    MatrixRenderer cached = dispatch[type]
-    if (cached != null) return cached
+  private static MatrixRenderer findRenderer(Map<Class<?>, MatrixRenderer> routes, Class<?> type) {
     Class<?> current = type
     while (current != null) {
-      cached = dispatch[current]
+      MatrixRenderer cached = routes[current]
       if (cached != null) return cached
-      MatrixRenderer fromInterface = current.interfaces.collect { findInterfaceRenderer(it) }.find { it != null }
+      MatrixRenderer fromInterface = current.interfaces.collect { findInterfaceRenderer(routes, it) }.find { it != null }
       if (fromInterface != null) return fromInterface
       current = current.superclass
     }
     null
   }
 
-  private MatrixRenderer findInterfaceRenderer(Class<?> type) {
-    MatrixRenderer direct = dispatch[type]
+  private static MatrixRenderer findInterfaceRenderer(Map<Class<?>, MatrixRenderer> routes, Class<?> type) {
+    MatrixRenderer direct = routes[type]
     if (direct != null) return direct
-    type.interfaces.collect { findInterfaceRenderer(it) }.find { it != null }
+    type.interfaces.collect { findInterfaceRenderer(routes, it) }.find { it != null }
   }
 }

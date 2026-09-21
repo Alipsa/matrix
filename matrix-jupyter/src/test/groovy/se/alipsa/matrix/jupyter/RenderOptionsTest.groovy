@@ -1,7 +1,9 @@
 package se.alipsa.matrix.jupyter
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertThrows
+import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
 
@@ -20,5 +22,29 @@ class RenderOptionsTest {
     assertEquals(1024, options.width)
     assertEquals(768, options.height)
     assertThrows(UnsupportedOperationException) { options.attr.id = 'table' }
+  }
+
+  @Test
+  void rejectsNegativeLimitsAndNonPositiveSizes() {
+    IllegalArgumentException rows = assertThrows(IllegalArgumentException) { new RenderOptions(-1, 50) }
+    IllegalArgumentException columns = assertThrows(IllegalArgumentException) { new RenderOptions(50, -1) }
+    IllegalArgumentException width = assertThrows(IllegalArgumentException) { new RenderOptions(50, 50, true, [:], 0, 600) }
+    IllegalArgumentException height = assertThrows(IllegalArgumentException) { new RenderOptions(50, 50, true, [:], 800, -5) }
+
+    assertTrue(rows.message.contains('maxRows'))
+    assertTrue(columns.message.contains('maxColumns'))
+    assertTrue(width.message.contains('width'))
+    assertTrue(height.message.contains('height'))
+  }
+
+  @Test
+  void allowsNullAndZeroLimits() {
+    RenderOptions unlimited = new RenderOptions(null, null)
+    RenderOptions zero = new RenderOptions(0, 0)
+
+    assertNull(unlimited.maxRows)
+    assertNull(unlimited.maxColumns)
+    assertEquals(0, zero.maxRows)
+    assertEquals(0, zero.maxColumns)
   }
 }

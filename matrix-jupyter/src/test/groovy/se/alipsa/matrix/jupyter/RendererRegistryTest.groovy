@@ -35,6 +35,31 @@ class RendererRegistryTest {
   }
 
   @Test
+  void skipsProvidersWhoseSupportedTypesContainNull() {
+    RendererRegistry registry = RendererRegistry.instance
+    registry.reload()
+
+    SkippedRenderer skipped = registry.skipped().find { it.rendererName == 'NullTypeRenderer' }
+
+    assertNotNull(skipped)
+    assertTrue(skipped.reason.contains('supportedTypes() must not be null or contain null'))
+    assertNull(registry.render(new NullTypeValue()))
+    assertTrue(registry.active().every { ActiveRenderer active -> !active.supportedTypes.contains(null) })
+  }
+
+  @Test
+  void skipsProvidersWhoseSupportedTypesIsNull() {
+    RendererRegistry registry = RendererRegistry.instance
+    registry.reload()
+
+    SkippedRenderer skipped = registry.skipped().find { it.rendererName == 'NullSetRenderer' }
+
+    assertNotNull(skipped)
+    assertTrue(skipped.reason.contains('supportedTypes() must not be null or contain null'))
+    assertNull(registry.active().find { ActiveRenderer active -> active.renderer.rendererName() == 'NullSetRenderer' })
+  }
+
+  @Test
   void dispatchesValuesThroughTheirImplementedInterface() {
     RendererRegistry registry = RendererRegistry.instance
     registry.reload()

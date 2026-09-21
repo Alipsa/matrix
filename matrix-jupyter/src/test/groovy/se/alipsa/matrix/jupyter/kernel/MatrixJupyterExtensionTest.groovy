@@ -62,6 +62,19 @@ class MatrixJupyterExtensionTest {
   }
 
   @Test
+  void installSurvivesAProviderWithANullSupportedType() {
+    TestKernel kernel = new TestKernel()
+    MatrixJupyterExtension extension = new MatrixJupyterExtension()
+    RendererRegistry.instance.reload()
+
+    extension.install(kernel)
+    DisplayData rendered = kernel.renderer.render(Matrix.builder().columns(value: [1]).build())
+
+    assertTrue(rendered.getData(MIMEType.TEXT_HTML).contains('>1</td>'))
+    extension.uninstall(kernel)
+  }
+
+  @Test
   void preservesMatrixContentForPlainOnlyRequests() {
     TestKernel kernel = new TestKernel()
     MatrixJupyterExtension extension = new MatrixJupyterExtension()

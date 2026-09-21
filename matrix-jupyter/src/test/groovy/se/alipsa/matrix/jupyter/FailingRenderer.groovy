@@ -28,6 +28,27 @@ class PlainOnlyValue {
   @Override String toString() { 'plain only value' }
 }
 
+/** Test-only renderer that violates the supportedTypes() contract with a null entry. */
+class NullTypeRenderer implements MatrixRenderer {
+  @Override String rendererName() { 'NullTypeRenderer' }
+  @Override boolean available() { true }
+  @Override Set<Class<?>> supportedTypes() { [NullTypeValue, null] as Set<Class<?>> }
+  @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.plain('null type') }
+}
+
+/** Value declared by {@link NullTypeRenderer}; must never be routed. */
+class NullTypeValue {
+  final String description = 'null supported type test value'
+}
+
+/** Test-only renderer that violates the supportedTypes() contract by returning null. */
+class NullSetRenderer implements MatrixRenderer {
+  @Override String rendererName() { 'NullSetRenderer' }
+  @Override boolean available() { true }
+  @Override Set<Class<?>> supportedTypes() { null }
+  @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.plain('null set') }
+}
+
 /** Test-only unavailable renderer that verifies discovery gating. */
 class UnavailableRenderer implements MatrixRenderer {
   @Override String rendererName() { 'UnavailableRenderer' }
