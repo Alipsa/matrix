@@ -2,6 +2,13 @@ package se.alipsa.matrix.xchart.abstractions
 
 import se.alipsa.matrix.core.Matrix
 
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.OffsetDateTime
+import java.time.ZonedDateTime
+
 /**
  * Deferred common configuration for Matrix XChart convenience builders.
  * An XChart instance is created only when a concrete builder calls {@code build()}.
@@ -18,6 +25,17 @@ abstract class ChartBuilder<B extends ChartBuilder<B>> {
   protected List<String> yColumns = []
   protected String xLabel
   protected String yLabel
+
+  /**
+   * Value types XChart 4.0.4 can place on an X-axis: numbers plus the date/time types that
+   * {@code org.knowm.xchart.internal.Utils.toEpochMillis} converts.
+   */
+  static final List<Class> AXIS_VALUE_TYPES = [
+      Number, Date, Instant, ZonedDateTime, OffsetDateTime, LocalDateTime, LocalDate, LocalTime
+  ].asImmutable()
+
+  /** Human readable list of {@link #AXIS_VALUE_TYPES} for error messages. */
+  static final String AXIS_VALUE_TYPES_MESSAGE = 'supported types are Number, Date, Instant, ZonedDateTime, OffsetDateTime, LocalDateTime, LocalDate and LocalTime'
 
   protected ChartBuilder(Matrix data) {
     if (data == null) {
@@ -51,6 +69,19 @@ abstract class ChartBuilder<B extends ChartBuilder<B>> {
     requireColumn(name)
     if (!Number.isAssignableFrom(data.type(name))) {
       throw new IllegalArgumentException("Column '$name' must be numeric")
+    }
+  }
+
+  /** Whether values of the given type can be plotted on an XChart X-axis. */
+  static boolean isAxisValueType(Class type) {
+    type != null && AXIS_VALUE_TYPES.any { Class supported -> supported.isAssignableFrom(type) }
+  }
+
+  protected void requireNumericOrTemporal(String name) {
+    requireColumn(name)
+    Class type = data.type(name)
+    if (!isAxisValueType(type)) {
+      throw new IllegalArgumentException("Column '$name' must be numeric or a date/time type, got ${type?.simpleName}; $AXIS_VALUE_TYPES_MESSAGE")
     }
   }
 

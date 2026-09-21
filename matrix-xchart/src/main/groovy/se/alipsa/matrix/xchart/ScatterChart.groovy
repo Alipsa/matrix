@@ -82,12 +82,12 @@ class ScatterChart extends AbstractXYChart<ScatterChart> {
    * @param seriesCol the name of the column used to group data into separate series
    * @param width optional chart width in pixels
    * @param height optional chart height in pixels
-   * @return a new ScatterChart instance with one series per unique value in seriesCol
+   * @return a new ScatterChart instance with one series per unique value in seriesCol, in order of first appearance
    */
   static ScatterChart create(String title, Matrix matrix, String xAxis, String yAxis, String seriesCol, Integer width = null, Integer height = null) {
     def chart = new ScatterChart(matrix, width, height)
     chart.title = title
-    def seriesVals = matrix[seriesCol].toSet()
+    List<?> seriesVals = matrix[seriesCol].unique(false)
     for (val in seriesVals) {
       def series = matrix.subset(seriesCol, val)
       chart.addSeries("$seriesCol=$val", series.column(xAxis), series.column(yAxis))
@@ -102,7 +102,7 @@ class ScatterChart extends AbstractXYChart<ScatterChart> {
     Builder(Matrix data) { super(data) }
     ScatterChart build() {
       requireXAndY()
-      requireNumeric(xColumn)
+      requireNumericOrTemporal(xColumn)
       yColumns.each { String column -> requireNumeric(column) }
       ScatterChart chart = ScatterChart.create(data, chartWidth, chartHeight)
       applyTo(chart)

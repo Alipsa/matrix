@@ -142,8 +142,6 @@ class BoxChart extends AbstractChart<BoxChart, org.knowm.xchart.BoxChart, BoxSty
   static class Builder extends ChartBuilder<Builder> {
     Builder(Matrix data) { super(data) }
     @Override Builder x(String columnName) { throw new IllegalArgumentException('BoxChart does not support x(...)') }
-    @Override Builder xAxisTitle(String title) { throw new IllegalArgumentException('BoxChart does not support xAxisTitle(...)') }
-    @Override Builder yAxisTitle(String title) { throw new IllegalArgumentException('BoxChart does not support yAxisTitle(...)') }
     BoxChart build() {
       if (yColumns.isEmpty()) {
         throw new IllegalStateException('y(...) must be called before build()')

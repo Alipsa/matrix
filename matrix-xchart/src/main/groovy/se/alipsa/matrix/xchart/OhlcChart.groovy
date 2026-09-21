@@ -27,7 +27,7 @@ import se.alipsa.matrix.xchart.abstractions.ChartBuilder
  * CSVFormat format = CSVFormat.Builder.create().setTrim(true).build()
  * Matrix gspc = CsvImporter.importCsv(url, format)
  *   .convert([
- *     Date: Date,
+ *     Date: LocalDate,
  *     Open: Number,
  *     High: Number,
  *     Low: Number,
@@ -93,28 +93,33 @@ class OhlcChart extends AbstractChart<OhlcChart, OHLCChart, OHLCStyler, OHLCSeri
    * @return this chart for method chaining
    */
   OhlcChart addSeries(String name, String xData, String open, String high, String low, String close) {
-    addSeries(name, matrix[xData] as List<Date>, matrix[open] as List<Number>, matrix[high] as List<Number>, matrix[low] as List<Number>, matrix[close] as List<Number>)
+    addSeries(name, matrix[xData] as List<?>, matrix[open] as List<Number>, matrix[high] as List<Number>, matrix[low] as List<Number>, matrix[close] as List<Number>)
   }
 
   /**
    * Add an OHLC series using lists of values.
    *
    * @param name the name for this series (displayed in legend)
-   * @param xData the date/time values for the X-axis
+   * @param xData the X-axis values: {@link Number}, {@link Date}, {@link java.time.Instant},
+   *        {@link java.time.ZonedDateTime}, {@link java.time.OffsetDateTime}, {@link java.time.LocalDateTime},
+   *        {@link java.time.LocalDate} or {@link java.time.LocalTime}; all values must be of the same kind
+   *        (numeric or date/time) and none may be null
    * @param open the opening price values
    * @param high the high price values
    * @param low the low price values
    * @param close the closing price values
    * @return this chart for method chaining
-   * @throws IllegalArgumentException if any list is null or lists have unequal lengths
+   * @throws IllegalArgumentException if any list is null, lists have unequal lengths, or xData contains
+   *         a null, an unsupported type, or mixes numeric and date/time values
    */
-  OhlcChart addSeries(String name, List<Date> xData, List<Number> open, List<Number> high, List<Number> low, List<Number> close) {
+  OhlcChart addSeries(String name, List<?> xData, List<Number> open, List<Number> high, List<Number> low, List<Number> close) {
     validateEqualLengths(xData, open, high, low, close)
+    validateXValues(xData)
     xchart.addSeries(name, xData, open, high, low, close)
     this
   }
 
-  private static void validateEqualLengths(List<Date> xData, List<Number> open, List<Number> high, List<Number> low, List<Number> close) {
+  private static void validateEqualLengths(List<?> xData, List<Number> open, List<Number> high, List<Number> low, List<Number> close) {
     Map<String, List> data = [
         xData: xData,
         open: open,
@@ -132,6 +137,34 @@ class OhlcChart extends AbstractChart<OhlcChart, OHLCChart, OHLCStyler, OHLCSeri
     }
   }
 
+  private static void validateXValues(List<?> xData) {
+    Boolean numeric = null
+    xData.eachWithIndex { Object value, int i ->
+      if (value == null) {
+        throw new IllegalArgumentException("OHLC xData must not contain null values (index $i)")
+      }
+      if (!isSupportedXValue(value.class)) {
+        throw new IllegalArgumentException("OHLC xData value at index $i has unsupported type ${value.class.simpleName}; ${ChartBuilder.AXIS_VALUE_TYPES_MESSAGE}")
+      }
+      boolean isNumber = value instanceof Number
+      if (numeric == null) {
+        numeric = isNumber
+      } else if (numeric != isNumber) {
+        throw new IllegalArgumentException("OHLC xData must not mix numeric and date/time values (index $i is ${value.class.simpleName})")
+      }
+    }
+  }
+
+  /**
+   * Whether values of the given type can be used on the OHLC X-axis.
+   *
+   * @param type the column/value type
+   * @return true for types that XChart can convert to an X-axis value
+   */
+  static boolean isSupportedXValue(Class type) {
+    ChartBuilder.isAxisValueType(type)
+  }
+
   /** Creates a deferred convenience builder. */
   static Builder builder(Matrix data) { new Builder(data) }
 
@@ -146,8 +179,9 @@ class OhlcChart extends AbstractChart<OhlcChart, OHLCChart, OHLCStyler, OHLCSeri
     Builder seriesName(String name) { seriesName = name; this }
     Builder date(String name) {
       requireColumn(name)
-      if (!Date.isAssignableFrom(data.type(name))) {
-        throw new IllegalArgumentException("Column '$name' must contain java.util.Date values")
+      Class type = data.type(name)
+      if (!isSupportedXValue(type)) {
+        throw new IllegalArgumentException("Column '$name' has type ${type?.simpleName}; ${ChartBuilder.AXIS_VALUE_TYPES_MESSAGE}")
       }
       dateColumn = name
       this

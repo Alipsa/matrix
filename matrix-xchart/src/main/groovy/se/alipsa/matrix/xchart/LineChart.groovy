@@ -63,7 +63,7 @@ class LineChart extends AbstractXYChart<LineChart> {
     Builder(Matrix data) { super(data) }
     LineChart build() {
       requireXAndY()
-      requireColumn(xColumn)
+      requireNumericOrTemporal(xColumn)
       yColumns.each { String column -> requireNumeric(column) }
       LineChart chart = LineChart.create(data, chartWidth, chartHeight)
       applyTo(chart)

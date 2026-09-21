@@ -109,8 +109,10 @@ class BubbleChart extends AbstractChart<BubbleChart, org.knowm.xchart.BubbleChar
    * @param valueCol the column containing bubble size values
    * @param transparency the fill alpha value (0 = fully transparent, 255 = fully opaque); defaults to 185
    * @return this chart for method chaining
+   * @throws IllegalArgumentException if xCol, yCol or valueCol is null
    */
   BubbleChart addSeries(Column xCol, Column yCol, Column valueCol, Integer transparency = 185) {
+    requireColumns(xCol, yCol, valueCol)
     addSeries(valueCol.name, xCol, yCol, valueCol, transparency)
   }
 
@@ -123,16 +125,26 @@ class BubbleChart extends AbstractChart<BubbleChart, org.knowm.xchart.BubbleChar
    * @param valueCol the column containing bubble size values
    * @param transparency the fill alpha value (0 = fully transparent, 255 = fully opaque); defaults to 185
    * @return this chart for method chaining
-   * @throws IllegalArgumentException if valueCol is null
+   * @throws IllegalArgumentException if xCol, yCol or valueCol is null
    */
   BubbleChart addSeries(String seriesName, Column xCol, Column yCol, Column valueCol, Integer transparency = 185) {
-    if (valueCol == null) {
-      throw new IllegalArgumentException('The valueCol is null, cannot add series')
-    }
+    requireColumns(xCol, yCol, valueCol)
     def s = xchart.addSeries(seriesName, xCol, yCol, valueCol)
     makeFillTransparent(s, numSeries, transparency)
     numSeries++
     this
+  }
+
+  private static void requireColumns(Column xCol, Column yCol, Column valueCol) {
+    if (xCol == null) {
+      throw new IllegalArgumentException('The xCol is null, cannot add series')
+    }
+    if (yCol == null) {
+      throw new IllegalArgumentException('The yCol is null, cannot add series')
+    }
+    if (valueCol == null) {
+      throw new IllegalArgumentException('The valueCol is null, cannot add series')
+    }
   }
 
   /** Creates a deferred convenience builder. */
