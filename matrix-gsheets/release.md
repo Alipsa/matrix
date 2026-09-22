@@ -4,6 +4,15 @@
 ### Behavior Changes
 - `GsAuthenticator.authenticate()` now throws `SheetOperationException` when authentication
   cannot be completed, instead of returning `null` (behaviour change).
+- `GsAuthenticator.authenticate()` now uses existing Application Default Credentials (ADC) only;
+  it no longer starts a browser login implicitly. When ADC are absent or lack a required scope,
+  the exception gives the exact `gcloud auth application-default login --scopes=...` command.
+  Local desktop applications can opt in with the new
+  `GsAuthenticator.authenticateInteractively(...)` API.
+- Authentication now requests only the scope needed for each operation: readers retain
+  `spreadsheets.readonly`, writers use `spreadsheets`, and `GsUtil.deleteSheet(String)` uses
+  `drive.file` rather than full Drive access. The latter can delete spreadsheets created or
+  opened by this application; delete other Drive files with a caller-managed `Drive` service.
 - Reject unsafe `Long`, `BigInteger`, and long-backed atomic integral values as well as
   `BigDecimal` values (behaviour change), avoiding silent IEEE-754 rounding.
 
@@ -27,6 +36,8 @@
   secrets when the filesystem cannot guarantee them; the ACL read-back check now tolerates
   providers that normalize entry flags (e.g. Windows/NTFS).
 - Treat null sheet names as `Sheet1` and correctly parse quoted sheet names containing `!`.
+- `testIntegration.sh` now verifies that local gcloud ADC grant cloud-platform, Sheets, and
+  `drive.file` before running the external integration tests.
 
 - Upgrade dependencies:
   - com.google.api-client:google-api-client 2.9.0 -> 2.9.1

@@ -2,9 +2,11 @@
 
 matrix-gsheets bundles its own "Desktop app" OAuth 2.0 client into the jar
 (`se/alipsa/matrix/gsheets/oauth/client_secret.json` on the classpath) so
-that no caller has to register their own OAuth client just to authenticate
-interactively — they get the standard Google consent screen out of the box
-(`GsAuthUtils.loginAndWriteAdc`).
+that a local developer can opt in to an interactive login without first
+registering their own OAuth client. The library never starts this flow
+implicitly: use `GsAuthenticator.authenticateInteractively(...)` when a
+desktop consent screen is appropriate. Normal reader and writer calls use
+existing Application Default Credentials (ADC) only.
 
 **The secret is not committed to git.** Although Google's OAuth docs say
 installed-app client secrets aren't confidential
@@ -42,3 +44,9 @@ at login time, pointing at the steps below.
 
 For CI-driven releases, store the client JSON as a CI secret and have the
 release job write it to `~/client_secret_desktop.json` before building.
+
+This desktop client is for local, user-driven authorization. Do not use its
+refresh tokens or user ADC as production service credentials. Production
+workloads should use the runtime's ADC mechanism, such as an attached service
+account or workload identity, and should provide their own Google Cloud project
+and OAuth consent configuration when acting on behalf of end users.

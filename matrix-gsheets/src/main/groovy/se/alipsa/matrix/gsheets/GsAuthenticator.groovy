@@ -13,8 +13,11 @@ import se.alipsa.matrix.core.util.Logger
 import java.security.GeneralSecurityException
 
 /**
- * Checks for Google Cloud authentication by checking for Application Default Credentials (ADC)
- * and delegates to the 'gcloud' SDK for an interactive login if needed.
+ * Obtains Google Cloud Application Default Credentials (ADC) for Google Sheets operations.
+ *
+ * <p>Normal library calls only use credentials that already exist. To start a desktop OAuth
+ * flow explicitly, call {@link #authenticateInteractively(List, String)} from an interactive
+ * application.
  */
 class GsAuthenticator {
 
@@ -52,15 +55,12 @@ class GsAuthenticator {
   private static final String GCLOUD_APP_DEFAULT = 'application-default'
   private static final String ENV_GOOGLE_CLOUD_PROJECT = 'GOOGLE_CLOUD_PROJECT'
   private static final String AUTHENTICATE_OPERATION = 'authenticate'
+  private static final String COMMA = ','
   private static final String AUTHENTICATION_FAILED = 'Authentication failed. Could not validate credentials after login, even after retrying.'
   private static final String MISSING_REQUIRED_SCOPES = 'Authentication succeeded but the granted token is missing required scopes.'
 
   static final List<String> SCOPES = [
-      SCOPE_CLOUD_PLATFORM,
-      SCOPE_SHEETS,
-      SCOPE_DRIVE_FILE,
-      SCOPE_OPENID,
-      SCOPE_USERINFO_EMAIL
+      SCOPE_SHEETS
   ]
 
   /** Pluggable authentication primitives, primarily for offline testing. */
@@ -89,10 +89,6 @@ class GsAuthenticator {
     // Always add cloud-platform (gcloud insists on this when --scopes is used)
     Set<String> s = new LinkedHashSet<>((scopes ?: Collections.<String> emptyList()))
     s.add(SCOPE_CLOUD_PLATFORM)
-    // Prefer write over readonly to avoid future “missing scope” churn
-    if (s.remove(SCOPE_SHEETS_READONLY)) {
-      s.add(SCOPE_SHEETS)
-    }
     s.remove('email') // never ask for short OIDC email; use userinfo.email
     return new ArrayList<>(s)
   }
@@ -166,7 +162,7 @@ class GsAuthenticator {
         // The command will run interactively in the user's terminal.
         //def command = ['gcloud', 'auth', 'login', '--update-adc', '--enable-gdrive-access']
         def command = [GCLOUD_CMD, GCLOUD_AUTH, GCLOUD_APP_DEFAULT, 'login',
-                       '--scopes', scopes.join(',')]
+                       '--scopes', scopes.join(COMMA)]
         def process = new ProcessBuilder(command)
             .inheritIO() // This connects the subprocess's I/O to the current terminal
             .start()
@@ -234,54 +230,98 @@ class GsAuthenticator {
   }
 
   /**
-   * Ensures that the user is authenticated with gcp.
+   * Obtains existing Application Default Credentials for a single scope.
    *
-   * @param scope the scope to grant access to.
-   * @return credentials, or throws {@link SheetOperationException} when authentication fails
+   * <p>This method does not open a browser or start a login process. If ADC are absent or do
+   * not grant the scope, its exception explains how to create them with gcloud.
+   *
+   * @param scope the required Google OAuth scope
+   * @return credentials, or throws {@link SheetOperationException} when ADC are unavailable
    */
   static GoogleCredentials authenticate(String scope) {
     authenticate([scope])
   }
 
   /**
-   * Ensures that the user is authenticated with gcp.
+   * Obtains existing Application Default Credentials for the requested scopes.
    *
-   * Requested scopes are merged into {@link #SCOPES} (cloud-platform, spreadsheets, drive.file,
-   * openid, and userinfo.email). A read-only spreadsheets scope is upgraded to read/write, so it
-   * may prompt for read/write consent.
+   * <p>This method does not initiate interactive authentication. On a developer machine, create
+   * the credentials once with the command in the resulting exception, or call
+   * {@link #authenticateInteractively(List, String)} explicitly. Production workloads should
+   * provide ADC through their environment or workload identity.
    *
-   * @param requestedScopes scopes to grant access to, defaulting to {@link #SCOPES}
-   * @param quotaProjectId optional quota project ID
-   * @return credentials, or throws {@link SheetOperationException} when authentication fails
+   * @param requestedScopes required scopes, defaulting to {@link #SCOPES}
+   * @param quotaProjectId retained for source compatibility; quota projects are read from ADC
+   * @return credentials, or throws {@link SheetOperationException} when ADC are unavailable
    */
   static GoogleCredentials authenticate(List<String> requestedScopes = SCOPES, String quotaProjectId = null) {
     authenticate(requestedScopes, quotaProjectId, DEFAULT_BACKEND)
   }
 
   /**
-   * Authenticates with the supplied backend. Requested scopes are merged into {@link #SCOPES},
-   * and read-only Sheets access is upgraded to read/write access.
+   * Obtains existing ADC with the supplied backend. This overload supports offline tests.
+   *
+   * @return credentials, or throws {@link SheetOperationException} when ADC are unavailable
+   */
+  static GoogleCredentials authenticate(List<String> requestedScopes, String quotaProjectId, AuthBackend backend) {
+    authenticate(requestedScopes, quotaProjectId, backend, false)
+  }
+
+  /**
+   * Explicitly starts desktop OAuth authentication for a single scope when existing ADC lack it.
+   *
+   * @param scope required Google OAuth scope
+   * @return credentials, or throws {@link SheetOperationException} when authentication fails
+   */
+  static GoogleCredentials authenticateInteractively(String scope) {
+    authenticateInteractively([scope])
+  }
+
+  /**
+   * Explicitly starts desktop OAuth authentication if existing ADC are unavailable.
+   *
+   * <p>Use this method only from a local, interactive application. It may open a browser and
+   * writes the resulting user ADC to the standard gcloud location. Server and background
+   * workloads should use workload-provided ADC instead.
+   *
+   * @param requestedScopes required scopes, defaulting to {@link #SCOPES}
+   * @param quotaProjectId optional quota project ID to record for the new ADC
+   * @return credentials, or throws {@link SheetOperationException} when authentication fails
+   */
+  static GoogleCredentials authenticateInteractively(List<String> requestedScopes = SCOPES,
+                                                      String quotaProjectId = null) {
+    authenticate(requestedScopes, quotaProjectId, DEFAULT_BACKEND, true)
+  }
+
+  /**
+   * Explicitly starts desktop OAuth authentication with the supplied backend. This overload
+   * supports offline tests.
    *
    * @return credentials, or throws {@link SheetOperationException} when authentication fails
    */
-  static GoogleCredentials authenticate(List<String> requestedScopes, String quotaProjectId, AuthBackend backend) {
-    List<String> scopes = SCOPES
-    if (requestedScopes) {
-      Set<String> effective = new LinkedHashSet<>(SCOPES)
-      effective.addAll(requestedScopes)
-      // Upgrade readonly to read-write once to avoid future churn
-      if (effective.remove(SCOPE_SHEETS_READONLY)) {
-        effective.add(SCOPE_SHEETS)
-      }
-      scopes = new ArrayList<>(effective)
-    }
+  static GoogleCredentials authenticateInteractively(List<String> requestedScopes,
+                                                      String quotaProjectId,
+                                                      AuthBackend backend) {
+    authenticate(requestedScopes, quotaProjectId, backend, true)
+  }
+
+  private static GoogleCredentials authenticate(List<String> requestedScopes,
+                                                String quotaProjectId,
+                                                AuthBackend backend,
+                                                boolean allowInteractiveLogin) {
+    List<String> scopes = effectiveScopes(requestedScopes)
 
     GoogleCredentials creds = backend.existing(new ArrayList<>(scopes))
     boolean hasScopes = creds != null && backend.hasAllScopes(creds, scopes)
-    if (!hasScopes) {
+    if (!hasScopes && allowInteractiveLogin) {
       creds = backend.login(scopes, quotaProjectId)
     }
 
+    if (!allowInteractiveLogin && !hasScopes) {
+      String message = adcSetupMessage(scopes)
+      log.error message
+      throw new SheetOperationException(AUTHENTICATE_OPERATION, message)
+    }
     if (creds == null) {
       log.error AUTHENTICATION_FAILED
       throw new SheetOperationException(AUTHENTICATE_OPERATION, AUTHENTICATION_FAILED)
@@ -291,7 +331,7 @@ class GsAuthenticator {
       throw new SheetOperationException(AUTHENTICATE_OPERATION, MISSING_REQUIRED_SCOPES)
     }
 
-    // Only try userinfo if we actually asked for it
+    // Only try userinfo when the caller explicitly requested it.
     boolean wantEmail = scopes.any { it == SCOPE_USERINFO_EMAIL || it == SCOPE_OPENID }
     if (wantEmail) {
       def email = backend.userEmail(creds)
@@ -300,6 +340,18 @@ class GsAuthenticator {
       log.info 'Google Cloud is authenticated.'
     }
     creds
+  }
+
+  private static List<String> effectiveScopes(List<String> requestedScopes) {
+    new ArrayList<>(new LinkedHashSet<>(requestedScopes ?: SCOPES))
+  }
+
+  private static String adcSetupMessage(List<String> scopes) {
+    String gcloudScopes = normalizeScopesForGcloud(scopes).join(COMMA)
+    'Application Default Credentials with the required Google scopes are unavailable. Run ' +
+        "'gcloud auth application-default login --scopes=${gcloudScopes}', set " +
+        'GOOGLE_APPLICATION_CREDENTIALS to suitable workload credentials, or call ' +
+        'GsAuthenticator.authenticateInteractively(...) from an interactive desktop application.'
   }
 
   /**
@@ -387,9 +439,9 @@ class GsAuthenticator {
    */
   static void main(String[] args) {
     if (args.length > 0) {
-      authenticate(args.collect() as List)
+      authenticateInteractively(args.collect() as List)
     } else {
-      authenticate()
+      authenticateInteractively()
     }
   }
 

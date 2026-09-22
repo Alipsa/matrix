@@ -43,12 +43,23 @@ class GsUtil {
   private static final int MAX_DOUBLE_SAFE_PRECISION = 15
   private static final BigInteger MAX_EXACT_DOUBLE_INTEGER = 9007199254740992G
 
+  /**
+   * Deletes a spreadsheet using existing Application Default Credentials.
+   *
+   * <p>The credentials require the {@code drive.file} scope and can therefore delete a file
+   * created or opened by this application. To delete other Drive files, construct a Drive service
+   * with separately managed credentials and use {@link #deleteSheet(String, Drive)}.
+   *
+   * @param spreadsheetId the ID of the spreadsheet to delete
+   * @throws IllegalArgumentException if {@code spreadsheetId} is null or blank
+   * @throws SheetOperationException if credential acquisition or deletion fails
+   */
   static void deleteSheet(String spreadsheetId) {
     if (spreadsheetId == null || spreadsheetId.trim().isEmpty()) {
       throw new IllegalArgumentException(SPREADSHEET_ID_ERROR)
     }
 
-    def scopes = ['https://www.googleapis.com/auth/drive'] + GsAuthenticator.SCOPES
+    def scopes = [GsAuthenticator.SCOPE_DRIVE_FILE]
     def credentials = GsAuthenticator.authenticate(scopes)
     HttpRequestInitializer cred = new HttpCredentialsAdapter(credentials)
     def transport = GoogleNetHttpTransport.newTrustedTransport()

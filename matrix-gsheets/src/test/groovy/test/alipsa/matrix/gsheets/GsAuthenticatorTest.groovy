@@ -31,14 +31,14 @@ class GsAuthenticatorTest {
   }
 
   @Test
-  void testNormalizeScopesForGcloudUpgradesReadonly() {
+  void testNormalizeScopesForGcloudPreservesReadonly() {
     def scopes = [SCOPE_SHEETS_READONLY]
     def normalized = GsAuthenticator.normalizeScopesForGcloud(scopes)
 
-    assertTrue(normalized.contains(SCOPE_SHEETS),
-      'Should upgrade readonly to full sheets scope')
-    assertFalse(normalized.contains(SCOPE_SHEETS_READONLY),
-      'Should remove readonly after upgrading')
+    assertTrue(normalized.contains(SCOPE_SHEETS_READONLY),
+      'Should retain the requested readonly scope')
+    assertFalse(normalized.contains(SCOPE_SHEETS),
+      'Should not upgrade readonly access to read/write')
   }
 
   @Test
@@ -104,13 +104,10 @@ class GsAuthenticatorTest {
 
   @Test
   void testDefaultScopes() {
-    // Verify SCOPES contains the expected default scopes
+    // Verify SCOPES contains only the default write scope
     assertNotNull(SCOPES)
-    assertTrue(SCOPES.contains(SCOPE_CLOUD_PLATFORM))
     assertTrue(SCOPES.contains(SCOPE_SHEETS))
-    assertTrue(SCOPES.contains(SCOPE_DRIVE_FILE))
-    assertTrue(SCOPES.contains(SCOPE_OPENID))
-    assertTrue(SCOPES.contains(SCOPE_USERINFO_EMAIL))
+    assertEquals([SCOPE_SHEETS], SCOPES)
   }
 
   @Test
@@ -122,10 +119,11 @@ class GsAuthenticatorTest {
   }
 
   @Test
-  void testAuthenticateThrowsUsefulExceptionWhenLoginCannotProduceCredentials() {
+  void testAuthenticateDoesNotStartInteractiveLoginWhenAdcIsUnavailable() {
+    int logins = 0
     def backend = [
         existing    : { List<String> scopes -> null },
-        login       : { List<String> scopes, String quotaProject -> null },
+        login       : { List<String> scopes, String quotaProject -> logins++; null },
         hasAllScopes: { GoogleCredentials creds, List<String> scopes -> false },
         userEmail   : { GoogleCredentials creds -> 'stub@example.test' }
     ] as GsAuthenticator.AuthBackend
@@ -133,7 +131,8 @@ class GsAuthenticatorTest {
     SheetOperationException exception = assertThrows(SheetOperationException,
         () -> GsAuthenticator.authenticate([SCOPE_SHEETS], null, backend))
     assertEquals('authenticate', exception.operation)
-    assertTrue(exception.message.contains('Authentication failed'))
+    assertTrue(exception.message.contains('gcloud auth application-default login --scopes='))
+    assertEquals(0, logins)
   }
 
   @Test
@@ -152,7 +151,22 @@ class GsAuthenticatorTest {
   }
 
   @Test
-  void testAuthenticateUsesLoginPathAndRejectsMissingScopes() {
+  void testAuthenticateDoesNotMergeUnrequestedScopes() {
+    GoogleCredentials credentials = credentials()
+    List<String> requested = []
+    def backend = [
+        existing    : { List<String> scopes -> requested = scopes; credentials },
+        login       : { List<String> scopes, String quotaProject -> fail('Login must not be called'); null },
+        hasAllScopes: { GoogleCredentials creds, List<String> scopes -> true },
+        userEmail   : { GoogleCredentials creds -> 'stub@example.test' }
+    ] as GsAuthenticator.AuthBackend
+
+    assertSame(credentials, GsAuthenticator.authenticate([SCOPE_SHEETS_READONLY], null, backend))
+    assertEquals([SCOPE_SHEETS_READONLY], requested)
+  }
+
+  @Test
+  void testAuthenticateInteractivelyUsesLoginPathAndRejectsMissingScopes() {
     GoogleCredentials credentials = credentials()
     int logins = 0
     def backend = [
@@ -163,7 +177,7 @@ class GsAuthenticatorTest {
     ] as GsAuthenticator.AuthBackend
 
     SheetOperationException exception = assertThrows(SheetOperationException,
-        () -> GsAuthenticator.authenticate([SCOPE_SHEETS], null, backend))
+        () -> GsAuthenticator.authenticateInteractively([SCOPE_SHEETS], null, backend))
     assertTrue(exception.message.contains('missing required scopes'))
     assertEquals(1, logins)
   }

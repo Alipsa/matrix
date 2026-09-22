@@ -245,10 +245,10 @@ class GsAuthUtils {
       if (cause instanceof IOException) {
         if (cause.message?.startsWith(TOKENINFO_REJECTED)) {
           log.warn("OAuth scope verification rejected the access token (${cause.message}); " +
-              'it is invalid or revoked. Treating credentials as unverified and attempting login.')
+              'it is invalid or revoked. Treating credentials as unverified.')
         } else {
           log.warn("OAuth scope verification was unavailable (${cause.message}); " +
-              'treating credentials as unverified and attempting login.')
+              'treating credentials as unverified.')
         }
         log.debug('OAuth scope verification failure details', cause)
         return false
@@ -272,7 +272,7 @@ class GsAuthUtils {
   /**
    * Fetches the scopes Google granted to an access token. Connect and read timeouts are set so
    * a hung request fails into the "verification unavailable" path instead of blocking
-   * {@link #hasAllScopes(GoogleCredentials, List)} (and thus authenticate()) indefinitely.
+   * {@link #hasAllScopes(GoogleCredentials, List)} (and thus authentication) indefinitely.
    */
   @CompileDynamic
   static Set<String> fetchGrantedScopes(String token) throws IOException {

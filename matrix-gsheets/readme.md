@@ -3,6 +3,37 @@
 
 # Usage
 
+## Authentication
+
+Matrix-gsheets uses existing Application Default Credentials (ADC) and never starts a browser
+from a reader, writer, or utility call. For local development, create user ADC once with the
+minimum scopes needed for the examples and integration tests:
+
+```bash
+gcloud auth application-default login \
+  --scopes=https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/spreadsheets,https://www.googleapis.com/auth/drive.file
+```
+
+`spreadsheets` permits reads and writes; `drive.file` permits this application to delete the
+spreadsheets that it created or opened. Read-only applications can use
+`https://www.googleapis.com/auth/spreadsheets.readonly` instead of `spreadsheets`.
+
+For a local desktop application that deliberately wants the library to run the OAuth consent
+flow, call it explicitly before using the API:
+
+```groovy
+import se.alipsa.matrix.gsheets.GsAuthenticator
+
+GsAuthenticator.authenticateInteractively([
+    GsAuthenticator.SCOPE_SHEETS,
+    GsAuthenticator.SCOPE_DRIVE_FILE
+])
+```
+
+Production workloads should provide ADC through their runtime environment (for example, an
+attached service account or workload identity). Pass `GoogleCredentials` explicitly when the
+application owns credential selection.
+
 Assuming a dataset like this:
 ```groovy
 import se.alipsa.matrix.core.Matrix

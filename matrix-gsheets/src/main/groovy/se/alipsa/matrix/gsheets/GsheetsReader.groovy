@@ -16,7 +16,7 @@ import se.alipsa.matrix.core.Matrix
  *
  * <h3>Authentication</h3>
  * If no credentials are provided, the reader will attempt to use Application Default Credentials (ADC).
- * For interactive authentication, use {@link GsAuthenticator#authenticate()}.
+ * For local interactive authentication, use {@link GsAuthenticator#authenticateInteractively()}.
  *
  * <h3>Usage Examples</h3>
  * <pre>{@code

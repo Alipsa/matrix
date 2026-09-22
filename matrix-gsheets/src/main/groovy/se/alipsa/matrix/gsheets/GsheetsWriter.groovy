@@ -34,7 +34,7 @@ import java.time.LocalDateTime
  *
  * <h3>Authentication</h3>
  * If no credentials are provided, the writer will attempt to use Application Default Credentials (ADC).
- * For interactive authentication, use {@link GsAuthenticator#authenticate()}.
+ * For local interactive authentication, use {@link GsAuthenticator#authenticateInteractively()}.
  *
  * <h3>Setup Requirements</h3>
  * Before using the writer, ensure your Google Cloud project has the required APIs enabled:
@@ -329,7 +329,7 @@ class GsheetsWriter {
                        boolean convertNullsToEmptyString = true,
                        boolean convertDatesToSerial = false) {
     // Local input validation only (no start-cell/formatting checks): fail fast on bad
-    // input before authenticate() can trigger an interactive login. updateWithService
+    // input before authenticate() can require Application Default Credentials. updateWithService
     // performs the full preflight, so this must not call preflightUpdate() here.
     validateUpdateInputs(spreadsheetId, range, matrix)
     Sheets sheets = buildSheetsService(credentials)
