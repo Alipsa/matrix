@@ -6,6 +6,7 @@ se.alipsa.matrix.jupyter.FailingRenderer
 se.alipsa.matrix.jupyter.PlainOnlyRenderer
 se.alipsa.matrix.jupyter.NullTypeRenderer
 se.alipsa.matrix.jupyter.NullSetRenderer
+se.alipsa.matrix.jupyter.SetOfRenderer
 se.alipsa.matrix.jupyter.UnavailableRenderer
 se.alipsa.matrix.jupyter.DuplicateMatrixRenderer
 se.alipsa.matrix.jupyter.InvalidMimeRenderer

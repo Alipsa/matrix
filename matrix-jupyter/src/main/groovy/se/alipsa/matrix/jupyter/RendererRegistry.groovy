@@ -148,7 +148,7 @@ class RendererRegistry {
       boolean usable = mimeUsable(mime)
       if (!usable) log.warn("Renderer ${display} declared unsupported preferred MIME '${mime}'")
       Set<Class<?>> types = renderer.supportedTypes()
-      if (types == null || types.contains(null)) {
+      if (types == null || types.any { it == null }) {
         String reason = 'supportedTypes() must not be null or contain null'
         log.warn("Renderer ${display} skipped: ${reason}")
         missed << new SkippedRenderer(display, providerName, mime, usable, reason)

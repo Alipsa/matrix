@@ -60,6 +60,18 @@ class RendererRegistryTest {
   }
 
   @Test
+  void discoversRenderersThatUseNullHostileImmutableSupportedTypeSets() {
+    RendererRegistry registry = RendererRegistry.instance
+    registry.reload()
+
+    MimeBundle bundle = registry.render(new SetOfValue())
+
+    assertTrue(registry.active().any { it.renderer.rendererName() == 'SetOfRenderer' })
+    assertNull(registry.skipped().find { it.rendererName == 'SetOfRenderer' })
+    assertEquals('<b>set of</b>', bundle['text/html'])
+  }
+
+  @Test
   void dispatchesValuesThroughTheirImplementedInterface() {
     RendererRegistry registry = RendererRegistry.instance
     registry.reload()

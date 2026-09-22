@@ -49,6 +49,19 @@ class NullSetRenderer implements MatrixRenderer {
   @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.plain('null set') }
 }
 
+/** Test-only renderer whose immutable supported-type set rejects null membership checks. */
+class SetOfRenderer implements MatrixRenderer {
+  @Override String rendererName() { 'SetOfRenderer' }
+  @Override boolean available() { true }
+  @Override Set<Class<?>> supportedTypes() { Set.of(SetOfValue) }
+  @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.html('<b>set of</b>', 'set of') }
+}
+
+/** Value handled by {@link SetOfRenderer}. */
+class SetOfValue {
+  final String description = 'Set.of supported type test value'
+}
+
 /** Test-only unavailable renderer that verifies discovery gating. */
 class UnavailableRenderer implements MatrixRenderer {
   @Override String rendererName() { 'UnavailableRenderer' }
