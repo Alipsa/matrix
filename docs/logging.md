@@ -18,8 +18,8 @@ discover the grabbed provider and Log4j bridge:
 
 ```groovy
 @GrabConfig(systemClassLoader=true)
-@Grab('se.alipsa.matrix:matrix-core:3.9.0')
-@Grab('se.alipsa.matrix:matrix-logging:0.1.2')
+@Grab('se.alipsa.matrix:matrix-core:3.9.1')
+@Grab('se.alipsa.matrix:matrix-logging:0.1.3')
 import se.alipsa.matrix.core.Matrix
 ```
 

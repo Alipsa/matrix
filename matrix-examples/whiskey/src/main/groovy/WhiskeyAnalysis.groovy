@@ -6,8 +6,8 @@
 
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.csv.*
-import se.alipsa.matrix.stats.dimred.Pca
 import se.alipsa.matrix.pict.*
+import se.alipsa.matrix.stats.dimred.Pca
 
 m = CsvImporter.importCsv('https://www.niss.org/sites/default/files/ScotchWhisky01.txt')
     .drop('RowID')
