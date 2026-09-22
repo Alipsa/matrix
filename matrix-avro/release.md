@@ -12,6 +12,7 @@
 - The writer reads raw column values, so declared `int`/`long` columns accept losslessly convertible numeric values (for example `5L` or `2.0d` in an `Integer` column) and reject lossy conversions (fractional, out-of-range, or non-finite values) with column and row context instead of silently narrowing them.
 - Dependency upgrades
   - org.apache.avro:avro 1.12.1 -> 1.12.2
+
 ## v0.3.0 2026-05-01
 - matrix-avro now compiles Groovy statically by default via config/groovy/compileStatic.groovy; explicit @CompileStatic annotations were removed.
 - CodeNarc is now enforced for the module with ignoreFailures = false, and warnings were fixed.
