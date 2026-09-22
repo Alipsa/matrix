@@ -306,21 +306,17 @@ class ScaleXTime extends ScaleContinuous {
     String u = unitStr.toLowerCase().trim()
 
     // Handle both singular and plural forms explicitly
+    ChronoUnit unit
     switch (u) {
-      case 'second':
-      case 'seconds':
-        return ChronoUnit.SECONDS
-      case 'minute':
-      case 'minutes':
-        return ChronoUnit.MINUTES
-      case 'hour':
-      case 'hours':
-        return ChronoUnit.HOURS
-      default:
+      case 'second', 'seconds' -> unit = ChronoUnit.SECONDS
+      case 'minute', 'minutes' -> unit = ChronoUnit.MINUTES
+      case 'hour', 'hours' -> unit = ChronoUnit.HOURS
+      default ->
         throw new IllegalArgumentException(
           "Invalid time unit '${unitStr}'. Supported units: second/seconds, minute/minutes, hour/hours"
         )
     }
+    unit
   }
 
   private List<LocalTime> generateBreaksByUnit(LocalTime minTime, LocalTime maxTime, ChronoUnit unit, int step) {
@@ -357,51 +353,63 @@ class ScaleXTime extends ScaleContinuous {
   }
 
   private LocalTime roundTimeToUnit(LocalTime time, ChronoUnit unit, int step) {
+    LocalTime rounded
     switch (unit) {
-      case ChronoUnit.SECONDS:
+      case ChronoUnit.SECONDS -> {
         // Round down to nearest step boundary
         int totalSeconds = time.toSecondOfDay()
         int roundedSeconds = (totalSeconds.intdiv(step)) * step
-        return LocalTime.ofSecondOfDay(roundedSeconds)
-      case ChronoUnit.MINUTES:
+        rounded = LocalTime.ofSecondOfDay(roundedSeconds)
+      }
+      case ChronoUnit.MINUTES -> {
         // Round down to nearest step boundary
         int totalMinutes = time.hour * 60 + time.minute
         int roundedMinutes = (totalMinutes.intdiv(step)) * step
         int hours = roundedMinutes.intdiv(60)
         int minutes = roundedMinutes % 60
-        return LocalTime.of(hours, minutes, 0)
-      case ChronoUnit.HOURS:
+        rounded = LocalTime.of(hours, minutes, 0)
+      }
+      case ChronoUnit.HOURS -> {
         // Round down to nearest step boundary
         int roundedHours = (time.hour.intdiv(step)) * step
-        return LocalTime.of(roundedHours, 0, 0)
-      default:
-        return time.withSecond(0).withNano(0)
+        rounded = LocalTime.of(roundedHours, 0, 0)
+      }
+      default -> rounded = time.withSecond(0).withNano(0)
     }
+    rounded
   }
 
   private LocalTime advanceTime(LocalTime time, ChronoUnit unit, int step) {
+    LocalTime advanced
     switch (unit) {
-      case ChronoUnit.SECONDS:
+      case ChronoUnit.SECONDS -> {
         long newSeconds = time.toSecondOfDay() + step
         if (newSeconds >= 86400) {
-          return null  // Exceeds valid time range
+          advanced = null  // Exceeds valid time range
+        } else {
+          advanced = LocalTime.ofSecondOfDay(newSeconds)
         }
-        return LocalTime.ofSecondOfDay(newSeconds)
-      case ChronoUnit.MINUTES:
+      }
+      case ChronoUnit.MINUTES -> {
         long totalSeconds = time.toSecondOfDay() + (step * 60L)
         if (totalSeconds >= 86400) {
-          return null  // Would wrap past midnight
+          advanced = null  // Would wrap past midnight
+        } else {
+          advanced = LocalTime.ofSecondOfDay(totalSeconds)
         }
-        return LocalTime.ofSecondOfDay(totalSeconds)
-      case ChronoUnit.HOURS:
+      }
+      case ChronoUnit.HOURS -> {
         long secondsFromHours = time.toSecondOfDay() + (step * 3600L)
         if (secondsFromHours >= 86400) {
-          return null  // Would wrap past midnight
+          advanced = null  // Would wrap past midnight
+        } else {
+          advanced = LocalTime.ofSecondOfDay(secondsFromHours)
         }
-        return LocalTime.ofSecondOfDay(secondsFromHours)
-      default:
+      }
+      default ->
         throw new IllegalArgumentException("Unsupported ChronoUnit: ${unit}")
     }
+    advanced
   }
 
   /**

@@ -6,6 +6,12 @@ package se.alipsa.matrix.gg.scale
  */
 class ScaleColorDistiller extends ScaleColorGradientN {
 
+  private static final Map<String, String> TYPE_PALETTES = [
+      div : 'Spectral',
+      qual: 'Set1'
+  ]
+  private static final String DEFAULT_PALETTE = 'Blues'
+
   /** Palette name (e.g. Blues, Spectral). */
   String palette
 
@@ -61,14 +67,6 @@ class ScaleColorDistiller extends ScaleColorGradientN {
     if (palette != null && BrewerPalettes.getPalette(palette) != null) {
       return palette
     }
-    switch (type?.toLowerCase()) {
-      case 'div':
-        return 'Spectral'
-      case 'qual':
-        return 'Set1'
-      case 'seq':
-      default:
-        return 'Blues'
-    }
+    TYPE_PALETTES[type?.toLowerCase()] ?: DEFAULT_PALETTE
   }
 }

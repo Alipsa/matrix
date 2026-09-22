@@ -283,16 +283,18 @@ class ScaleXDatetime extends ScaleContinuous {
 
   private ChronoUnit parseUnit(String unitStr) {
     String u = unitStr.toLowerCase().replaceAll('s$', '')  // Remove plural 's'
+    ChronoUnit unit
     switch (u) {
-      case 'second': return ChronoUnit.SECONDS
-      case 'minute': return ChronoUnit.MINUTES
-      case 'hour': return ChronoUnit.HOURS
-      case 'day': return ChronoUnit.DAYS
-      case 'week': return ChronoUnit.WEEKS
-      case 'month': return ChronoUnit.MONTHS
-      case 'year': return ChronoUnit.YEARS
-      default: return ChronoUnit.HOURS
+      case 'second' -> unit = ChronoUnit.SECONDS
+      case 'minute' -> unit = ChronoUnit.MINUTES
+      case 'hour' -> unit = ChronoUnit.HOURS
+      case 'day' -> unit = ChronoUnit.DAYS
+      case 'week' -> unit = ChronoUnit.WEEKS
+      case 'month' -> unit = ChronoUnit.MONTHS
+      case 'year' -> unit = ChronoUnit.YEARS
+      default -> unit = ChronoUnit.HOURS
     }
+    unit
   }
 
   private List<LocalDateTime> generateBreaksByUnit(LocalDateTime minDt, LocalDateTime maxDt, ChronoUnit unit, int step) {
@@ -312,45 +314,33 @@ class ScaleXDatetime extends ScaleContinuous {
   }
 
   private LocalDateTime roundDatetimeToUnit(LocalDateTime dt, ChronoUnit unit) {
+    LocalDateTime rounded
     switch (unit) {
-      case ChronoUnit.SECONDS:
-        return dt.withNano(0)
-      case ChronoUnit.MINUTES:
-        return dt.withSecond(0).withNano(0)
-      case ChronoUnit.HOURS:
-        return dt.withMinute(0).withSecond(0).withNano(0)
-      case ChronoUnit.DAYS:
-        return dt.toLocalDate().atStartOfDay()
-      case ChronoUnit.WEEKS:
-        return dt.minusDays(dt.getDayOfWeek().getValue() - 1).toLocalDate().atStartOfDay()
-      case ChronoUnit.MONTHS:
-        return dt.withDayOfMonth(1).toLocalDate().atStartOfDay()
-      case ChronoUnit.YEARS:
-        return dt.withDayOfYear(1).toLocalDate().atStartOfDay()
-      default:
-        return dt
+      case ChronoUnit.SECONDS -> rounded = dt.withNano(0)
+      case ChronoUnit.MINUTES -> rounded = dt.withSecond(0).withNano(0)
+      case ChronoUnit.HOURS -> rounded = dt.withMinute(0).withSecond(0).withNano(0)
+      case ChronoUnit.DAYS -> rounded = dt.toLocalDate().atStartOfDay()
+      case ChronoUnit.WEEKS -> rounded = dt.minusDays(dt.getDayOfWeek().getValue() - 1).toLocalDate().atStartOfDay()
+      case ChronoUnit.MONTHS -> rounded = dt.withDayOfMonth(1).toLocalDate().atStartOfDay()
+      case ChronoUnit.YEARS -> rounded = dt.withDayOfYear(1).toLocalDate().atStartOfDay()
+      default -> rounded = dt
     }
+    rounded
   }
 
   private LocalDateTime advanceDatetime(LocalDateTime dt, ChronoUnit unit, int step) {
+    LocalDateTime advanced
     switch (unit) {
-      case ChronoUnit.SECONDS:
-        return dt.plusSeconds(step)
-      case ChronoUnit.MINUTES:
-        return dt.plusMinutes(step)
-      case ChronoUnit.HOURS:
-        return dt.plusHours(step)
-      case ChronoUnit.DAYS:
-        return dt.plusDays(step)
-      case ChronoUnit.WEEKS:
-        return dt.plusWeeks(step)
-      case ChronoUnit.MONTHS:
-        return dt.plusMonths(step)
-      case ChronoUnit.YEARS:
-        return dt.plusYears(step)
-      default:
-        return dt.plusHours(step)
+      case ChronoUnit.SECONDS -> advanced = dt.plusSeconds(step)
+      case ChronoUnit.MINUTES -> advanced = dt.plusMinutes(step)
+      case ChronoUnit.HOURS -> advanced = dt.plusHours(step)
+      case ChronoUnit.DAYS -> advanced = dt.plusDays(step)
+      case ChronoUnit.WEEKS -> advanced = dt.plusWeeks(step)
+      case ChronoUnit.MONTHS -> advanced = dt.plusMonths(step)
+      case ChronoUnit.YEARS -> advanced = dt.plusYears(step)
+      default -> advanced = dt.plusHours(step)
     }
+    advanced
   }
 
   /**

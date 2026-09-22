@@ -63,28 +63,17 @@ class GgCharmAnnotationMapper {
       return []
     }
 
+    List<AnnotationSpec> annotations
     switch (geomSpec.type) {
-      case CharmGeomType.CUSTOM:
-        return mapCustomAnnotationLayer(layer, idx, reasons)
-      case CharmGeomType.LOGTICKS:
-        return mapLogticksAnnotationLayer(layer, idx)
-      case CharmGeomType.RASTER_ANN:
-        return mapRasterAnnotationLayer(layer, idx, reasons)
-      case CharmGeomType.MAP:
-        if (!layer.inheritAes) {
-          return mapMapAnnotationLayer(layer, idx, reasons)
-        }
-        return []
-      case CharmGeomType.TEXT:
-      case CharmGeomType.RECT:
-      case CharmGeomType.SEGMENT:
-        if (!layer.inheritAes) {
-          return mapInlineAnnotationLayer(layer, geomSpec.type, idx, reasons)
-        }
-        return []
-      default:
-        return []
+      case CharmGeomType.CUSTOM -> annotations = mapCustomAnnotationLayer(layer, idx, reasons)
+      case CharmGeomType.LOGTICKS -> annotations = mapLogticksAnnotationLayer(layer, idx)
+      case CharmGeomType.RASTER_ANN -> annotations = mapRasterAnnotationLayer(layer, idx, reasons)
+      case CharmGeomType.MAP -> annotations = !layer.inheritAes ? mapMapAnnotationLayer(layer, idx, reasons) : []
+      case CharmGeomType.TEXT, CharmGeomType.RECT, CharmGeomType.SEGMENT ->
+        annotations = !layer.inheritAes ? mapInlineAnnotationLayer(layer, geomSpec.type, idx, reasons) : []
+      default -> annotations = []
     }
+    annotations
   }
 
   private static List<AnnotationSpec> mapCustomAnnotationLayer(Layer layer, int idx, List<String> reasons) {
@@ -210,16 +199,14 @@ class GgCharmAnnotationMapper {
       return []
     }
 
+    List<AnnotationSpec> annotations
     switch (type) {
-      case CharmGeomType.TEXT:
-        return mapTextAnnotations(data, aes, layer.params, idx, reasons)
-      case CharmGeomType.RECT:
-        return mapRectAnnotations(data, aes, layer.params, idx, reasons)
-      case CharmGeomType.SEGMENT:
-        return mapSegmentAnnotations(data, aes, layer.params, idx, reasons)
-      default:
-        return []
+      case CharmGeomType.TEXT -> annotations = mapTextAnnotations(data, aes, layer.params, idx, reasons)
+      case CharmGeomType.RECT -> annotations = mapRectAnnotations(data, aes, layer.params, idx, reasons)
+      case CharmGeomType.SEGMENT -> annotations = mapSegmentAnnotations(data, aes, layer.params, idx, reasons)
+      default -> annotations = []
     }
+    annotations
   }
 
   @SuppressWarnings('UnnecessaryToString')

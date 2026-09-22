@@ -281,14 +281,16 @@ class ScaleXDate extends ScaleContinuous {
 
   private ChronoUnit parseUnit(String unitStr) {
     String u = unitStr.toLowerCase().replaceAll('s$', '')  // Remove plural 's'
+    ChronoUnit unit
     switch (u) {
-      case 'day': return ChronoUnit.DAYS
-      case 'week': return ChronoUnit.WEEKS
-      case 'month': return ChronoUnit.MONTHS
-      case 'year': return ChronoUnit.YEARS
-      case 'quarter': return ChronoUnit.MONTHS  // Will use step=3
-      default: return ChronoUnit.DAYS
+      case 'day' -> unit = ChronoUnit.DAYS
+      case 'week' -> unit = ChronoUnit.WEEKS
+      case 'month' -> unit = ChronoUnit.MONTHS
+      case 'year' -> unit = ChronoUnit.YEARS
+      case 'quarter' -> unit = ChronoUnit.MONTHS  // Will use step=3
+      default -> unit = ChronoUnit.DAYS
     }
+    unit
   }
 
   private List<LocalDate> generateBreaksByUnit(LocalDate minDate, LocalDate maxDate, ChronoUnit unit, int step) {
@@ -308,33 +310,27 @@ class ScaleXDate extends ScaleContinuous {
   }
 
   private LocalDate roundDateToUnit(LocalDate date, ChronoUnit unit) {
+    LocalDate rounded
     switch (unit) {
-      case ChronoUnit.DAYS:
-        return date
-      case ChronoUnit.WEEKS:
-        return date.minusDays(date.getDayOfWeek().getValue() - 1)
-      case ChronoUnit.MONTHS:
-        return date.withDayOfMonth(1)
-      case ChronoUnit.YEARS:
-        return date.withDayOfYear(1)
-      default:
-        return date
+      case ChronoUnit.DAYS -> rounded = date
+      case ChronoUnit.WEEKS -> rounded = date.minusDays(date.getDayOfWeek().getValue() - 1)
+      case ChronoUnit.MONTHS -> rounded = date.withDayOfMonth(1)
+      case ChronoUnit.YEARS -> rounded = date.withDayOfYear(1)
+      default -> rounded = date
     }
+    rounded
   }
 
   private LocalDate advanceDate(LocalDate date, ChronoUnit unit, int step) {
+    LocalDate advanced
     switch (unit) {
-      case ChronoUnit.DAYS:
-        return date.plusDays(step)
-      case ChronoUnit.WEEKS:
-        return date.plusWeeks(step)
-      case ChronoUnit.MONTHS:
-        return date.plusMonths(step)
-      case ChronoUnit.YEARS:
-        return date.plusYears(step)
-      default:
-        return date.plusDays(step)
+      case ChronoUnit.DAYS -> advanced = date.plusDays(step)
+      case ChronoUnit.WEEKS -> advanced = date.plusWeeks(step)
+      case ChronoUnit.MONTHS -> advanced = date.plusMonths(step)
+      case ChronoUnit.YEARS -> advanced = date.plusYears(step)
+      default -> advanced = date.plusDays(step)
     }
+    advanced
   }
 
   /**

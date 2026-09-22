@@ -126,14 +126,11 @@ class ScaleColorBrewer extends ScaleDiscrete {
     if (BrewerPalettes.getPalette(palette) != null) {
       return palette
     }
-    switch (type?.toLowerCase()) {
-      case 'div':
-        return 'Spectral'
-      case 'seq':
-        return 'Blues'
-      case 'qual':
-      default:
-        return 'Set1'
+    return switch (type?.toLowerCase()) {
+      case 'div' -> 'Spectral'
+      case 'seq' -> 'Blues'
+      case 'qual' -> 'Set1'
+      default -> 'Set1'
     }
   }
 }

@@ -356,34 +356,28 @@ class Transformations {
       return new IdentityTrans()
     }
 
+    Trans transformation
     switch (name.toLowerCase()) {
-      case 'identity':
-        return new IdentityTrans()
-      case 'log':
-        return new LogTrans()
-      case 'log10':
-        return new Log10Trans()
-      case 'sqrt':
-        return new SqrtTrans()
-      case 'reverse':
-        return new ReverseTrans()
-      case 'reciprocal':
-      case 'inverse':
-        return new ReciprocalTrans()
-      case 'power':
+      case 'identity' -> transformation = new IdentityTrans()
+      case 'log' -> transformation = new LogTrans()
+      case 'log10' -> transformation = new Log10Trans()
+      case 'sqrt' -> transformation = new SqrtTrans()
+      case 'reverse' -> transformation = new ReverseTrans()
+      case 'reciprocal', 'inverse' -> transformation = new ReciprocalTrans()
+      case 'power' -> {
         Number exp
         if (params.exponent) {
           exp = params.exponent as Number
         } else {
           exp = 2
         }
-        return new PowerTrans(exp)
-      case 'asn':
-      case 'asin':
-        return new AsnTrans()
-      default:
+        transformation = new PowerTrans(exp)
+      }
+      case 'asn', 'asin' -> transformation = new AsnTrans()
+      default ->
         throw new IllegalArgumentException("Unknown transformation: $name")
     }
+    transformation
   }
 
   /**

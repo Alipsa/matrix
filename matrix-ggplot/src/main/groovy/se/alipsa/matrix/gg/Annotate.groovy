@@ -59,42 +59,29 @@ class Annotate {
     // Extract style parameters (not coordinate parameters)
     Map styleParams = extractStyleParams(params)
 
+    Geom geom
     switch (type.toLowerCase()) {
-      case 'text':
-        return new GeomText(styleParams)
-      case 'label':
-        return new GeomLabel(styleParams)
-      case 'rect':
-        return new GeomRect(styleParams)
-      case 'segment':
-        return new GeomSegment(styleParams)
-      case 'point':
-        return new GeomPoint(styleParams)
-      case 'line':
-        return new GeomLine(styleParams)
-      case 'hline':
-        return new GeomHline(styleParams)
-      case 'vline':
-        return new GeomVline(styleParams)
-      case 'pointrange':
-        return new GeomPointrange(styleParams)
-      case 'linerange':
-        return new GeomLinerange(styleParams)
-      case 'crossbar':
-        return new GeomCrossbar(styleParams)
-      case 'ribbon':
-        return new GeomRibbon(styleParams)
-      case 'tile':
-        return new GeomTile(styleParams)
-      case 'path':
-        return new GeomPath(styleParams)
-      case 'step':
-        return new GeomStep(styleParams)
-      default:
+      case 'text' -> geom = new GeomText(styleParams)
+      case 'label' -> geom = new GeomLabel(styleParams)
+      case 'rect' -> geom = new GeomRect(styleParams)
+      case 'segment' -> geom = new GeomSegment(styleParams)
+      case 'point' -> geom = new GeomPoint(styleParams)
+      case 'line' -> geom = new GeomLine(styleParams)
+      case 'hline' -> geom = new GeomHline(styleParams)
+      case 'vline' -> geom = new GeomVline(styleParams)
+      case 'pointrange' -> geom = new GeomPointrange(styleParams)
+      case 'linerange' -> geom = new GeomLinerange(styleParams)
+      case 'crossbar' -> geom = new GeomCrossbar(styleParams)
+      case 'ribbon' -> geom = new GeomRibbon(styleParams)
+      case 'tile' -> geom = new GeomTile(styleParams)
+      case 'path' -> geom = new GeomPath(styleParams)
+      case 'step' -> geom = new GeomStep(styleParams)
+      default ->
         throw new IllegalArgumentException("Unknown annotation geom type: $type. " +
             'Supported types: text, label, rect, segment, point, line, hline, vline, ' +
             'pointrange, linerange, crossbar, ribbon, tile, path, step')
     }
+    geom
   }
 
   private Map extractStyleParams(Map params) {
