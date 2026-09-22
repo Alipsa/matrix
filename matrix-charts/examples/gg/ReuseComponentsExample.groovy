@@ -30,6 +30,7 @@ ggplot(mpg, aes(displ, 1 / hwy)) +
  */
 @Grab('se.alipsa.matrix:matrix-core:3.7.0')
 @Grab('se.alipsa.matrix:matrix-charts:0.5.0')
+@Grab('se.alipsa.matrix:matrix-ggplot:0.5.0')
 @Grab('se.alipsa.matrix:matrix-datasets:2.1.2')
 @Grab('se.alipsa.matrix:matrix-stats:2.3.0')
 

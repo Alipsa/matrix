@@ -31,6 +31,7 @@ colorbar_plot <- ggplot(df, aes(x, y, colour = value)) +
 */
 @Grab('se.alipsa.matrix:matrix-core:3.7.0')
 @Grab('se.alipsa.matrix:matrix-charts:0.5.0')
+@Grab('se.alipsa.matrix:matrix-ggplot:0.5.0')
 @Grab('se.alipsa.matrix:matrix-datasets:2.1.2')
 @Grab('se.alipsa.matrix:matrix-stats:2.3.0')
 

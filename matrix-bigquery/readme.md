@@ -8,7 +8,7 @@ To use it, add the following to your Gradle build script:
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.5'
 implementation 'se.alipsa.matrix:matrix-core:3.7.1'
-implementation 'se.alipsa.matrix:matrix-bigquery:0.6.1'
+implementation 'se.alipsa.matrix:matrix-bigquery:0.7.1'
 ```
 
 To export and import data:

@@ -1,7 +1,7 @@
-@Grab('se.alipsa.matrix:matrix-core:3.8.0')
-@Grab('se.alipsa.matrix:matrix-csv:2.4.0')
+@Grab('se.alipsa.matrix:matrix-core:3.9.0')
+@Grab('se.alipsa.matrix:matrix-csv:2.5.0')
 @Grab('se.alipsa.matrix:matrix-stats:2.5.3')
-@Grab('se.alipsa.matrix:matrix-xchart:0.3.2')
+@Grab('se.alipsa.matrix:matrix-xchart:0.4.0')
 @GrabConfig(systemClassLoader=true)
 
 import se.alipsa.matrix.core.*
