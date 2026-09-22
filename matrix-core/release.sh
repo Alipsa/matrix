@@ -2,8 +2,6 @@
 set -eo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
-BOM_FILE="$REPO_ROOT/matrix-bom/bom.xml"
 CENTRAL_REPO_URL="${CENTRAL_REPO_URL:-https://repo.maven.apache.org/maven2}"
 CENTRAL_VERIFY_ATTEMPTS="${CENTRAL_VERIFY_ATTEMPTS:-30}"
 CENTRAL_VERIFY_DELAY_SECONDS="${CENTRAL_VERIFY_DELAY_SECONDS:-10}"
@@ -71,25 +69,11 @@ for ((attempt = 1; attempt <= CENTRAL_VERIFY_ATTEMPTS; attempt++)); do
 done
 
 if [[ "$pom_available" != true || "$jar_available" != true ]]; then
-  echo "Release $PROJECT:$RELEASE_VERSION was not verified on Maven Central; BOM was not changed." >&2
+  echo "Release $PROJECT:$RELEASE_VERSION was not verified on Maven Central; the BOM baseline was not changed." >&2
   echo "POM: $POM_URL" >&2
   echo "JAR: $JAR_URL" >&2
   exit 1
 fi
 
-baseline_count=$(rg -o '<matrixCoreBaselineVersion>[^<]*</matrixCoreBaselineVersion>' "$BOM_FILE" | wc -l || true)
-if [[ "$baseline_count" -ne 1 ]]; then
-  echo "Expected exactly one matrixCoreBaselineVersion property in $BOM_FILE; found $baseline_count" >&2
-  exit 1
-fi
-
-sed -i -E "s#<matrixCoreBaselineVersion>[^<]*</matrixCoreBaselineVersion>#<matrixCoreBaselineVersion>$RELEASE_VERSION</matrixCoreBaselineVersion>#" "$BOM_FILE"
-if ! rg -q "<matrixCoreBaselineVersion>$RELEASE_VERSION</matrixCoreBaselineVersion>" "$BOM_FILE"; then
-  echo "Failed to update matrixCoreBaselineVersion in $BOM_FILE" >&2
-  exit 1
-fi
-
 echo "Verified $PROJECT:$RELEASE_VERSION on Maven Central (POM and JAR)."
-echo "Updated $BOM_FILE with matrixCoreBaselineVersion=$RELEASE_VERSION."
-echo "The BOM is ready to be committed; review the diff before committing:"
-git -C "$REPO_ROOT" diff -- matrix-bom/bom.xml
+echo "The BOM matrixCoreBaselineVersion remains unchanged for its pending compatibility comparison."
