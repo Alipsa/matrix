@@ -20,14 +20,14 @@ dependencies {
     implementation project(':matrix-core')
     implementation project(':matrix-csv')
     implementation project(':matrix-stats')
-    implementation project(':matrix-xchart')
+    implementation project(':matrix-pict')
   } else {
     // This is what you would if the project was standalone:
     implementation platform('se.alipsa.matrix:matrix-bom:2.6.0')
     implementation 'se.alipsa.matrix:matrix-core'
     implementation 'se.alipsa.matrix:matrix-csv'
     implementation 'se.alipsa.matrix:matrix-stats'
-    implementation 'se.alipsa.matrix:matrix-xchart'
+    implementation 'se.alipsa.matrix:matrix-pict'
   }
   testImplementation libs.junit.jupiter
 }

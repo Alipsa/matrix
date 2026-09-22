@@ -1,13 +1,13 @@
 @Grab('se.alipsa.matrix:matrix-core:3.9.0')
 @Grab('se.alipsa.matrix:matrix-csv:2.5.0')
 @Grab('se.alipsa.matrix:matrix-stats:2.5.3')
-@Grab('se.alipsa.matrix:matrix-xchart:0.4.0')
+@Grab('se.alipsa.matrix:matrix-pict:0.6.0')
 @GrabConfig(systemClassLoader=true)
 
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.csv.*
 import se.alipsa.matrix.stats.dimred.Pca
-import se.alipsa.matrix.xchart.*
+import se.alipsa.matrix.pict.*
 
 m = CsvImporter.importCsv('https://www.niss.org/sites/default/files/ScotchWhisky01.txt')
     .drop('RowID')
@@ -21,20 +21,23 @@ selected= m.subset{ it.Fruity > 0.5 && it.Sweetness > 0.5 }
 println selected.dimensions()
 println selected.head(10)
 
-transparency = 80
+transparency = 0.8
 aberlour = selected.subset(0..0)
-aberlourRc = RadarChart.create(aberlour, 600, 500)
-    .setTitle('aberlour')
-    .addSeries('Distillery', transparency)
-//io.display(aberlourRc.exportSwing())
-aberlourRc.display()
-//rc.exportPng(new File( 'aberlour.png'))
-distilleriesRc = RadarChart.create(selected, 680, 500)
-    .setTitle("Distilleries")
-    .addSeries('Distillery', transparency)
-distilleriesRc.display()
-//rc.exportPng(new File( 'distilleries.png'))
-//io.display(distilleriesRc.exportSwing())
+aberlourRc = RadarChart.builder(aberlour)
+    .title('Aberlour')
+    .label('Distillery')
+    .values(features)
+    .fillAlpha(transparency)
+    .build()
+Plot.png(aberlourRc, new File('aberlour.png'), 600, 500)
+
+distilleriesRc = RadarChart.builder(selected)
+    .title('Distilleries')
+    .label('Distillery')
+    .values(features)
+    .fillAlpha(transparency)
+    .build()
+Plot.png(distilleriesRc, new File('distilleries.png'), 680, 500)
 
 
 iterations = 20
@@ -57,25 +60,22 @@ println Matrix.builder('Cluster allocation').ginqResult(result).build().content(
 
 // PCA projection onto the two first principal components
 pca = Pca.fit(m, features)
-m['X'] = pca.scores(0)
-m['Y'] = pca.scores(1)
+mCluster['X'] = pca.scores(0)
+mCluster['Y'] = pca.scores(1)
 println "Variance explained by PC1 + PC2: ${(pca.cumulativeExplainedVariance()[1] * 100).round(1)}%"
 
-clusters = m['Cluster'].toSet()
-sc = ScatterChart.create(m, 700, 500)
-sc.title = 'Whisky Flavor Clusters'
-for (i in clusters) {
-  def series = m.subset('Cluster', i)
-  sc.addSeries("Cluster $i", series.column('X'), series.column('Y'))
-}
-sc.display()
-//sc.exportPng(new File( 'clusters.png'))
-//io.display(sc.exportSwing())
+mCluster.addColumn('markerSize', Integer, [1] * mCluster.rowCount())
+sc = BubbleChart.builder(mCluster)
+    .title('Whisky Flavor Clusters')
+    .x('X')
+    .y('Y')
+    .size('markerSize')
+    .group('Cluster')
+    .build()
+Plot.png(sc, new File('clusters.png'), 700, 500)
 
-// Create a correlation heatmap
-CorrelationHeatmapChart.create(m, 820, 500)
-  .addSeries('Heat Series', features)
-  .display()
-
-//hc.exportPng(new File('heatmap.png'))
-//io.display(hc.exportSwing())
+hc = CorrelationHeatmapChart.builder(m)
+    .title('Whisky Feature Correlations')
+    .columns(features)
+    .build()
+Plot.png(hc, new File('heatmap.png'), 820, 500)

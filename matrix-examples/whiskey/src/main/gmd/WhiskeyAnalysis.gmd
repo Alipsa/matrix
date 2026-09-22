@@ -6,10 +6,10 @@
 @Grab('se.alipsa.matrix:matrix-csv:2.5.0')
 @Grab('se.alipsa.matrix:matrix-stats:2.5.3')
 @Grab('se.alipsa.matrix:matrix-groovy-ext:0.4.0')
-@Grab('se.alipsa.matrix:matrix-xchart:0.4.0')
+@Grab('se.alipsa.matrix:matrix-pict:0.6.0')
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.csv.*
-import se.alipsa.matrix.xchart.*
+import se.alipsa.matrix.pict.*
 
 m = CsvImporter.importCsv('https://www.niss.org/sites/default/files/ScotchWhisky01.txt')
     .drop('RowID')
@@ -35,24 +35,30 @@ out.println selected, [width: '50%']
 ## Aberlour 
 
 ```{groovy}
-import se.alipsa.matrix.xchart.*
+import se.alipsa.matrix.pict.*
 
-transparency = 80
+transparency = 0.8
 def aberlour = selected.subset(0..0)
-def rc = RadarChart.create(aberlour, 600, 500)
-    .setTitle('aberlour')
-    .addSeries('Distillery', transparency)
-out.println rc
+def rc = RadarChart.builder(aberlour)
+    .title('Aberlour')
+    .label('Distillery')
+    .values(features)
+    .fillAlpha(transparency)
+    .build()
+out.println Plot.svg(rc, 600, 500)
 ```
 
 ## Distilleries
 ```{groovy}
-import se.alipsa.matrix.xchart.*
+import se.alipsa.matrix.pict.*
 
-rc = RadarChart.create(selected, 680, 500)
-    .setTitle("Distilleries")
-    .addSeries('Distillery', transparency)
-out.println rc
+rc = RadarChart.builder(selected)
+    .title('Distilleries')
+    .label('Distillery')
+    .values(features)
+    .fillAlpha(transparency)
+    .build()
+out.println Plot.svg(rc, 680, 500)
 ```
 
 ## Cluster analysis
@@ -86,7 +92,7 @@ whiskeyClusters.each {
 }
 
 import se.alipsa.matrix.stats.dimred.Pca
-import se.alipsa.matrix.xchart.*
+import se.alipsa.matrix.pict.*
 
 // PCA projection onto the two first principal components
 def pca = Pca.fit(m, features)
@@ -94,23 +100,26 @@ mCluster['X'] = pca.scores(0)
 mCluster['Y'] = pca.scores(1)
 out.println "Variance explained by PC1 + PC2: ${(pca.cumulativeExplainedVariance()[1] * 100).round(1)}%"
 
-def clusters = mCluster['Cluster'].toSet()
-def sc = ScatterChart.create(mCluster, 700, 500)
-sc.title = 'Whisky Flavor Clusters'
-for (i in clusters) {
-  def series = mCluster.subset('Cluster', i)
-  sc.addSeries("Cluster $i", series.column('X'), series.column('Y'))
-}
+mCluster.addColumn('markerSize', Integer, [1] * mCluster.rowCount())
+def sc = BubbleChart.builder(mCluster)
+    .title('Whisky Flavor Clusters')
+    .x('X')
+    .y('Y')
+    .size('markerSize')
+    .group('Cluster')
+    .build()
 
-out.println sc
+out.println Plot.svg(sc, 700, 500)
 ```
 ## Correlation Heatmap
 ```{groovy}
 import se.alipsa.matrix.core.*
-import se.alipsa.matrix.xchart.*
+import se.alipsa.matrix.pict.*
 
-def hc = CorrelationHeatmapChart.create(m, 820, 500)
-    .addSeries('Heat Series', features)
+def hc = CorrelationHeatmapChart.builder(m)
+    .title('Whisky Feature Correlations')
+    .columns(features)
+    .build()
 
-out.println hc
+out.println Plot.svg(hc, 820, 500)
 ```
