@@ -61,7 +61,7 @@ implementation('se.alipsa.matrix:matrix-core')
          <dependency>
             <groupId>se.alipsa.matrix</groupId>
             <artifactId>matrix-bom</artifactId>
-            <version>2.5.1</version>
+            <version>2.6.0</version>
             <type>pom</type>
             <scope>import</scope>
          </dependency>
@@ -75,7 +75,7 @@ implementation('se.alipsa.matrix:matrix-core')
       <dependency>
          <groupId>org.apache.groovy</groupId>
          <artifactId>groovy-all</artifactId>
-         <version>5.0.7</version>
+         <version>5.1.2</version>
       </dependency>
    </dependencies>
    ...
@@ -92,7 +92,7 @@ modules. It is simpler, but less flexible and brings in more dependencies.
 Groovy version your application uses explicitly:
 
 ```groovy
-implementation('org.apache.groovy:groovy-all:5.0.7') 
+implementation('org.apache.groovy:groovy-all:5.1.2') 
 implementation('se.alipsa.matrix:matrix-all:2.6.0')
 ```
 
@@ -103,7 +103,7 @@ implementation('se.alipsa.matrix:matrix-all:2.6.0')
       <dependency>
          <groupId>org.apache.groovy</groupId>
          <artifactId>groovy-all</artifactId>
-         <version>5.0.7</version>
+         <version>5.1.2</version>
       </dependency>
       <dependency>
          <groupId>se.alipsa.matrix</groupId>
