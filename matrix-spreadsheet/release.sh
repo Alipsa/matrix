@@ -6,7 +6,7 @@ source jdk21
 echo "Build was successful, publishing to maven central..."
 ./gradlew :matrix-spreadsheet:release
 PROJECT=$(basename "$PWD")
-if grep "version '" build.gradle | grep -q 'SNAPSHOT'; then
+if grep -E '^[[:space:]]*version[[:space:]]*=' build.gradle | grep -q 'SNAPSHOT'; then
   echo "$PROJECT snapshot published"
 else
   echo "$PROJECT published"

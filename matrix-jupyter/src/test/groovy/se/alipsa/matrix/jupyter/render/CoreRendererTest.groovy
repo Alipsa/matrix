@@ -65,7 +65,7 @@ class CoreRendererTest {
     Matrix matrix = Matrix.builder().columns(a: [1, 2, 3], b: [4, 5, 6], c: [7, 8, 9]).build()
 
     String plain = new CoreRenderer().plainText(matrix, new RenderOptions(2, 2, false))
-    Matrix columns = matrix.selectColumns(['a', 'b'])
+    Matrix columns = matrix.select(['a', 'b'])
 
     assertEquals("${columns}\n${columns.tail(2)}\nshowing 2 of 3 rows, 2 of 3 columns", plain)
   }
@@ -85,6 +85,21 @@ class CoreRendererTest {
     assertTrue(column['text/html'].contains('>score</th>'))
     assertTrue(column['text/html'].contains('>42</td>'))
     assertTrue(gridBundle['text/html'].contains('>4</td>'))
+  }
+
+  @Test
+  void preservesColumnTypesForRowsAndColumns() {
+    Matrix matrix = Matrix.builder().columns(name: ['Ada'], score: [42]).types(String, Integer).build()
+    CoreRenderer renderer = new CoreRenderer()
+
+    String row = renderer.render(matrix.row(0), new RenderOptions())['text/html']
+    String column = renderer.render(matrix.column('score'), new RenderOptions())['text/html']
+
+    assertTrue(row.contains("<th class='name String'>name</th>"))
+    assertTrue(row.contains("<th class='score Integer' style='text-align: right'>score</th>"))
+    assertTrue(row.contains("<td class='score Integer' style='text-align: right'>42</td>"))
+    assertTrue(column.contains("<th class='score Integer' style='text-align: right'>score</th>"))
+    assertTrue(column.contains("<td class='score Integer' style='text-align: right'>42</td>"))
   }
 
   @Test

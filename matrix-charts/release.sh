@@ -4,7 +4,7 @@ source jdk21
 #./gradlew clean publishToSonatype closeAndReleaseSonatypeStagingRepository
 ../gradlew :matrix-charts:clean :matrix-charts:build :matrix-charts:release || exit 1
 PROJECT=$(basename "$PWD")
-if grep "version '" build.gradle | grep -q 'SNAPSHOT'; then
+if grep -E '^[[:space:]]*version[[:space:]]*=' build.gradle | grep -q 'SNAPSHOT'; then
   echo "$PROJECT snapshot published"
 else
   echo "$PROJECT uploaded and released"

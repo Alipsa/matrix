@@ -3,7 +3,7 @@ source ~/.sdkman/bin/sdkman-init.sh
 source jdk21
 ./gradlew clean build release || exit 1
 PROJECT=$(basename "$PWD")
-if grep "version '" build.gradle | grep -q 'SNAPSHOT'; then
+if grep -E '^[[:space:]]*version[[:space:]]*=' build.gradle | grep -q 'SNAPSHOT'; then
   echo "$PROJECT snapshot published"
 else
   echo "$PROJECT released"

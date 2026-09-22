@@ -15,6 +15,53 @@ class FailingValue {
   @Override String toString() { 'failing value' }
 }
 
+/** Test-only renderer that intentionally returns a plain-only bundle despite declaring text/html. */
+class PlainOnlyRenderer implements MatrixRenderer {
+  @Override String rendererName() { 'PlainOnlyRenderer' }
+  @Override boolean available() { true }
+  @Override Set<Class<?>> supportedTypes() { [PlainOnlyValue] as Set<Class<?>> }
+  @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.plain('plain only payload') }
+}
+
+/** Value handled by {@link PlainOnlyRenderer}. */
+class PlainOnlyValue {
+  @Override String toString() { 'plain only value' }
+}
+
+/** Test-only renderer that violates the supportedTypes() contract with a null entry. */
+class NullTypeRenderer implements MatrixRenderer {
+  @Override String rendererName() { 'NullTypeRenderer' }
+  @Override boolean available() { true }
+  @Override Set<Class<?>> supportedTypes() { [NullTypeValue, null] as Set<Class<?>> }
+  @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.plain('null type') }
+}
+
+/** Value declared by {@link NullTypeRenderer}; must never be routed. */
+class NullTypeValue {
+  final String description = 'null supported type test value'
+}
+
+/** Test-only renderer that violates the supportedTypes() contract by returning null. */
+class NullSetRenderer implements MatrixRenderer {
+  @Override String rendererName() { 'NullSetRenderer' }
+  @Override boolean available() { true }
+  @Override Set<Class<?>> supportedTypes() { null }
+  @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.plain('null set') }
+}
+
+/** Test-only renderer whose immutable supported-type set rejects null membership checks. */
+class SetOfRenderer implements MatrixRenderer {
+  @Override String rendererName() { 'SetOfRenderer' }
+  @Override boolean available() { true }
+  @Override Set<Class<?>> supportedTypes() { Set.of(SetOfValue) }
+  @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.html('<b>set of</b>', 'set of') }
+}
+
+/** Value handled by {@link SetOfRenderer}. */
+class SetOfValue {
+  final String description = 'Set.of supported type test value'
+}
+
 /** Test-only unavailable renderer that verifies discovery gating. */
 class UnavailableRenderer implements MatrixRenderer {
   @Override String rendererName() { 'UnavailableRenderer' }
