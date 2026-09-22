@@ -24,10 +24,10 @@ p2 <- ggplot(df, aes(x, y, colour = value)) +
   labs(title = "Guide colorbar")
 ggsave("guide_colorbar.svg", plot = p2)
 */
-@Grab('se.alipsa.matrix:matrix-core:3.7.0-SNAPSHOT')
-@Grab('se.alipsa.matrix:matrix-charts:0.5.0-SNAPSHOT')
-@Grab('se.alipsa.matrix:matrix-datasets:2.1.2-SNAPSHOT')
-@Grab('se.alipsa.matrix:matrix-stats:2.3.0-SNAPSHOT')
+@Grab('se.alipsa.matrix:matrix-core:3.7.0')
+@Grab('se.alipsa.matrix:matrix-charts:0.5.0')
+@Grab('se.alipsa.matrix:matrix-datasets:2.1.2')
+@Grab('se.alipsa.matrix:matrix-stats:2.3.0')
 
 import groovy.transform.SourceURI
 import se.alipsa.matrix.core.Matrix

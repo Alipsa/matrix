@@ -1,6 +1,6 @@
 # Matrix Core Release History
 
-## 3.9.0, in progress
+## 3.9.0, 2026-09-22
 
 ### Utilities
 - Added `SourceNameUtil` for consistent Matrix-name derivation from files and decoded URL paths.

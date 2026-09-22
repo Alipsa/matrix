@@ -1,6 +1,6 @@
 # Release history
 
-## v2.2.1, in progress
+## v2.2.1, 2026-09-22
 - Fix `FileUtil.checkFilePath()` and `FileUtil.getResourceFile()` for resources packaged inside a jar: they now throw the
   documented `FileNotFoundException` (with a message pointing to `getResourceUrl()`) instead of leaking
   `FileSystemNotFoundException` or returning a `File` that does not exist

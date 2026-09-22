@@ -1,7 +1,7 @@
 # Release history
 Date format used below is yyyy-MM-dd
 
-## v2.5.0, 2026-09-08
+## v2.5.0, 2026-09-22
 
 Requires matrix-core 3.9.0 or later.
 

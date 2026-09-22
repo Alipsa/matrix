@@ -1,6 +1,6 @@
 # Release history
 
-## v2.5.0
+## v2.5.0, 2026-09-22
 - Derive URL and file matrix names through matrix-core's shared `SourceNameUtil`; behavior is
   unchanged except leading-dot filenames now retain their name.
 - make `rfc4180()` preserve field whitespace and no longer ignore blank records on read, matching Commons CSV RFC4180

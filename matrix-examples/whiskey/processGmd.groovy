@@ -1,8 +1,7 @@
 #!/usr/bin/env groovy
-// TODO: pin to released versions once matrix-stats 2.5.3 and gmd-core 3.2.0 are published;
-//       SNAPSHOT coordinates only resolve after a local publishToMavenLocal
+// gmd-core 3.2.0 has not been released yet, so this script needs a locally published GMD snapshot.
 @Grab('se.alipsa.gmd:gmd-core:3.2.0-SNAPSHOT')
-@Grab('se.alipsa.matrix:matrix-stats:2.5.3-SNAPSHOT')
+@Grab('se.alipsa.matrix:matrix-stats:2.5.3')
 @GrabExclude(group='xml-apis', module='xml-apis')
 @GrabConfig(systemClassLoader=true)
 import se.alipsa.gmd.core.*

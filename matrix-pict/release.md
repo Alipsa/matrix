@@ -1,6 +1,6 @@
 # Matrix-pict Release History
 
-## v0.6.0, unreleased
+## v0.6.0, 2026-09-22
 
 **New chart types**
 

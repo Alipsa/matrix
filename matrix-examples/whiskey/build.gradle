@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix.examples'
-version = '1.0.0-SNAPSHOT'
+version = '1.0.0'
 
 repositories {
   mavenCentral()
@@ -23,7 +23,7 @@ dependencies {
     implementation project(':matrix-xchart')
   } else {
     // This is what you would if the project was standalone:
-    implementation platform('se.alipsa.matrix:matrix-bom:2.5.0')
+    implementation platform('se.alipsa.matrix:matrix-bom:2.6.0')
     implementation 'se.alipsa.matrix:matrix-core'
     implementation 'se.alipsa.matrix:matrix-csv'
     implementation 'se.alipsa.matrix:matrix-stats'

@@ -49,7 +49,7 @@ use the bom file.
 
 An example for matrix-core is as follows for Gradle
 ```groovy
-implementation(platform('se.alipsa.matrix:matrix-bom:2.5.1'))
+implementation(platform('se.alipsa.matrix:matrix-bom:2.6.0'))
 implementation('se.alipsa.matrix:matrix-core')
 ```
 ...or the following for maven

@@ -1,5 +1,9 @@
 # Matrix-smile release history
 
+## v0.2.1, 2026-09-22
+- Use the centrally configured static compilation and remove redundant annotations.
+- Resolve CodeNarc violations without changing the public API.
+
 ## v0.2.0, 2026-05-23
 Bug fixes and API improvements.
 

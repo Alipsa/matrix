@@ -14,7 +14,7 @@ To use the PICT chart types, add the following dependency to your project:
 ### Gradle Configuration
 
 ```groovy
-implementation platform('se.alipsa.matrix:matrix-bom:2.5.1')
+implementation platform('se.alipsa.matrix:matrix-bom:2.6.0')
 implementation 'se.alipsa.matrix:matrix-pict'
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-stats'

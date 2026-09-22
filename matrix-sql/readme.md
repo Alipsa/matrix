@@ -10,8 +10,8 @@ To use it, add the following to your Gradle build script:
 
 ```groovy
 implementation 'org.apache.groovy:groovy:5.1.1'
-implementation 'se.alipsa.matrix:matrix-core:3.9.0-SNAPSHOT'
-implementation 'se.alipsa.matrix:matrix-sql:2.5.0-SNAPSHOT'
+implementation 'se.alipsa.matrix:matrix-core:3.9.0'
+implementation 'se.alipsa.matrix:matrix-sql:2.5.0'
 ```
 
 or if you use Maven:
@@ -26,12 +26,12 @@ or if you use Maven:
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-core</artifactId>
-    <version>3.9.0-SNAPSHOT</version>
+    <version>3.9.0</version>
   </dependency>
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-sql</artifactId>
-    <version>2.5.0-SNAPSHOT</version>
+    <version>2.5.0</version>
   </dependency>
 </dependencies>
 ```

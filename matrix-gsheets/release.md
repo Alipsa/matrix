@@ -1,6 +1,6 @@
 # Release history
 
-## 0.3.0, in progress
+## 0.3.0, 2026-09-22
 ### Behavior Changes
 - `GsAuthenticator.authenticate()` now throws `SheetOperationException` when authentication
   cannot be completed, instead of returning `null` (behaviour change).

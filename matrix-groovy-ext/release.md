@@ -1,6 +1,6 @@
 # Matrix-groovy-ext release history
 
-## v0.4.0-SNAPSHOT 2026-09-06
+## v0.4.0, 2026-09-22
 - Improved trigonometric accuracy by retaining DECIMAL128 guard precision in derived functions and rounding only their public results.
 - Made trigonometric range reduction calculate π at a precision derived from the angle magnitude, reject requests above 512 digits, and cache eligible values for reuse.
 - Documented the approximate supported angle boundary (through `1E+469`) and added a regression test for the accepted/rejected transition.
@@ -13,7 +13,7 @@
 - **Breaking:** Changed `Double.ulp()` and `Float.ulp()` from decimal-scale semantics to their IEEE 754 ULP and collapsed `ulp()` to a single public `ulp(Number)` overload that dispatches by runtime type. The `ulp(BigDecimal)`, `ulp(Double)` and `ulp(Float)` signatures are gone; direct static invocation with an integral argument now returns the decimal ULP instead of incorrectly selecting the float ULP. Already-compiled direct callers must be recompiled.
 - **Breaking:** `sqrt()`, `asin()` and `acos()` now throw `IllegalArgumentException` for mathematical domain violations, matching `log()`, `log10()` and `log1p()`. Callers catching `ArithmeticException` for these domain violations must be updated. `exp()`'s exponent guard and the trigonometric range-reduction guard still throw `ArithmeticException`, since those signal implementation limits rather than domain violations.
 - **Breaking:** Non-finite `Double` and `Float` inputs now raise `IllegalArgumentException` with a message identifying the operation and input instead of leaking a JDK `NumberFormatException`.
-- Updated dependency examples and extension metadata for `0.4.0-SNAPSHOT`.
+- Updated dependency examples and extension metadata for `0.4.0`.
 
 ## v0.3.0 2026-06-28
 - Added `cbrt()` — cube root with DECIMAL64 precision using Newton-Raphson refinement seeded from `Math.cbrt`. Supports negative values and BigDecimal values far outside double range (both `BigDecimal` and `Number` overloads).

@@ -1,6 +1,6 @@
 # Matrix XChart release history
 
-## v0.4.0, In progress
+## v0.4.0, 2026-09-22
 - Add deferred Pict-like `builder(Matrix)` convenience APIs for Line, Area, Scatter, Bar, Stick, Box, Bubble, Histogram, Pie, Radar, Heatmap, CorrelationHeatmap, and OHLC charts.
   - Common chart builders support title, dimensions, mappings, and axis labels where XChart supports axes.
   - Specialized builders use explicit mappings for bubble sizes, histogram buckets, pie donuts, radar radii, heatmap values/labels, correlation columns, and OHLC fields.

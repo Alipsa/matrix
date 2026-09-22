@@ -1,6 +1,6 @@
 # Matrix Logging release history
 
-## v0.1.2-SNAPSHOT
+## v0.1.2, 2026-09-22
 - Document that Groovy scripts require `@GrabConfig(systemClassLoader=true)` for SLF4J provider and Log4j bridge discovery
 - Clarify that JPL/System.Logger routing requires dependencies on the JVM launch classpath and is unavailable through Grape or `groovy -cp`
 - Warn applications with an existing logging backend against using the convenience module transitively

@@ -10,7 +10,7 @@ To use the matrix-json module, you need to add it as a dependency to your projec
 
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.5'
-implementation platform('se.alipsa.matrix:matrix-bom:2.5.1')
+implementation platform('se.alipsa.matrix:matrix-bom:2.6.0')
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-json'
 ```

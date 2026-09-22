@@ -1,6 +1,6 @@
 # Release history
 
-## Next release
+## v2.5.0, 2026-09-22
 
 ### Bug Fixes
 - fix XLSX import of blank or missing header cells; generated column names are used and blank rows inside the imported range are preserved
