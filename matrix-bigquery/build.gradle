@@ -15,7 +15,7 @@ configurations {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.7.1-SNAPSHOT'
+version = '0.7.1'
 description = "Groovy library for importing and exporting to and from Google BigQuery to a Matrix"
 
 JavaCompile javaCompile = compileJava {

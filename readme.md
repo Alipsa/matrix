@@ -49,7 +49,7 @@ use the bom file.
 
 An example for matrix-core is as follows for Gradle
 ```groovy
-implementation(platform('se.alipsa.matrix:matrix-bom:2.5.1'))
+implementation(platform('se.alipsa.matrix:matrix-bom:2.6.0'))
 implementation('se.alipsa.matrix:matrix-core')
 ```
 ...or the following for maven
@@ -93,7 +93,7 @@ Groovy version your application uses explicitly:
 
 ```groovy
 implementation('org.apache.groovy:groovy-all:5.0.7') 
-implementation('se.alipsa.matrix:matrix-all:2.5.1')
+implementation('se.alipsa.matrix:matrix-all:2.6.0')
 ```
 
 ```xml
@@ -108,7 +108,7 @@ implementation('se.alipsa.matrix:matrix-all:2.5.1')
       <dependency>
          <groupId>se.alipsa.matrix</groupId>
          <artifactId>matrix-all</artifactId>
-         <version>2.5.1</version>
+         <version>2.6.0</version>
       </dependency>
    </dependencies>
    ...

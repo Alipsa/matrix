@@ -1,6 +1,6 @@
 # Matrix-Tablesaw Version history
 
-## v0.4.0, unreleased
+## v0.4.0, 2026-09-22
 
 ### Security
 - `XmlReader` now rejects any XML document containing a `DOCTYPE` declaration, and disables

@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'se.alipsa.groovy'
-version = '1.0.0-SNAPSHOT'
+version = '1.0.0'
 
 tasks.withType(JavaCompile) {
     options.deprecation = true
@@ -15,7 +15,7 @@ tasks.withType(GroovyCompile) { task ->
 
 dependencies {
     implementation libs.groovy
-    implementation(platform( 'se.alipsa.matrix:matrix-bom:2.5.1'))
+    implementation(platform( 'se.alipsa.matrix:matrix-bom:2.6.0'))
     implementation('se.alipsa.matrix:matrix-core')
     implementation('se.alipsa.matrix:matrix-datasets')
     implementation('se.alipsa.matrix:matrix-stats')

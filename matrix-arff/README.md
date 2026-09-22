@@ -34,7 +34,7 @@ To use the matrix-arff module, add it as a dependency to your project.
 
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.4'
-implementation platform("se.alipsa.matrix:matrix-bom:2.5.1")
+implementation platform("se.alipsa.matrix:matrix-bom:2.6.0")
 implementation "se.alipsa.matrix:matrix-core"
 implementation "se.alipsa.matrix:matrix-arff"
 ```

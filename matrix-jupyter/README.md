@@ -5,8 +5,8 @@
 Install `matrix-jupyter` on the kernel launch classpath (the guaranteed deployment path), together with whichever optional chart module you use. Then, in a notebook cell:
 
 ```groovy
-@Grab('se.alipsa.matrix:matrix-jupyter:0.1.0-SNAPSHOT')
-@Grab('se.alipsa.matrix:matrix-charts:0.6.0-SNAPSHOT')
+@Grab('se.alipsa.matrix:matrix-jupyter:0.1.0')
+@Grab('se.alipsa.matrix:matrix-charts:0.6.0')
 
 import se.alipsa.matrix.core.Matrix
 

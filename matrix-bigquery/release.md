@@ -1,6 +1,6 @@
 # Matrix-bigquery Release History
 
-## v0.7.1, in progress
+## v0.7.1, 2026-09-22
 - Add `insertRows(...)`, which reports the selected write mechanism and optional load-job metadata.
   Existing deprecated `insert(...)` methods remain source and binary compatible and return `null`
   after a successful InsertAll write.

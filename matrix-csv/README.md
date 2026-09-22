@@ -19,7 +19,7 @@ Versions below are examples. If you use multiple Matrix modules, prefer the Matr
 
 ```groovy
 dependencies {
-  implementation platform("se.alipsa.matrix:matrix-bom:2.5.1")
+  implementation platform("se.alipsa.matrix:matrix-bom:2.6.0")
   implementation "se.alipsa.matrix:matrix-core"
   implementation "se.alipsa.matrix:matrix-csv"
 }

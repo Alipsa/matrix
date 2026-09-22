@@ -1,6 +1,6 @@
 # Matrix-arff release history
 
-## v0.3.0, in progress
+## v0.3.0, 2026-09-22
 Weka compatibility release. Files written by matrix-arff now interoperate with Weka across the documented supported
 behavior and limitations.
 Behaviour changes are marked **(changed)**.

@@ -1,6 +1,6 @@
 # matrix-ggplot Release Notes
 
-## 0.6.0, in progress
+## 0.6.0, 2026-09-22
 
 - Several fixes change rendered output: `I()` constants and constant point colours are now honoured, closure aesthetics may
 return strings/booleans, and the colour/shape/size scales listed below are now delegated to Charm instead of being silently ignored. `GgStat` and `GgPosition` are removed as a consequence (DRY).

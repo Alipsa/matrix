@@ -1,6 +1,6 @@
 # Matrix-Json Release history
 
-## v2.3.2, In progress
+## v2.3.2, 2026-09-22
 - Upgrade dependencies:
   - com.fasterxml.jackson:jackson-bom 2.22.1 -> tools.jackson:jackson-bom 3.2.2
   - com.fasterxml.jackson.core:jackson-core 2.22.1 -> tools.jackson.core:jackson-core 3.2.2

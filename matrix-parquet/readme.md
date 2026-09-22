@@ -49,8 +49,8 @@ This module enables import and export of [Apache Parquet](https://parquet.apache
 Add the following to your Gradle build script:
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.6'
-implementation 'se.alipsa.matrix:matrix-core:3.8.0'
-implementation 'se.alipsa.matrix:matrix-parquet:0.6.0'
+implementation 'se.alipsa.matrix:matrix-core:3.9.0'
+implementation 'se.alipsa.matrix:matrix-parquet:0.7.0'
 ```
 
 ## Basic Usage

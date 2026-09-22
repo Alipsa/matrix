@@ -44,7 +44,7 @@ The Matrix library targets Groovy 5 and requires JDK 21. You can add the library
 For Gradle projects, you can use the Bill of Materials (BOM) to simplify dependency management:
 
 ```groovy
-implementation(platform('se.alipsa.matrix:matrix-bom:2.5.1'))
+implementation(platform('se.alipsa.matrix:matrix-bom:2.6.0'))
 implementation('se.alipsa.matrix:matrix-core')
 ```
 

@@ -1,6 +1,6 @@
 # Matrix-charts Release History
 
-## v0.6.0, in progress
+## v0.6.0, 2026-09-22
 
 This release corrects several rendering defects that change default output: bar/col charts now
 always include zero on the y axis, stacked and interval geoms train the axis on their full extent,

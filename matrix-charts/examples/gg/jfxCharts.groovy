@@ -6,10 +6,10 @@
  * If you have a "normal" jdk, run the jfxChartsLinux or jfxChartsMac script as appropriate instead.
  */
 @GrabConfig(systemClassLoader=true)
-@Grab('se.alipsa.matrix:matrix-core:3.7.0-SNAPSHOT')
-@Grab('se.alipsa.matrix:matrix-charts:0.5.0-SNAPSHOT')
-@Grab('se.alipsa.matrix:matrix-datasets:2.1.2-SNAPSHOT')
-@Grab('se.alipsa.matrix:matrix-stats:2.3.0-SNAPSHOT')
+@Grab('se.alipsa.matrix:matrix-core:3.9.0')
+@Grab('se.alipsa.matrix:matrix-charts:0.6.0')
+@Grab('se.alipsa.matrix:matrix-datasets:2.2.1')
+@Grab('se.alipsa.matrix:matrix-stats:2.5.3')
 
 import groovy.transform.SourceURI
 import javafx.application.Application

@@ -8,7 +8,7 @@ When you use the Matrix BOM, add `matrix-parquet` alongside `matrix-core`:
 
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.6'
-implementation platform('se.alipsa.matrix:matrix-bom:2.5.1')
+implementation platform('se.alipsa.matrix:matrix-bom:2.6.0')
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-parquet'
 ```

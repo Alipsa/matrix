@@ -1,6 +1,6 @@
 # Matrix stats release history
 
-## v2.5.3, in progress
+## v2.5.3, 2026-09-22
 - Add PCA dimensionality reduction through `Pca.fit(...)`, including compact SVD storage for scalable tall-matrix analysis, projections, loadings, and explained-variance accessors.
 - `SvdResult.sigma()` is now sized `U.columns × Vt.rows` so `reconstruct()` works for compact (thin) decompositions; hand-built results with a non-square `U` now get a `k × k` Sigma instead of `m × n`.
 - Fix basic `KMeansPlusPlus` initialization so it no longer mutates observations; seeded `pp(false)` centroids, assignments, and WCSS can change because clustering now uses the original data.

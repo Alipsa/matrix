@@ -1,6 +1,6 @@
 # Maven-BOM release history
 
-## v2.6.0, in progress
+## v2.6.0, 2026-09-22
 
 ### Remove matrix-smile
 matrix-smile is now excluded from the bom and the matrix-all packages since the GPL nature of smile-core would otherwise force users to adhere to the GPL license of any derived product. 
@@ -9,7 +9,26 @@ If you have a GPL project and want to use matrix-smile, you can just add the dep
 ### Add new matrix-jupyter module
 
 Dependency changes:
+- Add matrix-jupyter 0.1.0
+- Upgrade matrix-arff 0.2.1 -> 0.3.0
+- Upgrade matrix-avro 0.3.0 -> 0.3.1
+- Upgrade matrix-bigquery 0.7.0 -> 0.7.1
+- Upgrade matrix-charts 0.5.0 -> 0.6.0
+- Upgrade matrix-core 3.8.0 -> 3.9.0
+- Upgrade matrix-csv 2.4.0 -> 2.5.0
+- Upgrade matrix-datasets 2.2.0 -> 2.2.1
+- Upgrade matrix-ggplot 0.5.0 -> 0.6.0
+- Upgrade matrix-groovy-ext 0.3.0 -> 0.4.0
+- Upgrade matrix-gsheets 0.2.1 -> 0.3.0
+- Upgrade matrix-json 2.3.1 -> 2.3.2
+- Upgrade matrix-logging 0.1.1 -> 0.1.2
+- Upgrade matrix-parquet 0.6.0 -> 0.7.0
+- Upgrade matrix-pict 0.5.0 -> 0.6.0
+- Upgrade matrix-spreadsheet 2.4.1 -> 2.5.0
+- Upgrade matrix-sql 2.4.0 -> 2.5.0
+- Upgrade matrix-stats 2.5.2 -> 2.5.3
 - Upgrade matrix-tablesaw 0.3.2 -> 0.4.0
+- Upgrade matrix-xchart 0.3.2 -> 0.4.0
 
 ## v2.5.1, 2026-07-10
 Pom files available at maven central

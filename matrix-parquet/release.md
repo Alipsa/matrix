@@ -1,6 +1,6 @@
 # Matrix-parquet Release History
 
-## v0.7.0, unreleased
+## v0.7.0, 2026-09-22
 - SPI `inferPrecisionAndScale` parsing is now strict: Boolean values and trimmed, case-insensitive `true`/`false` strings are accepted; former truthy inputs are rejected.
 - Breaking change: explicit DECIMAL scale conversion now defaults to `RoundingMode.UNNECESSARY`, rejecting lossy conversion with a contextual `IllegalArgumentException`. Set `roundingMode: 'HALF_UP'` (or another named `RoundingMode`) when rounding is intentional.
 - Add typed `roundingMode(RoundingMode)` and `roundingMode(String)` options to `ParquetWriteOptions` and `MatrixParquetWriter.WriterBuilder`, plus the `write(matrix, file, precision, scale, roundingMode)` overload.

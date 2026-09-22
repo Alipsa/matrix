@@ -1,6 +1,6 @@
 # Matrix-avro release history
 
-## v0.3.1, unreleased
+## v0.3.1, 2026-09-22
 - Decimal schema inference now uses the shared column profile from matrix-core 3.9.0; matrix-core 3.9.0 or later is required.
 - Legal multi-branch unions are now decoded through Avro's branch resolver. Conversion errors retain the full public target label, such as `UNION[NULL, INT, STRING]`.
 - `BigInteger` is now lossless `bytes` `decimal(precision, 0)`, marked with `se.alipsa.matrix.javaType: java.math.BigInteger`; it is no longer narrowed to `long`. Generic consumers should read this as a standard decimal, and Matrix reader schemas that omit the marker read it as `BigDecimal`.

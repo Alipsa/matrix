@@ -13,8 +13,8 @@ Add the dependency to your build.gradle:
 
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.6'
-implementation 'se.alipsa.matrix:matrix-core:3.8.0'
-implementation 'se.alipsa.matrix:matrix-smile:0.2.0'
+implementation 'se.alipsa.matrix:matrix-core:3.9.0'
+implementation 'se.alipsa.matrix:matrix-smile:0.2.1'
 ```
 
 ## Design Principles

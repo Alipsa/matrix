@@ -10,8 +10,8 @@ Gradle:
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.6'
 implementation 'org.apache.groovy:groovy-ginq:5.0.6'
-implementation 'se.alipsa.matrix:matrix-core:3.7.1'
-implementation 'se.alipsa.matrix:matrix-datasets:2.2.0'
+implementation 'se.alipsa.matrix:matrix-core:3.9.0'
+implementation 'se.alipsa.matrix:matrix-datasets:2.2.1'
 ```
 Maven:
 ```xml
@@ -129,4 +129,3 @@ The following table illustrates the version compatibility of the matrix datasets
 |           2.1.1 | 3.1.0 -> 3.5.0 |
 |           2.1.2 | 3.5.0 -> 3.6.0 |
 |           2.2.0 | 3.7.0 -> 3.7.1 |
-

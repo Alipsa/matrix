@@ -19,7 +19,7 @@ This approach simplifies dependency management and helps avoid version conflicts
 To use the Matrix BOM in a Gradle project, add the following to your build script:
 
 ```groovy
-implementation(platform('se.alipsa.matrix:matrix-bom:2.5.1'))
+implementation(platform('se.alipsa.matrix:matrix-bom:2.6.0'))
 implementation('se.alipsa.matrix:matrix-core')
 implementation('se.alipsa.matrix:matrix-spreadsheet')
 // Add other matrix modules as needed without specifying versions
@@ -92,7 +92,7 @@ repositories {
 
 dependencies {
     // Import the BOM
-    implementation(platform('se.alipsa.matrix:matrix-bom:2.5.1'))
+    implementation(platform('se.alipsa.matrix:matrix-bom:2.6.0'))
     
     // Add Groovy
     implementation 'org.apache.groovy:groovy:5.0.5'
