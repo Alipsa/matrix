@@ -4,18 +4,122 @@ Integration between [Matrix](https://github.com/Alipsa/matrix) and [Smile](https
 
 ## Requirements
 
-- Java 21 or earlier (Smile 4.x is not compatible with Java 22+)
-- Groovy 5.0+ (required for modern switch expression syntax)
+- **JDK 21.** Smile 4.x is published as Java 21 bytecode (class file major version 65),
+  so it will not load on an older JDK. matrix-smile itself compiles with
+  `options.release = 21`. The module is built and tested on JDK 21.
+- **Groovy 5.0+** (required for the modern switch expression syntax).
 
 ## Installation
 
 Add the dependency to your build.gradle:
 
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.6'
+implementation 'org.apache.groovy:groovy:5.1.2'
 implementation 'se.alipsa.matrix:matrix-core:3.9.0'
 implementation 'se.alipsa.matrix:matrix-smile:0.2.1'
 ```
+
+## Choosing the Smile version
+
+matrix-smile 0.2.1 is built and tested against **Smile 4.4.2**, which it declares as an
+`api` dependency, so you get Smile transitively:
+
+```
+se.alipsa.matrix:matrix-smile:0.2.1
+└── com.github.haifengl:smile-core:4.4.2
+    ├── com.github.haifengl:smile-base:4.4.2   (smile.data, smile.stat, smile.math)
+    └── org.slf4j:slf4j-api:2.0.17
+```
+
+`smile-core` holds the model packages (`smile.classification`, `smile.clustering`,
+`smile.regression`, ...), while `smile-base` holds `smile.data.DataFrame`,
+`smile.data.type.*` and `smile.stat.*`. matrix-smile uses both, so if you manage Smile
+yourself, keep the two artifacts on the same version.
+
+### Supported versions
+
+| Smile version | Status with matrix-smile 0.2.1                                          |
+|---------------|-------------------------------------------------------------------------|
+| 4.4.2         | Built and tested against this version                                   |
+| Other 4.x     | Expected to work, not tested                                            |
+| 5.x and 6.x   | **Not supported** — requires Java 25 (class file major 69), and the API has changed across major versions |
+
+### Overriding the version within 4.x
+
+Gradle resolves conflicts by picking the **highest** version, so declaring a newer 4.x
+release is enough to upgrade:
+
+```groovy
+implementation 'se.alipsa.matrix:matrix-smile:0.2.1'
+// any 4.x newer than 4.4.2 wins over the transitive version
+implementation 'com.github.haifengl:smile-core:4.5.0'
+```
+
+Declaring an **older** version has no effect on its own — Gradle still resolves 4.4.2.
+Downgrade with a strict version:
+
+```groovy
+implementation('com.github.haifengl:smile-core') {
+  version { strictly '4.4.0' }
+}
+```
+
+...or force it for every configuration:
+
+```groovy
+configurations.all {
+  resolutionStrategy.force 'com.github.haifengl:smile-core:4.4.0'
+}
+```
+
+Maven resolves by nearest definition, so a direct `<dependency>` wins in either direction:
+
+```xml
+<dependency>
+  <groupId>com.github.haifengl</groupId>
+  <artifactId>smile-core</artifactId>
+  <version>4.4.0</version>
+</dependency>
+```
+
+### Supplying Smile yourself
+
+`smile-core` is licensed under **GPL-3.0** while matrix-smile is MIT. If you do not want
+Smile pulled into your dependency graph implicitly, exclude it and add the version you
+have vetted:
+
+```groovy
+implementation('se.alipsa.matrix:matrix-smile:0.2.1') {
+  exclude group: 'com.github.haifengl'
+}
+implementation 'com.github.haifengl:smile-core:4.4.2'
+```
+
+```xml
+<dependency>
+  <groupId>se.alipsa.matrix</groupId>
+  <artifactId>matrix-smile</artifactId>
+  <version>0.2.1</version>
+  <exclusions>
+    <exclusion>
+      <groupId>com.github.haifengl</groupId>
+      <artifactId>smile-core</artifactId>
+    </exclusion>
+  </exclusions>
+</dependency>
+<dependency>
+  <groupId>com.github.haifengl</groupId>
+  <artifactId>smile-core</artifactId>
+  <version>4.4.2</version>
+</dependency>
+```
+
+matrix-smile's public API returns Smile types (`DataframeConverter.convert(Matrix)`
+returns `smile.data.DataFrame`), so Smile must be on your compile classpath either way —
+excluding it without adding it back fails with `NoClassDefFoundError` at first use.
+
+For the same licensing reason, matrix-smile is excluded from `matrix-bom` and
+`matrix-all` as of BOM 2.6.0; add it as a direct dependency.
 
 ## Design Principles
 
