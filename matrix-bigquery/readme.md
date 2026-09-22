@@ -7,7 +7,7 @@ This module makes it simple to query data from Google BigQuery and get the resul
 To use it, add the following to your Gradle build script:
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.5'
-implementation 'se.alipsa.matrix:matrix-core:3.7.1'
+implementation 'se.alipsa.matrix:matrix-core:3.9.0'
 implementation 'se.alipsa.matrix:matrix-bigquery:0.7.1'
 ```
 

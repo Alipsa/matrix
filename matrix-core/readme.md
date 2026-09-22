@@ -13,7 +13,7 @@ Matrix should work with any 5.x version of groovy. Binary builds can be download
 from the [Matrix project release page](https://github.com/Alipsa/matrix/releases) but if you use a build system that 
 handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
 ```groovy
-implementation 'se.alipsa.matrix:matrix-core:3.6.0'
+implementation 'se.alipsa.matrix:matrix-core:3.9.0'
 ```
 ...and the following for maven
 ```xml

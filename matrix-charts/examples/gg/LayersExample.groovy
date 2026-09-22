@@ -6,11 +6,11 @@ p <- ggplot(mpg, aes(cty, hwy)) +
   geom_smooth(formula = y ~ x, method = "lm")
 ggsave("layers.svg", plot = p)
  */
-@Grab('se.alipsa.matrix:matrix-core:3.8.0')
-@Grab('se.alipsa.matrix:matrix-charts:0.5.0')
-@Grab('se.alipsa.matrix:matrix-ggplot:0.5.0')
-@Grab('se.alipsa.matrix:matrix-datasets:2.2.0')
-@Grab('se.alipsa.matrix:matrix-stats:2.5.2')
+@Grab('se.alipsa.matrix:matrix-core:3.9.0')
+@Grab('se.alipsa.matrix:matrix-charts:0.6.0')
+@Grab('se.alipsa.matrix:matrix-ggplot:0.6.0')
+@Grab('se.alipsa.matrix:matrix-datasets:2.2.1')
+@Grab('se.alipsa.matrix:matrix-stats:2.5.3')
 
 import groovy.transform.SourceURI
 import static se.alipsa.matrix.gg.GgPlot.*

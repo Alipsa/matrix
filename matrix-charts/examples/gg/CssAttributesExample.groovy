@@ -9,10 +9,10 @@
  * The equivalent R ggplot2 doesn't have built-in CSS attribute support,
  * but the ggiraph package provides similar interactivity features.
  */
-@Grab('se.alipsa.matrix:matrix-core:3.8.0')
-@Grab('se.alipsa.matrix:matrix-charts:0.5.0')
-@Grab('se.alipsa.matrix:matrix-ggplot:0.5.0')
-@Grab('se.alipsa.matrix:matrix-datasets:2.2.0')
+@Grab('se.alipsa.matrix:matrix-core:3.9.0')
+@Grab('se.alipsa.matrix:matrix-charts:0.6.0')
+@Grab('se.alipsa.matrix:matrix-ggplot:0.6.0')
+@Grab('se.alipsa.matrix:matrix-datasets:2.2.1')
 
 import groovy.transform.SourceURI
 import static se.alipsa.matrix.gg.GgPlot.*
