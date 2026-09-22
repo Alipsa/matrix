@@ -10,7 +10,7 @@
  * 4. Analyzing data                                          *
  * 5. Visualizing data                                        *
  *************************************************************/
-@Grab('se.alipsa.matrix:matrix-core:3.8.0')
+@Grab('se.alipsa.matrix:matrix-core:3.9.0')
 @Grab('se.alipsa.matrix:matrix-csv:2.3.0')
 @Grab('se.alipsa.matrix:matrix-stats:2.5.1')
 @Grab('se.alipsa.matrix:matrix-xchart:0.3.1')
