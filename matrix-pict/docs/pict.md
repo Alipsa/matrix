@@ -950,6 +950,13 @@ BufferedImage image = ChartToImage.export(chart)
 
 ### JavaFX
 
+JavaFX is optional for SVG export. Add the JavaFX runtime dependencies only when
+using `Plot.jfx()`. This method returns an SVGImage extending JavaFX Group; its
+generic return type allows `Plot` to load without JavaFX for other exports.
+Assign the result to `javafx.scene.Node` or `javafx.scene.Group` when using static
+compilation. The `chart` parameter is required; the unsized overload defaults to
+800 × 600 pixels, and `width` and `height` set explicit pixel dimensions.
+
 ```groovy
 import se.alipsa.matrix.pict.Plot
 

@@ -1,5 +1,15 @@
 # Matrix-pict Release History
 
+## v0.6.1 (unreleased)
+
+- SVG exports through `Plot` work without JavaFX on the runtime classpath.
+  Fixes `NoClassDefFoundError: javafx/scene/Group` during Groovy method discovery
+  when calling `Plot.svg()`.
+  `Plot.jfx()` now uses an unbounded generic return type, while still returning
+  the same JavaFX Group object. JavaFX remains required for calls to `jfx()`.
+  Recompile previously compiled callers of `Plot.jfx()` because its JVM return
+  type has changed from Group to Object.
+
 ## v0.6.0, 2026-09-22
 
 **New chart types**

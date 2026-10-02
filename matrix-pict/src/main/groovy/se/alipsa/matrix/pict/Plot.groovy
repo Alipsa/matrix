@@ -12,7 +12,6 @@ import se.alipsa.matrix.chartexport.SvgPanel
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import javafx.scene.Group
 
 /**
  * Primary export API for pict chart types (AreaChart, BarChart, BoxChart, BubbleChart,
@@ -275,27 +274,35 @@ class Plot {
    * Now returns {@code javafx.scene.Group} (an SVGImage extending Group).
    * Use the returned {@code Node} in a JavaFX scene graph.</p>
    *
+   * <p>The generic return type keeps JavaFX optional for other export formats.
+   * JavaFX must be available when this method is called.</p>
+   *
    * @param chart the chart to convert
+   * @param <T> the JavaFX node type expected by the caller (normally Group or Node)
    * @return a JavaFX Node rendering the chart
    * @throws IllegalArgumentException if chart is null
    */
-  static Group jfx(Chart chart) {
+  static <T> T jfx(Chart chart) {
     requireChart(chart)
-    ChartToJfx.export(CharmBridge.convert(chart))
+    (T) ChartToJfx.export(CharmBridge.convert(chart))
   }
 
   /**
    * Converts a chart to a JavaFX Node with explicit dimensions.
    *
+   * <p>The generic return type keeps JavaFX optional for other export formats.
+   * JavaFX must be available when this method is called.</p>
+   *
    * @param chart the chart to convert
    * @param width chart width in pixels
    * @param height chart height in pixels
+   * @param <T> the JavaFX node type expected by the caller (normally Group or Node)
    * @return a JavaFX Node rendering the chart
    * @throws IllegalArgumentException if chart is null
    */
-  static Group jfx(Chart chart, int width, int height) {
+  static <T> T jfx(Chart chart, int width, int height) {
     requireChart(chart)
-    ChartToJfx.export(CharmBridge.renderSvg(chart, width, height))
+    (T) ChartToJfx.export(CharmBridge.renderSvg(chart, width, height))
   }
 
   /**

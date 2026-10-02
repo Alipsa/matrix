@@ -2,6 +2,8 @@ package chart
 
 import static org.junit.jupiter.api.Assertions.*
 
+import groovy.transform.CompileStatic
+
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.common.PDRectangle
@@ -105,6 +107,7 @@ class PlotExportTest {
   }
 
   @Test
+  @CompileStatic
   void jfxRendersAtRequestedSize() {
     Assumptions.assumeTrue(
         System.getenv('DISPLAY') != null || 'true' == System.getProperty('headless'),
