@@ -329,7 +329,7 @@ def panel = ChartToSwing.export(chart)
 ```
 
 For PICT charts, use `Plot.png(...)`, `Plot.svg(...)`, `Plot.base64(...)`, or
-`Plot.jfx(...)` where applicable. Use the `chartexport` classes for formats and targets
+`PlotFx.jfx(...)` where applicable. Use the `chartexport` classes for formats and targets
 that are not exposed by `Plot`.
 
 ## Customizing Charts
