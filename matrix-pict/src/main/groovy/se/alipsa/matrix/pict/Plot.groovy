@@ -25,7 +25,7 @@ import java.nio.file.Files
  * <p>Example:
  * <pre>
  * LineChart chart = LineChart.builder(data).title('Sales').x('month').y('revenue').build()
- * javafx.scene.Node node = Plot.jfx(chart)
+ * javafx.scene.Node node = PlotFx.jfx(chart)
  * Plot.png(chart, new File('chart.png'))
  * </pre>
  */

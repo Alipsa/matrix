@@ -18,7 +18,7 @@ class PlotFx {
    * @throws IllegalArgumentException if chart is null
    */
   static Group jfx(Chart chart) {
-    jfx(chart, 800, 600)
+    ChartToJfx.export(Plot.svg(chart))
   }
 
   /**
@@ -28,7 +28,7 @@ class PlotFx {
    * @param width chart width in pixels
    * @param height chart height in pixels
    * @return an SVGImage extending JavaFX Group
-   * @throws IllegalArgumentException if chart is null or dimensions are invalid
+   * @throws IllegalArgumentException if chart is null
    */
   static Group jfx(Chart chart, int width, int height) {
     ChartToJfx.export(Plot.svg(chart, width, height))

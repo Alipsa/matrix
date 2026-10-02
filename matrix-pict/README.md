@@ -103,13 +103,16 @@ Use `se.alipsa.matrix.pict.Plot` for convenient export:
 
 ```groovy
 import se.alipsa.matrix.pict.Plot
+import se.alipsa.matrix.pict.PlotFx
 
 Plot.png(chart, new File('chart.png'))
 Plot.svg(chart, new File('chart.svg'))
-Plot.jfx(chart)              // JavaFX Node
+PlotFx.jfx(chart)            // JavaFX Group
 Plot.swing(chart)            // Swing SvgPanel
 def dataUri = Plot.base64(chart)
 ```
+
+JavaFX must be on the runtime classpath when using `PlotFx.jfx(chart)`.
 
 The `se.alipsa.matrix.chartexport` package (pulled in transitively from `matrix-charts`)
 provides additional formats including JPEG, PDF, and lower-level conversion APIs.
