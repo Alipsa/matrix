@@ -10,7 +10,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.6.1-SNAPSHOT'
+version = '0.7.0-SNAPSHOT'
 description = "Groovy chart-type-first API for matrix (pict)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -69,6 +69,7 @@ dependencies {
 }
 
 test {
+  exclude 'chart/PlotWithoutJavafxTest*'
   testLogging.showStandardStreams = true
   jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}"
   maxParallelForks = Math.max(1, Runtime.getRuntime().availableProcessors().intdiv(2))
@@ -99,6 +100,7 @@ test {
 }
 
 tasks.register('testFast', Test) {
+  exclude 'chart/PlotWithoutJavafxTest*'
   description = 'Runs only fast (non-render) tests. Use for quick dev-cycle feedback.'
   group = 'verification'
   testClassesDirs = sourceSets.test.output.classesDirs
@@ -180,4 +182,21 @@ nexusReleasePlugin {
   userName = project.ext.properties.sonatypeUsername
   password = project.ext.properties.sonatypePassword
   mavenPublication = publishing.publications.maven
+}
+
+// Exercise Groovy method discovery with the optional JavaFX runtime absent.
+tasks.register('testWithoutJavafx', Test) {
+  description = 'Verifies SVG export without JavaFX on the runtime classpath.'
+  group = 'verification'
+  testClassesDirs = sourceSets.test.output.classesDirs
+  classpath = sourceSets.test.runtimeClasspath.filter { File file ->
+    !file.name.startsWith('javafx-')
+  }
+  include 'chart/PlotWithoutJavafxTest*'
+  useJUnitPlatform()
+  jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}"
+}
+
+tasks.named('test') {
+  dependsOn tasks.named('testWithoutJavafx')
 }

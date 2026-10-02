@@ -2,6 +2,8 @@ package chart
 
 import static org.junit.jupiter.api.Assertions.*
 
+import groovy.transform.CompileStatic
+
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.common.PDRectangle
@@ -13,6 +15,7 @@ import se.alipsa.matrix.chartexport.SvgPanel
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.LineChart
 import se.alipsa.matrix.pict.Plot
+import se.alipsa.matrix.pict.PlotFx
 
 import java.awt.image.BufferedImage
 import java.nio.file.Path
@@ -105,6 +108,7 @@ class PlotExportTest {
   }
 
   @Test
+  @CompileStatic
   void jfxRendersAtRequestedSize() {
     Assumptions.assumeTrue(
         System.getenv('DISPLAY') != null || 'true' == System.getProperty('headless'),
@@ -117,6 +121,11 @@ class PlotExportTest {
     Group defaults = Plot.jfx(chart())
     assertEquals(800, defaults.boundsInLocal.width, 0.01d)
     assertEquals(600, defaults.boundsInLocal.height, 0.01d)
+
+    assertEquals(WIDTH, PlotFx.jfx(chart(), WIDTH, HEIGHT).boundsInLocal.width, 0.01d)
+    assertEquals(HEIGHT, PlotFx.jfx(chart(), WIDTH, HEIGHT).boundsInLocal.height, 0.01d)
+    assertEquals(800, PlotFx.jfx(chart()).boundsInLocal.width, 0.01d)
+    assertEquals(600, PlotFx.jfx(chart()).boundsInLocal.height, 0.01d)
   }
 
   @Test
@@ -125,6 +134,8 @@ class PlotExportTest {
     assertThrows(IllegalArgumentException) { Plot.pdf(null, new ByteArrayOutputStream(), WIDTH, HEIGHT) }
     assertThrows(IllegalArgumentException) { Plot.swing(null, WIDTH, HEIGHT) }
     assertThrows(IllegalArgumentException) { Plot.jfx(null, WIDTH, HEIGHT) }
+    assertThrows(IllegalArgumentException) { PlotFx.jfx(null) }
+    assertThrows(IllegalArgumentException) { PlotFx.jfx(null, WIDTH, HEIGHT) }
     assertThrows(IllegalArgumentException) { Plot.base64(null, WIDTH, HEIGHT) }
   }
 

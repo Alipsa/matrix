@@ -3,7 +3,6 @@ package se.alipsa.matrix.pict
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.chartexport.ChartToImage
-import se.alipsa.matrix.chartexport.ChartToJfx
 import se.alipsa.matrix.chartexport.ChartToJpeg
 import se.alipsa.matrix.chartexport.ChartToPdf
 import se.alipsa.matrix.chartexport.ChartToPng
@@ -12,7 +11,6 @@ import se.alipsa.matrix.chartexport.SvgPanel
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import javafx.scene.Group
 
 /**
  * Primary export API for pict chart types (AreaChart, BarChart, BoxChart, BubbleChart,
@@ -27,7 +25,7 @@ import javafx.scene.Group
  * <p>Example:
  * <pre>
  * LineChart chart = LineChart.builder(data).title('Sales').x('month').y('revenue').build()
- * javafx.scene.Node node = Plot.jfx(chart)
+ * javafx.scene.Node node = PlotFx.jfx(chart)
  * Plot.png(chart, new File('chart.png'))
  * </pre>
  */
@@ -271,31 +269,47 @@ class Plot {
   /**
    * Converts a chart to a JavaFX Node for display.
    *
-   * <p><b>Breaking change:</b> Previously returned {@code javafx.scene.chart.Chart}.
-   * Now returns {@code javafx.scene.Group} (an SVGImage extending Group).
-   * Use the returned {@code Node} in a JavaFX scene graph.</p>
+   * <p>The runtime value is an SVGImage extending {@code javafx.scene.Group};
+   * assign it to Group or Node. The generic signature does not reject incorrect
+   * target types at compile time and does not support direct property chaining
+   * under static compilation. Use {@link PlotFx#jfx(Chart)} for a typed return.</p>
+   *
+   * <p>The generic return type keeps JavaFX optional for other export formats.
+   * JavaFX must be available when this method is called.</p>
    *
    * @param chart the chart to convert
+   * @param <T> the JavaFX node type expected by the caller (normally Group or Node)
    * @return a JavaFX Node rendering the chart
    * @throws IllegalArgumentException if chart is null
+   * @deprecated Use {@link PlotFx#jfx(Chart)} for compile-time type safety.
    */
-  static Group jfx(Chart chart) {
+  @Deprecated
+  static <T> T jfx(Chart chart) {
     requireChart(chart)
-    ChartToJfx.export(CharmBridge.convert(chart))
+    (T) PlotFx.jfx(chart)
   }
 
   /**
    * Converts a chart to a JavaFX Node with explicit dimensions.
    *
+   * <p>The generic return type keeps JavaFX optional for other export formats.
+   * JavaFX must be available when this method is called. The runtime value is an
+   * SVGImage extending {@code javafx.scene.Group}; assign it to Group or Node.
+   * Incorrect target types are not rejected at compile time, and direct property
+   * chaining is not supported under static compilation.</p>
+   *
    * @param chart the chart to convert
    * @param width chart width in pixels
    * @param height chart height in pixels
+   * @param <T> the JavaFX node type expected by the caller (normally Group or Node)
    * @return a JavaFX Node rendering the chart
    * @throws IllegalArgumentException if chart is null
+   * @deprecated Use {@link PlotFx#jfx(Chart, int, int)} for compile-time type safety.
    */
-  static Group jfx(Chart chart, int width, int height) {
+  @Deprecated
+  static <T> T jfx(Chart chart, int width, int height) {
     requireChart(chart)
-    ChartToJfx.export(CharmBridge.renderSvg(chart, width, height))
+    (T) PlotFx.jfx(chart, width, height)
   }
 
   /**
