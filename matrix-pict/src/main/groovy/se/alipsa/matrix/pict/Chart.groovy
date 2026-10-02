@@ -11,7 +11,7 @@ import java.awt.Font
  * A chart can be exported into various formats using the Plot class e.g:
  * <code>
  * AreaChart chart = new AreaChart(table);
- * inout.view(Plot.jfx(chart))
+ * inout.view(PlotFx.jfx(chart))
  * </code>
  */
 abstract class Chart<T extends Chart> {

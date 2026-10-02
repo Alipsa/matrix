@@ -1081,14 +1081,14 @@ The `charts` package previously used multiple backend-specific converters:
 | `charts.png.PngConverter`                         | **Removed**         | `ChartToPng.export(chart, file)` via chartexport             |
 | `charts.svg.SvgBarChart` / `SvgChart`             | **Removed**         | Use Charm DSL or gg API, then `chart.render()` for SVG       |
 | `charts.util.StyleUtil`                           | **Removed**         | No replacement needed (was JavaFX-specific)                  |
-| `Plot.jfx(chart)`                                 | Rewired             | Returns `javafx.scene.Node` (was `javafx.scene.chart.Chart`) |
+| `Plot.jfx(chart)`                                 | Rewired             | Returns `javafx.scene.Node` (was `javafx.scene.chart.Chart`); deprecated in pict 0.7.0; use `PlotFx.jfx(chart)` |
 | `Plot.png(chart, file)`                           | Rewired             | Works as before, no longer requires JavaFX toolkit           |
 | `Plot.base64(chart)`                              | Rewired             | Works as before                                              |
 
 ### Breaking changes in this release
 
 - **`se.alipsa.matrix.charts.charmfx` removed.** Classes `CharmChartFx`, `ChartPane`, `LegendPane`, `PlotPane`, `TitlePane`, `Position`, `HorizontalLegendPane`, and `VerticalLegendPane` are deleted. Use Charm core + chartexport instead.
-- **`Plot.jfx()` return type changed** from `javafx.scene.chart.Chart` to `javafx.scene.Node`. Code using `inout.view(Plot.jfx(chart))` is unaffected since `view()` accepts `Node`.
+- **`Plot.jfx()` return type changed** from `javafx.scene.chart.Chart` to `javafx.scene.Node`. Code using `inout.view(Plot.jfx(chart))` is unaffected since `view()` accepts `Node`. (Deprecated in pict 0.7.0; use `PlotFx.jfx(chart)`.)
 - **`org.knowm.xchart` dependency removed.** The xchart library is no longer a transitive dependency. If you depended on it, add it directly.
 
 ### Recommended migration paths
@@ -1117,7 +1117,8 @@ import se.alipsa.matrix.chartexport.ChartToJfx
 def node = ChartToJfx.export(chart)
 
 // Or via the PICT-facing helper
-def node = Plot.jfx(chart)
+import se.alipsa.matrix.pict.PlotFx
+def node = PlotFx.jfx(chart)
 ```
 
 **From charts API to Charm DSL:**
