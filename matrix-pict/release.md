@@ -5,10 +5,18 @@
 - SVG exports through `Plot` work without JavaFX on the runtime classpath.
   Fixes `NoClassDefFoundError: javafx/scene/Group` during Groovy method discovery
   when calling `Plot.svg()`.
-  `Plot.jfx()` now uses an unbounded generic return type, while still returning
-  the same JavaFX Group object. JavaFX remains required for calls to `jfx()`.
-  Recompile previously compiled callers of `Plot.jfx()` because its JVM return
-  type has changed from Group to Object.
+
+**Breaking change**
+
+- `Plot.jfx()` now uses an unbounded generic return type and is deprecated in
+  favour of `PlotFx.jfx()`, which declares a JavaFX Group return type. The runtime
+  value remains an SVGImage extending Group. JavaFX is required for both APIs.
+- Recompile previously compiled callers of `Plot.jfx()` because its JVM return
+  type has changed from Group to Object; otherwise they fail with `NoSuchMethodError`.
+- The generic `Plot.jfx()` signature accepts incorrect assignment targets at compile
+  time, which can fail with `ClassCastException` at runtime. Direct property chaining
+  no longer compiles in Java or statically compiled Groovy. Use `PlotFx.jfx()` for
+  type-safe assignments, chaining, and calls to overloaded methods.
 
 ## v0.6.0, 2026-09-22
 

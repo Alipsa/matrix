@@ -950,19 +950,32 @@ BufferedImage image = ChartToImage.export(chart)
 
 ### JavaFX
 
-JavaFX is optional for SVG export. Add the JavaFX runtime dependencies only when
-using `Plot.jfx()`. This method returns an SVGImage extending JavaFX Group; its
-generic return type allows `Plot` to load without JavaFX for other exports.
-Assign the result to `javafx.scene.Node` or `javafx.scene.Group` when using static
-compilation. The `chart` parameter is required; the unsized overload defaults to
-800 × 600 pixels, and `width` and `height` set explicit pixel dimensions.
+JavaFX is optional for SVG export. Add the JavaFX runtime dependencies when using
+`PlotFx.jfx()`. This method declares a JavaFX Group return type and returns an
+SVGImage extending Group. The `chart` parameter is required and must not be null;
+the unsized overload defaults to 800 × 600 pixels. The sized overload takes
+`width` and `height` in pixels.
 
 ```groovy
-import se.alipsa.matrix.pict.Plot
+import se.alipsa.matrix.pict.PlotFx
 
-javafx.scene.Node node = Plot.jfx(chart)
-javafx.scene.Node sizedNode = Plot.jfx(chart, 1200, 900)
+javafx.scene.Node node = PlotFx.jfx(chart)
+javafx.scene.Group sizedNode = PlotFx.jfx(chart, 1200, 900)
+def bounds = PlotFx.jfx(chart).boundsInLocal
+// For display, add node to the children of your JavaFX scene's root.
 ```
+
+`Plot.jfx()` is deprecated; migrate calls to `PlotFx.jfx()` for compile-time type
+safety. The generic `Plot.jfx()` return type keeps `Plot` loadable without JavaFX,
+but it allows incorrect targets such as `String value = Plot.jfx(chart)` to compile
+and fail with `ClassCastException` at runtime. Direct chaining such as
+`Plot.jfx(chart).boundsInLocal` no longer compiles in Java or statically compiled
+Groovy. Assign to Node or Group first, or use `PlotFx.jfx()` for chaining and calls
+to overloaded methods. Dynamic Groovy callers retain runtime property access.
+
+Previously compiled callers of `Plot.jfx()` must be recompiled because its JVM
+return type changed from Group to Object; otherwise they fail with
+`NoSuchMethodError`.
 
 ### Swing
 

@@ -194,6 +194,7 @@ tasks.register('testWithoutJavafx', Test) {
   }
   include 'chart/PlotWithoutJavafxTest*'
   useJUnitPlatform()
+  jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}"
 }
 
 tasks.named('test') {
