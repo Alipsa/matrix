@@ -1074,16 +1074,16 @@ charts --builds------> charm ---renders-> Svg
 
 The `charts` package previously used multiple backend-specific converters:
 
-| Old path                                          | Status              | Replacement                                                  |
-|---------------------------------------------------|---------------------|--------------------------------------------------------------|
-| `charts.jfx.*` (JfxConverter, JfxBoxChart, ...)   | **Removed**         | `ChartToJfx.export(chart)` via chartexport                   |
-| `charts.swing.*` (SwingPlot, SwingConverter, ...) | **Removed**         | `ChartToSwing.export(chart)` via chartexport                 |
-| `charts.png.PngConverter`                         | **Removed**         | `ChartToPng.export(chart, file)` via chartexport             |
-| `charts.svg.SvgBarChart` / `SvgChart`             | **Removed**         | Use Charm DSL or gg API, then `chart.render()` for SVG       |
-| `charts.util.StyleUtil`                           | **Removed**         | No replacement needed (was JavaFX-specific)                  |
-| `Plot.jfx(chart)`                                 | Rewired             | Returns `javafx.scene.Node` (was `javafx.scene.chart.Chart`); deprecated in pict 0.7.0; use `PlotFx.jfx(chart)` |
-| `Plot.png(chart, file)`                           | Rewired             | Works as before, no longer requires JavaFX toolkit           |
-| `Plot.base64(chart)`                              | Rewired             | Works as before                                              |
+| Old path                                          | Status      | Replacement                                                                                                     |
+| ------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------- |
+| `charts.jfx.*` (JfxConverter, JfxBoxChart, ...)   | **Removed** | `ChartToJfx.export(chart)` via chartexport                                                                      |
+| `charts.swing.*` (SwingPlot, SwingConverter, ...) | **Removed** | `ChartToSwing.export(chart)` via chartexport                                                                    |
+| `charts.png.PngConverter`                         | **Removed** | `ChartToPng.export(chart, file)` via chartexport                                                                |
+| `charts.svg.SvgBarChart` / `SvgChart`             | **Removed** | Use Charm DSL or gg API, then `chart.render()` for SVG                                                          |
+| `charts.util.StyleUtil`                           | **Removed** | No replacement needed (was JavaFX-specific)                                                                     |
+| `Plot.jfx(chart)`                                 | Rewired     | Returns `javafx.scene.Node` (was `javafx.scene.chart.Chart`); deprecated in pict 0.7.0; use `PlotFx.jfx(chart)` |
+| `Plot.png(chart, file)`                           | Rewired     | Works as before, no longer requires JavaFX toolkit                                                              |
+| `Plot.base64(chart)`                              | Rewired     | Works as before                                                                                                 |
 
 ### Breaking changes in this release
 

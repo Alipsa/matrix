@@ -8,7 +8,7 @@ import java.awt.Font
 
 /**
  * Represents a chart in some form.
- * A chart can be exported into various formats using the Plot class e.g:
+ * A chart can be exported into various formats using Plot, or PlotFx for JavaFX, e.g:
  * <code>
  * AreaChart chart = new AreaChart(table);
  * inout.view(PlotFx.jfx(chart))
