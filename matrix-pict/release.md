@@ -1,6 +1,6 @@
 # Matrix-pict Release History
 
-## v0.6.1 (unreleased)
+## v0.7.0 (unreleased)
 
 - SVG exports through `Plot` work without JavaFX on the runtime classpath.
   Fixes `NoClassDefFoundError: javafx/scene/Group` during Groovy method discovery
