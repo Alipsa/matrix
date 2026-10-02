@@ -47,7 +47,7 @@
     <matrixJupyterVersion>0.1.1-SNAPSHOT</matrixJupyterVersion>
     <matrixLoggingVersion>0.1.3-SNAPSHOT</matrixLoggingVersion>
     <matrixParquetVersion>0.7.1-SNAPSHOT</matrixParquetVersion>
-    <matrixPictVersion>0.6.1-SNAPSHOT</matrixPictVersion>
+    <matrixPictVersion>0.7.0-SNAPSHOT</matrixPictVersion>
     <matrixSpreadsheetVersion>2.5.1-SNAPSHOT</matrixSpreadsheetVersion>
     <matrixSqlVersion>2.5.1-SNAPSHOT</matrixSqlVersion>
     <matrixStatsVersion>2.5.4-SNAPSHOT</matrixStatsVersion>
