@@ -971,4 +971,37 @@ class SmileFeaturesTest {
     assertNull(matrix.column('amount').get(1))
     assertEquals(BigDecimal, matrix.type('amount'))
   }
+
+  @Test
+  void testLegacyNumericFillCopiesOnlyOnce() {
+    def copies = [0]
+    def matrix = new CountingMatrix(copies)
+    def filled = SmileFeatures.fillna(matrix, 'amount', 0)
+    assertEquals(1, copies[0])
+    assertEquals(BigDecimal, filled.type('amount'))
+    assertEquals(Integer, filled.column('amount').get(0).getClass())
+    assertNull(matrix.column('amount').get(0))
+    filled.column('other').set(0, 'changed')
+    assertEquals('original', matrix.column('other').get(0))
+  }
+
+  private static class CountingMatrix extends Matrix {
+    private final List<Integer> copies
+
+    CountingMatrix(List<Integer> copies) {
+      super('counted', ['amount', 'other'], [[null, 1.25], ['original', 'other']], [BigDecimal, String])
+      this.copies = copies
+    }
+
+    @Override
+    Matrix clone() {
+      copies[0] = copies[0] + 1
+      def copy = new CountingMatrix(copies)
+      columns().eachWithIndex { column, index ->
+        copy.column(index).clear()
+        copy.column(index).addAll(column)
+      }
+      copy
+    }
+  }
 }

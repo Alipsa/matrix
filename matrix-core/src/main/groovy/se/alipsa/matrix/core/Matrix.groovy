@@ -198,21 +198,17 @@ class Matrix implements Iterable<Row>, Cloneable {
     Matrix result = clone()
     replacements.each { String name, Object replacement ->
       Column column = result.column(name)
-      boolean replaced = false
+      if (replacement == null || !column.hasNulls()) {
+        return
+      }
       Object fillValue = replacement
       Class declaredType = primitiveWrapper(column.type)
-      column.eachWithIndex { Object value, int row ->
-        if (value == null && replacement != null) {
-          if (!replaced && replacement instanceof Number && declaredType != null
-              && Number.isAssignableFrom(declaredType)) {
-            fillValue = ValueConverter.convertNumberLosslessly(replacement as Number,
-                declaredType as Class<? extends Number>)
-          }
-          column.set(row, fillValue)
-          replaced = true
-        }
+      if (replacement instanceof Number && declaredType != null && Number.isAssignableFrom(declaredType)) {
+        fillValue = ValueConverter.convertNumberLosslessly(replacement,
+            declaredType as Class<? extends Number>)
       }
-      if (replaced && declaredType != null && !declaredType.isInstance(fillValue)) {
+      column.replaceNulls(fillValue)
+      if (declaredType != null && !declaredType.isInstance(fillValue)) {
         column.type = commonDeclaredType(column.type, fillValue.getClass())
       }
     }

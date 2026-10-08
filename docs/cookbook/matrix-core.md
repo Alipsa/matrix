@@ -946,8 +946,8 @@ remain unconstrained. Both operations preserve name, schema, row/column order, a
 index configuration, including empty results; copied indexes rebuild as needed.
 Copies own their lists, but mutable cell objects are shared.
 
-Smile 0.3.0's existing `SmileFeatures.fillna`/`dropna` calls delegate to these core
-operations while preserving legacy type declarations and replacement runtime
+Smile 0.3.0's existing `SmileFeatures.fillna`/`dropna` calls share core null operations
+while preserving legacy type declarations and replacement runtime
 classes, empty dropna selection,
 unknown-column checks, and results without indexes. Mean/median imputation remains
 available through the existing Smile methods.
@@ -982,9 +982,11 @@ not mutable Row keys. It does not change Matrix indexes' existing raw-key policy
 
 ### Comparable extrema
 
-List, grid, and Matrix `Stat.min`/`Stat.max` compare only pairs that are both
-Numbers or have exactly the same runtime class. This rejects Groovy's character
-code comparisons between one-character strings and numbers. Null and
+List, grid, and Matrix `Stat.min`/`Stat.max` reject pairs where exactly one
+value is a Number. This prevents Groovy's character-code comparisons between
+one-character strings and numbers. Other pairs use Groovy's existing comparison:
+String/GString, Date/Timestamp, and constants of one enum remain supported;
+Groovy rejects other incompatible values. Null and
 non-Comparable values remain skipped; `ignoreNonNumerics` defaults to false and
 true retains numeric-only filtering where that parameter is available.
 

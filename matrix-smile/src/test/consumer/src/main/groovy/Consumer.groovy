@@ -24,4 +24,8 @@ try {
 } catch (IllegalArgumentException expected) {
   assert expected.message == 'Duplicate key [10] on left input violates ONE_TO_ONE'
 }
+int i = 2
+assert Stat.max(['a', "b$i"]) == "b$i"
+def jdbcDate = new java.sql.Timestamp(1000)
+assert Stat.max([new Date(0), jdbcDate]).is(jdbcDate)
 println 'Published dependency fillna/dropna and review regression smoke tests passed'

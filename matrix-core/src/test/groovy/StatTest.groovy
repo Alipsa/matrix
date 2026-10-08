@@ -703,8 +703,49 @@ class StatTest {
     assertEquals('A', min(['B', 'A']))
     assertEquals('B', max(['B', 'A']))
     assertEquals('A' as Character, min(['B' as Character, 'A' as Character]))
-    assertThrows(IllegalArgumentException) { min(['A', 'B' as Character]) }
-    assertThrows(IllegalArgumentException) { max([new Date(0), new java.sql.Date(1)]) }
+    assertEquals('A', min(['A', 'B' as Character]))
+    assertEquals(new java.sql.Date(1), max([new Date(0), new java.sql.Date(1)]))
   }
 
+
+  @Test
+  void testExtremaPreserveGroovyComparableCompatibility() {
+    int i = 2
+    def examples = [
+        ['a', "b$i"],
+        [new Date(0), new java.sql.Timestamp(1000)],
+        [Operation.MINUS, Operation.PLUS]]
+    examples.each { values ->
+      [values, values.reverse()].each { ordered ->
+        def grid = ordered.collect { [it] }
+        def table = Matrix.builder().data(value: ordered).types(Object).build()
+        assertSame(values[0], min(ordered))
+        assertSame(values[1], max(ordered))
+        assertSame(values[0], min(grid, [0])[0])
+        assertSame(values[1], max(grid, [0])[0])
+        assertSame(values[0], min(grid, 0)[0])
+        assertSame(values[1], max(grid, 0))
+        assertSame(values[0], min(table, ['value'])[0])
+        assertSame(values[1], max(table, ['value'])[0])
+        assertSame(values[1], max(table, 'value'))
+      }
+    }
+  }
+
+  private enum Operation {
+    MINUS {
+      @Override
+      int apply(int value) {
+        -value
+      }
+    },
+    PLUS {
+      @Override
+      int apply(int value) {
+        value
+      }
+    }
+
+    abstract int apply(int value)
+  }
 }

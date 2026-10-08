@@ -703,10 +703,9 @@ class Stat {
     }
 
     private static void validateComparablePair(Comparable value, Comparable current) {
-        if (current != null && !(value instanceof Number && current instanceof Number)
-                && value.getClass() != current.getClass()) {
+        if (current != null && (value instanceof Number) != (current instanceof Number)) {
             throw new IllegalArgumentException(
-                "Cannot compare ${value.getClass().simpleName} with ${current.getClass().simpleName}; extrema require Numbers or values of the same class")
+                "Cannot compare ${value.getClass().simpleName} with ${current.getClass().simpleName}; extrema cannot mix Numbers with nonnumeric values")
         }
     }
 
@@ -715,7 +714,7 @@ class Stat {
      * @param list input values; non-Comparable values are skipped
      * @param ignoreNonNumerics false by default; true keeps only Numbers
      * @return extremum or null when no eligible values exist
-     * @throws IllegalArgumentException when a compared pair is neither both Numbers nor the same runtime class
+     * @throws IllegalArgumentException when exactly one value in a compared pair is a Number
      */
     static <T> T min(List<T> list, boolean ignoreNonNumerics = false) {
         def minVal = null
@@ -744,7 +743,7 @@ class Stat {
      * @param colNums column indices in result order
      * @param ignoreNonNumerics false by default; true keeps only Numbers
      * @return one extremum per column, null for columns with no eligible values
-     * @throws IllegalArgumentException when a compared pair is neither both Numbers nor the same runtime class
+     * @throws IllegalArgumentException when exactly one value in a compared pair is a Number
      */
     static <T extends Comparable> List<T> min(List<List<T>> matrix, List<Integer> colNums, boolean ignoreNonNumerics = false) {
         def value
@@ -781,7 +780,7 @@ class Stat {
      * @param list input values; non-Comparable values are skipped
      * @param ignoreNonNumerics false by default; true keeps only Numbers
      * @return extremum or null when no eligible values exist
-     * @throws IllegalArgumentException when a compared pair is neither both Numbers nor the same runtime class
+     * @throws IllegalArgumentException when exactly one value in a compared pair is a Number
      */
     static <T> T max(List<T> list, boolean ignoreNonNumerics = false) {
         def maxVal = null
@@ -810,7 +809,7 @@ class Stat {
      * @param colNums column indices in result order
      * @param ignoreNonNumerics false by default; true keeps only Numbers
      * @return one extremum per column, null for columns with no eligible values
-     * @throws IllegalArgumentException when a compared pair is neither both Numbers nor the same runtime class
+     * @throws IllegalArgumentException when exactly one value in a compared pair is a Number
      */
     static <T extends Comparable> List<T> max(List<List<T>> matrix, List<Integer> colNums, boolean ignoreNonNumerics = false) {
         def value
