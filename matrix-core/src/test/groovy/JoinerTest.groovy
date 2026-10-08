@@ -832,4 +832,40 @@ class JoinerTest {
     assertEquals(['a', 'b', 5], full.column('id'))
   }
 
+
+  @Test
+  void testOuterJoinPreservesKeyFamilies() {
+    def cases = [[1, '01', Integer, String], [1, '1', Integer, String],
+                 ['1', 1, String, Integer], [1, 'a' as Character, Integer, Character],
+                 [java.time.LocalDate.of(2026, 1, 1), '2026-01-02', java.time.LocalDate, String],
+                 [true, 'false', Boolean, String]]
+    cases.each { values ->
+      def left = Matrix.builder().data(id: [values[0]]).types(values[2]).build()
+      def right = Matrix.builder().data(id: [values[1]]).types(values[3]).build()
+      [JoinType.RIGHT, JoinType.FULL].each { joinType ->
+        def result = Joiner.merge(left, right, 'id', joinType)
+        def raw = result[result.rowCount() - 1, 'id']
+        assertEquals(values[1], raw)
+        assertEquals(values[3], raw.getClass())
+        assertEquals(Object, result.types()[0])
+      }
+    }
+    def left = Matrix.builder().data(id: [1], part: ['x']).types(Integer, String).build()
+    def right = Matrix.builder().data(id: ['01', '1'], part: ['x', 'x']).types(String, String).build()
+    def joined = Joiner.merge(left, right, ['id', 'part'], JoinType.FULL)
+    assertIterableEquals([1, '01', '1'], joined['id'])
+    assertEquals(Object, joined.types()[0])
+  }
+
+
+  @Test
+  void testOuterJoinPreservesOverflowingNumericKeys() {
+    def left = Matrix.builder().data(id: [1]).types(Integer).build()
+    def right = Matrix.builder().data(id: [2147483648L, -2147483649L]).types(Long).build()
+    def result = Joiner.merge(left, right, 'id', JoinType.FULL)
+    assertEquals(Number, result.type('id'))
+    assertIterableEquals([1, 2147483648L, -2147483649L], result['id'])
+    assertEquals(Long, result.column('id').get(1).getClass())
+    assertEquals(Long, result.column('id').get(2).getClass())
+  }
 }

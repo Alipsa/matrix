@@ -11,7 +11,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '3.9.1-SNAPSHOT'
+version = '3.10.0-SNAPSHOT'
 description = "Groovy library for working with matrix ([][] data)"
 
 JavaCompile javaCompile = compileJava {

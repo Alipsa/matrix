@@ -9,11 +9,17 @@ The matrix core is focused on providing the data structure and data manipulation
 Grid classes) that all the other matrix libraries use.
 
 ## Setup
+The examples below use the development version. From a Matrix checkout, run
+`./gradlew :matrix-groovy-ext:publishToMavenLocal :matrix-core:publishToMavenLocal`
+and add `repositories { mavenLocal(); mavenCentral() }` to a Gradle consumer.
+Maven consumers use the local repository automatically. For released artifacts,
+select an available release from Maven Central instead of the SNAPSHOT coordinate.
+
 Matrix should work with any 5.x version of groovy. Binary builds can be downloaded 
 from the [Matrix project release page](https://github.com/Alipsa/matrix/releases) but if you use a build system that 
 handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
 ```groovy
-implementation 'se.alipsa.matrix:matrix-core:3.9.0'
+implementation 'se.alipsa.matrix:matrix-core:3.10.0-SNAPSHOT'
 ```
 ...and the following for maven
 ```xml
@@ -21,7 +27,7 @@ implementation 'se.alipsa.matrix:matrix-core:3.9.0'
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-core</artifactId>
-        <version>3.6.0</version>
+        <version>3.10.0-SNAPSHOT</version>
     </dependency>
 </dependencies>
 ```

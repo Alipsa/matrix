@@ -43,7 +43,6 @@ import java.time.LocalDateTime
  * Similarly, you use the same notation to assign / change values e.g.
  * <code>myMatrix[0,1] = 23</code> to assign the value 23 to the second variable of the first observation
  * or to assign / create a column <code> myMatrix['bar'] = [1..12]</code> to assign the range 1 to 12 to the column bar
- *
  */
 @SuppressWarnings(['JavadocEmptyLastLine', 'ClassSize', 'UnnecessaryGString', 'UnnecessaryCollectCall', 'SpaceBeforeOpeningBrace', 'JavadocMissingParamDescription', 'JavadocEmptyReturnTag', 'JavadocEmptyFirstLine', 'UnnecessaryElseStatement', 'DuplicateListLiteral', 'DuplicateNumberLiteral', 'MethodCount'])
 class Matrix implements Iterable<Row>, Cloneable {
@@ -75,6 +74,13 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   private List<Column> mColumns
   private int mRowCount = 0
+  private int structureVersion = 0
+
+  /** Version of tracked positional changes; direct Column mutations are untracked. */
+  @groovy.transform.PackageScope
+  int structuralVersion() {
+    structureVersion
+  }
   private String mName
   public static final Boolean ASC = Boolean.FALSE
   public static final Boolean DESC = Boolean.TRUE
@@ -96,6 +102,186 @@ class Matrix implements Iterable<Row>, Cloneable {
               "Current version: ${GroovySystem.version}"
       )
     }
+  }
+
+  /**
+   * Reports integrity problems without modifying data, schema, indexes, or Row versions.
+   * @param checkTypes false by default; true checks raw runtime assignability (nulls allowed)
+   * @return issues ordered by column, then structural/name issues before ascending cell rows
+   */
+  List<MatrixValidationIssue> validate(boolean checkTypes = false) {
+    List<MatrixValidationIssue> issues = []
+    Set<String> seen = [] as Set<String>
+    int expected = mColumns.isEmpty() ? 0 : mColumns[0].size()
+    mColumns.eachWithIndex { Column column, int index ->
+      if (column.size() != expected) {
+        issues << new MatrixValidationIssue(code: MatrixValidationCode.UNEQUAL_COLUMN_LENGTH,
+            columnIndex: index, columnName: column.name, expectedLength: expected, actualLength: column.size())
+      }
+      if (column.name == null || column.name.isBlank()) {
+        issues << new MatrixValidationIssue(code: MatrixValidationCode.MISSING_COLUMN_NAME,
+            columnIndex: index, columnName: column.name)
+      } else if (!seen.add(column.name)) {
+        issues << new MatrixValidationIssue(code: MatrixValidationCode.DUPLICATE_COLUMN_NAME,
+            columnIndex: index, columnName: column.name)
+      }
+      Class declared = primitiveWrapper(column.type)
+      if (checkTypes && declared != null && declared != Object) {
+        column.eachWithIndex { Object value, int row ->
+          if (value != null && !declared.isInstance(value)) {
+            issues << new MatrixValidationIssue(code: MatrixValidationCode.INCOMPATIBLE_CELL_TYPE,
+                columnIndex: index, columnName: column.name, rowIndex: row,
+                expectedType: declared, actualType: value.getClass())
+          }
+        }
+      }
+    }
+    issues
+  }
+
+  /**
+   * Copies rows without any null cell. Blanks and nonfinite numbers remain present.
+   * @return independent Matrix preserving name, schema, row order, and index configuration
+   */
+  Matrix withoutNullRows() {
+    selectNonNullRows((0..<columnCount()).toList())
+  }
+
+  /**
+   * Copies rows without nulls in the selected columns.
+   * @param columns nonempty existing column names; only null counts as missing
+   * @return independent Matrix preserving schema, name, order, and indexes
+   * @throws IllegalArgumentException for null, empty, or unknown selection
+   */
+  Matrix withoutNullRows(List<String> columns) {
+    selectNonNullRows(requireSelectedColumns(columns))
+  }
+
+  private List<Integer> requireSelectedColumns(List<String> columns) {
+    if (columns == null || columns.isEmpty()) {
+      throw new IllegalArgumentException('Select at least one existing column')
+    }
+    columns.collect { String name -> requireColumnIndex(name) }
+  }
+
+  private Matrix selectNonNullRows(List<Integer> columns) {
+    List<Integer> retained = (0..<rowCount()).findAll { int row ->
+      columns.every { int col -> mColumns[col].get(row) != null }
+    }
+    copySelectedRows(retained)
+  }
+
+  private Matrix copySelectedRows(List<Integer> retained) {
+    Matrix result = buildSubset(retained.collect { int row ->
+      mColumns.collect { Column column -> column.get(row) }
+    })
+    if (mColumns.isEmpty()) {
+      result.setRowCount(retained.size())
+    }
+    result
+  }
+
+  /**
+   * Copies this Matrix, filling only null cells with the supplied constants.
+   * @param replacements existing column names to constants; null constants leave nulls;
+   *                     an empty map returns an independent copy; null map is rejected
+   * Numeric replacements are converted to the declared numeric type when lossless;
+   * otherwise the original replacement is preserved and the type widened.
+   * @return copy retaining schema unless actual replacements require widening; indexes are rebuilt lazily
+   * @throws IllegalArgumentException for null map or unknown columns
+   */
+  Matrix fillNulls(Map<String, ?> replacements) {
+    if (replacements == null) {
+      throw new IllegalArgumentException('Replacement map must not be null')
+    }
+    replacements.keySet().each { String name -> requireColumnIndex(name) }
+    Matrix result = clone()
+    // Cloning sanitizes primitive declarations; filling preserves the original schema.
+    mColumns.eachWithIndex { Column column, int index ->
+      result.mColumns[index].type = column.type
+    }
+    replacements.each { String name, Object replacement ->
+      Column column = result.column(name)
+      if (replacement == null || !column.hasNulls()) {
+        return
+      }
+      Object fillValue = replacement
+      Class declaredType = primitiveWrapper(column.type)
+      if (replacement instanceof Number && declaredType != null && Number.isAssignableFrom(declaredType)) {
+        fillValue = ValueConverter.convertNumberLosslessly(replacement,
+            declaredType as Class<? extends Number>)
+      }
+      column.replaceNulls(fillValue)
+      if (declaredType != null && !declaredType.isInstance(fillValue)) {
+        column.type = commonDeclaredType(column.type, fillValue.getClass())
+      }
+    }
+    result.invalidateIndex()
+    result
+  }
+
+  /**
+   * Marks subsequent equal full rows, retaining the first occurrence.
+   * @return mask in input order; finite numbers compare mathematically, nulls match nulls
+   */
+  List<Boolean> duplicated() {
+    duplicateMask((0..<columnCount()).toList())
+  }
+
+  /**
+   * Marks subsequent equal selected keys. NaNs match across Float/Double, signed infinities
+   * are distinct categories; Strings and Characters retain types; other cells use equals/hashCode.
+   * @param columns nonempty existing names
+   * @return boolean mask, with false for each first occurrence
+   * @throws IllegalArgumentException for null, empty, or unknown selection
+   */
+  List<Boolean> duplicated(List<String> columns) {
+    duplicateMask(requireSelectedColumns(columns))
+  }
+
+  private List<Boolean> duplicateMask(List<Integer> columns) {
+    Set<List<Object>> seen = [] as Set<List<Object>>
+    (0..<rowCount()).collect { int row ->
+      List<Object> key = columns.collect { int col -> duplicateKey(mColumns[col].get(row)) }
+      !seen.add(key)
+    }
+  }
+
+  private static Object duplicateKey(Object value) {
+    if (value instanceof Double || value instanceof Float) {
+      double number = (value as Number).doubleValue()
+      if (Double.isNaN(number)) {
+        return NonfiniteDuplicateKey.NAN
+      }
+      if (Double.isInfinite(number)) {
+        return number > 0 ? NonfiniteDuplicateKey.POSITIVE_INFINITY : NonfiniteDuplicateKey.NEGATIVE_INFINITY
+      }
+    }
+    ValueComparison.normalizeKey(value)
+  }
+
+  private enum NonfiniteDuplicateKey { NAN, POSITIVE_INFINITY, NEGATIVE_INFINITY }
+
+  /**
+   * Copies the first occurrence of each full row in original order.
+   * @return independent Matrix preserving schema, name, and index configuration
+   */
+  Matrix withoutDuplicateRows() {
+    copyDistinctRows(duplicated())
+  }
+
+  /**
+   * Copies the first occurrence of each selected key, using duplicated() equality policy.
+   * @param columns nonempty existing column names
+   * @return independent Matrix preserving schema, name, order, and index configuration
+   * @throws IllegalArgumentException for null, empty, or unknown selection
+   */
+  Matrix withoutDuplicateRows(List<String> columns) {
+    copyDistinctRows(duplicated(columns))
+  }
+
+  private Matrix copyDistinctRows(List<Boolean> mask) {
+    copySelectedRows((0..<mask.size()).findAll { int row -> !mask[row] })
   }
 
   static MatrixBuilder builder() {
@@ -370,6 +556,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       throw new IllegalArgumentException("Column size (${column.size()}) does not match row count (${rowCount()})")
     }
     mColumns << new Column(name, column, type)
+    structureVersion++
     return this
   }
 
@@ -390,6 +577,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       throw new IllegalArgumentException("Column size (${column.size()}) does not match row count (${rowCount()})")
     }
     mColumns.add(index, new Column(name, column, type))
+    structureVersion++
     return this
   }
 
@@ -474,6 +662,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     for (int c = 0; c < row.size(); c++) {
       mColumns[c].add(row[c])
     }
+    structureVersion++
     invalidateIndex()
     return this
   }
@@ -499,6 +688,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     for (int c = 0; c < row.size(); c++) {
       mColumns[c].add(position, row[c])
     }
+    structureVersion++
     invalidateIndex()
     return this
   }
@@ -1745,6 +1935,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
       def colIdx = columnIndex(columnName)
       mColumns.remove(colIdx)
+      structureVersion++
     }
     return this
   }
@@ -1757,6 +1948,9 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix dropExcept(int ... columnIndices) {
     if (columnIndices.length == 0) {
+      if (!mColumns.isEmpty()) {
+        structureVersion++
+      }
       mColumns.clear()
       resetIndex()
       return this
@@ -1776,6 +1970,9 @@ class Matrix implements Iterable<Row>, Cloneable {
           break
         }
       }
+    }
+    if (mColumns.size() != columnsToKeep.size()) {
+      structureVersion++
     }
     mColumns.clear()
     mColumns.addAll(columnsToKeep)
@@ -1844,6 +2041,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       // Each time we iterate and remove, all of the below will have one less item
       // so we need to adjust the colIdx to still match
       mColumns.remove(colIdx - idx)
+      structureVersion++
     }
     return this
   }
@@ -2381,6 +2579,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     mColumns.each {
       it.add(to, it.remove(from))
     }
+    structureVersion++
     invalidateIndex()
     this
   }
@@ -2402,6 +2601,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     Column col = mColumns.remove(currentIndex)
     mColumns.add(index, col)
+    structureVersion++
     return this
   }
 
@@ -2476,6 +2676,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     List<Row> rows = this.rows()
     Collections.sort(rows, comparator)
     updateValues(rows)
+    structureVersion++
     invalidateIndex()
     return this
   }
@@ -2552,6 +2753,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       column.set(rowIndex.intValue(), value)
     } else if (rowIndex == column.size()) {
       column.add(value)
+      structureVersion++
     } else {
       throw new IndexOutOfBoundsException("Row index ($rowIndex) is outside the size of the column ${column.size()}")
     }
@@ -2640,6 +2842,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       } else {
         mColumns.add(index, new Column(columnName, column, type))
       }
+      structureVersion++
     }
   }
 
@@ -2933,6 +3136,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         col.remove((int) idx - count)
       }
     }
+    structureVersion++
     invalidateIndex()
     this
   }
@@ -2964,7 +3168,9 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   * Get the row at the specified index
+   * Get a snapshot Row at the specified index. Reads remain cached after parent edits;
+   * assignments write through unless a tracked positional change has invalidated the Row.
+   * Direct Column mutations bypass tracking: fetch fresh Rows after those changes.
    *
    * @param index the index of the row
    * @return the row (@see Row) corresponding to the row index (starting with 0)
@@ -3045,17 +3251,20 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   /**
    *
-   * @return a list of all the rows in this Matrix.
-   * Changes to values in a row is reflected back to the Matrix.
+   * @return snapshot Rows sharing immutable metadata snapshots; assignments write through.
+   * Parent edits do not refresh cached reads. Tracked positional mutations reject stale
+   * writes; direct exposed Column mutations bypass version tracking.
    */
   List<Row> rows() {
     if (mColumns.isEmpty()) {
       return Collections.emptyList()
     }
     int nRows = mColumns[0].size()
+    List<String> names = Collections.unmodifiableList(columnNames())
+    List<Class> declaredTypes = Collections.unmodifiableList(types())
     List<Row> r = new ArrayList<>(nRows)
     for (int i = 0; i < nRows; i++) {
-      r.add(new Row(i, this))
+      r.add(new Row(i, this, names, declaredTypes))
     }
     mColumns.eachWithIndex { List column, int col ->
       for (int row = 0; row < nRows; row++) {
@@ -4428,6 +4637,45 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   GroupedMatrix groupBy(List<String> columnNames) {
     Stat.groupBy(this, columnNames)
+  }
+
+  /**
+   * Joins this Matrix with explicit cardinality validation.
+   * @param y right input
+   * @param by shared key name(s) or paired x/y names
+   * @param joinType required join type
+   * @param cardinality required uniqueness policy; older overloads use MANY_TO_MANY
+   * @return new joined Matrix
+   * @throws IllegalArgumentException if uniqueness validation fails or a policy is null
+   */
+  Matrix merge(Matrix y, String by, JoinType joinType, JoinCardinality cardinality) {
+    Joiner.merge(this, y, by, joinType, cardinality)
+  }
+
+  /**
+   * Joins this Matrix with explicit cardinality validation.
+   * @param y right input
+   * @param by shared key name(s) or paired x/y names
+   * @param joinType required join type
+   * @param cardinality required uniqueness policy; older overloads use MANY_TO_MANY
+   * @return new joined Matrix
+   * @throws IllegalArgumentException if uniqueness validation fails or a policy is null
+   */
+  Matrix merge(Matrix y, List<String> by, JoinType joinType, JoinCardinality cardinality) {
+    Joiner.merge(this, y, by, joinType, cardinality)
+  }
+
+  /**
+   * Joins this Matrix with explicit cardinality validation.
+   * @param y right input
+   * @param by shared key name(s) or paired x/y names
+   * @param joinType required join type
+   * @param cardinality required uniqueness policy; older overloads use MANY_TO_MANY
+   * @return new joined Matrix
+   * @throws IllegalArgumentException if uniqueness validation fails or a policy is null
+   */
+  Matrix merge(Matrix y, Map<String, Object> by, JoinType joinType, JoinCardinality cardinality) {
+    Joiner.merge(this, y, by, joinType, cardinality)
   }
 
   /**

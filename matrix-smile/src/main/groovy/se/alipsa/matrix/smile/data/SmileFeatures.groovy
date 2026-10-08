@@ -322,9 +322,14 @@ class SmileFeatures {
    * @return a new Matrix with filled values
    */
   static Matrix fillna(Matrix matrix, String column, Object value) {
-    List<?> col = matrix.column(column)
-    List<?> filledCol = col.collect { it != null ? it : value }
-    replaceColumn(matrix, column, filledCol, matrix.type(matrix.columnNames().indexOf(column)))
+    matrix.column(column) // Preserve the existing unknown-column validation.
+    Class declaredType = matrix.type(matrix.columnNames().indexOf(column))
+    Matrix result = matrix.clone()
+    // Shared core Column filling preserves the legacy replacement's runtime type without another copy.
+    result.column(column).replaceNulls(value)
+    result.column(column).type = declaredType // Legacy fillna preserves declarations, even when incompatible.
+    result.resetIndex() // Legacy transformations do not carry index configuration.
+    result
   }
 
   /**
@@ -373,28 +378,9 @@ class SmileFeatures {
    * @return a new Matrix without null-containing rows
    */
   static Matrix dropna(Matrix matrix) {
-    List<Integer> validIndices = []
-    for (int i = 0; i < matrix.rowCount(); i++) {
-      List<?> row = matrix.row(i)
-      if (!row.any { it == null }) {
-        validIndices << i
-      }
-    }
-
-    if (validIndices.isEmpty()) {
-      return Matrix.builder()
-          .columnNames(matrix.columnNames() as List<String>)
-          .types(matrix.types())
-          .matrixName(matrix.matrixName)
-          .build()
-    }
-
-    Matrix.builder()
-        .rows(matrix.rows(validIndices) as List<List>)
-        .columnNames(matrix.columnNames() as List<String>)
-        .types(matrix.types())
-        .matrixName(matrix.matrixName)
-        .build()
+    Matrix result = matrix.withoutNullRows()
+    result.resetIndex()
+    result
   }
 
   /**
@@ -412,31 +398,10 @@ class SmileFeatures {
             "Column '${col}' not found in matrix. Available: ${knownColumns}")
       }
     }
-    List<Integer> colIndices = columns.collect { knownColumns.indexOf(it) }
-
-    List<Integer> validIndices = []
-    for (int i = 0; i < matrix.rowCount(); i++) {
-      List<?> row = matrix.row(i)
-      boolean hasNull = colIndices.any { idx -> row[idx] == null }
-      if (!hasNull) {
-        validIndices << i
-      }
-    }
-
-    if (validIndices.isEmpty()) {
-      return Matrix.builder()
-          .columnNames(matrix.columnNames() as List<String>)
-          .types(matrix.types())
-          .matrixName(matrix.matrixName)
-          .build()
-    }
-
-    Matrix.builder()
-        .rows(matrix.rows(validIndices) as List<List>)
-        .columnNames(matrix.columnNames() as List<String>)
-        .types(matrix.types())
-        .matrixName(matrix.matrixName)
-        .build()
+    // An empty legacy selection keeps every row; the new explicit API requires a selection.
+    Matrix result = columns.isEmpty() ? matrix.clone() : matrix.withoutNullRows(columns)
+    result.resetIndex()
+    result
   }
 
   // ============ Standardization Scaler Class ============

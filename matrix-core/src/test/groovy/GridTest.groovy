@@ -390,4 +390,27 @@ class GridTest {
 
         assertTrue(grid.data.isEmpty())
     }
+
+  @Test
+  void testTypedRowViewsValidateAssignments() {
+    [Integer, int].each { type ->
+      def grid = new Grid([[1, 2]], type)
+      def views = [grid[0], grid.data[0], grid.iterator().next(), grid[0].subList(0, 1)]
+      views.each { view ->
+        assertThrows(IllegalArgumentException) { view.set(0, 'bad') }
+        assertEquals(1, grid[0, 0])
+        def iterator = view.listIterator()
+        iterator.next()
+        assertThrows(IllegalArgumentException) { iterator.set('bad') }
+        assertThrows(IllegalArgumentException) { view.replaceAll { 'bad' } }
+      }
+      grid[0].set(0, null)
+      grid.data[0].set(0, 3)
+      assertTrue(Grid.isValid(grid, Integer))
+    }
+    def untyped = new Grid([[1]])
+    untyped[0].set(0, 'ok')
+    assertEquals('ok', untyped[0, 0])
+  }
+
 }

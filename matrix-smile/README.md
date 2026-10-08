@@ -15,17 +15,17 @@ Add the dependency to your build.gradle:
 
 ```groovy
 implementation 'org.apache.groovy:groovy:5.1.2'
-implementation 'se.alipsa.matrix:matrix-core:3.9.0'
-implementation 'se.alipsa.matrix:matrix-smile:0.2.1'
+implementation 'se.alipsa.matrix:matrix-core:3.10.0-SNAPSHOT'
+implementation 'se.alipsa.matrix:matrix-smile:0.3.0-SNAPSHOT'
 ```
 
 ## Choosing the Smile version
 
-matrix-smile 0.2.1 is built and tested against **Smile 4.4.2**, which it declares as an
+matrix-smile 0.3.0-SNAPSHOT is built and tested against **Smile 4.4.2**, which it declares as an
 `api` dependency, so you get Smile transitively:
 
 ```
-se.alipsa.matrix:matrix-smile:0.2.1
+se.alipsa.matrix:matrix-smile:0.3.0-SNAPSHOT
 └── com.github.haifengl:smile-core:4.4.2
     ├── com.github.haifengl:smile-base:4.4.2   (smile.data, smile.stat, smile.math)
     └── org.slf4j:slf4j-api:2.0.17
@@ -38,7 +38,7 @@ yourself, keep the two artifacts on the same version.
 
 ### Supported versions
 
-| Smile version | Status with matrix-smile 0.2.1                                          |
+| Smile version | Status with matrix-smile 0.3.0-SNAPSHOT                                          |
 |---------------|-------------------------------------------------------------------------|
 | 4.4.2         | Built and tested against this version                                   |
 | Other 4.x     | Expected to work, not tested                                            |
@@ -50,7 +50,7 @@ Gradle resolves conflicts by picking the **highest** version, so declaring a new
 release is enough to upgrade:
 
 ```groovy
-implementation 'se.alipsa.matrix:matrix-smile:0.2.1'
+implementation 'se.alipsa.matrix:matrix-smile:0.3.0-SNAPSHOT'
 // any 4.x newer than 4.4.2 wins over the transitive version
 implementation 'com.github.haifengl:smile-core:4.5.0'
 ```
@@ -89,7 +89,7 @@ Smile pulled into your dependency graph implicitly, exclude it and add the versi
 have vetted:
 
 ```groovy
-implementation('se.alipsa.matrix:matrix-smile:0.2.1') {
+implementation('se.alipsa.matrix:matrix-smile:0.3.0-SNAPSHOT') {
   exclude group: 'com.github.haifengl'
 }
 implementation 'com.github.haifengl:smile-core:4.4.2'
@@ -99,7 +99,7 @@ implementation 'com.github.haifengl:smile-core:4.4.2'
 <dependency>
   <groupId>se.alipsa.matrix</groupId>
   <artifactId>matrix-smile</artifactId>
-  <version>0.2.1</version>
+  <version>0.3.0-SNAPSHOT</version>
   <exclusions>
     <exclusion>
       <groupId>com.github.haifengl</groupId>
@@ -430,3 +430,20 @@ License v3.0 (GPL-3.0), not MIT. Distributing matrix-smile together with smile-c
 of an application) means distributing a combined work that includes GPL-3.0-licensed code, which
 is subject to the GPL-3.0's terms. Consult a lawyer if you need advice on how this affects your
 specific use case.
+
+### Core compatibility
+
+matrix-smile 0.3.0 requires matrix-core 3.10.0 or later. The development pair is
+core 3.10.0-SNAPSHOT and smile 0.3.0-SNAPSHOT. Core is a published transitive API
+dependency because Smile is intentionally excluded from matrix-bom. Maven users
+who also declare core directly must select 3.10.0 or later: Maven nearest-wins
+resolution can override the transitive version with an unsupported older core.
+`SmileFeatures.fillna` and `dropna` delegate to core null operations while retaining
+legacy declared-type behavior and returning results without index configuration.
+
+To try the SNAPSHOT pair from source, run
+`./gradlew :matrix-groovy-ext:publishToMavenLocal :matrix-core:publishToMavenLocal :matrix-smile:publishToMavenLocal`
+from a Matrix checkout and add `repositories { mavenLocal(); mavenCentral() }`
+to the consuming Gradle build. Maven consumers use the local repository automatically.
+The [standalone consumer fixture](src/test/consumer/README.md) gives complete metadata
+and runtime verification commands for both publication formats.

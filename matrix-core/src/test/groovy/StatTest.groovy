@@ -102,12 +102,14 @@ class StatTest {
     ]
 
     assertEquals(0.3, min(matrix[0]))
-    def m = min(matrix, 1..2)
+    assertThrows(IllegalArgumentException) { min(matrix, 1..2) }
+    def m = min(matrix, 1..2, true)
     assertEquals(1, m[0])
     assertEquals(0.9, m[1])
 
     def table = Matrix.builder().columnNames(["v0", "v1", "v2"]).rows(matrix).build()
-    def m2 = min(table, ["v1", "v2"])
+    assertThrows(IllegalArgumentException) { min(table, ["v1", "v2"]) }
+    def m2 = min(table, ["v1", "v2"], true)
     assertIterableEquals(m, m2)
   }
 
@@ -636,5 +638,114 @@ class StatTest {
     assertEquals(1.5, median(values), 'median')
     assertEquals(0.7071067811865476, sd(values) as double, 1e-15, 'sd')
     assertEquals(0.5, variance(values), 'variance')
+  }
+
+  @Test
+  void testSelectedMeansExcludeNonfiniteAndStrings() {
+    def data = [[1d, '5'], [Double.NaN, 3], [Float.NaN, null],
+                [Double.POSITIVE_INFINITY, '7'], [Float.NEGATIVE_INFINITY, null]]
+    assertEquals(1, means(data, [0, 1])[0])
+    assertEquals(3, means(data, [0, 1])[1])
+    assertEquals(1, means(data, 0..1)[0])
+    assertEquals(3, means(data, 0..1)[1])
+    assertIterableEquals([null], means([['5'], ['7']], [0]))
+    assertIterableEquals([null], means([[Double.NaN], [Float.POSITIVE_INFINITY]], [0]))
+    assertEquals(mean(['5', 3]), means([['5'], [3]], [0])[0])
+    def table = Matrix.builder().columnNames(['a', 'b']).rows(data).types(Object, Object).build()
+    means(data, [0, 1]).eachWithIndex { value, index ->
+      assertEquals(mean(data.collect { it[index] }), value)
+      assertEquals(means(table, ['a', 'b'])[index], value)
+    }
+  }
+
+  @Test
+  void testComparableGridMinima() {
+    assertIterableEquals(['a'], min([['b'], ['a'], [null]], [0]))
+    assertIterableEquals([null], min([['b'], ['a']], [0], true))
+    assertIterableEquals([null], min([], [0]))
+    assertIterableEquals([null], min([[null]], [0]))
+    def dates = [[LocalDate.of(2026, 2, 1)], [LocalDate.of(2026, 1, 1)]]
+    assertIterableEquals([LocalDate.of(2026, 1, 1)], min(dates, [0]))
+    assertIterableEquals(min(dates, [0]), min(dates, 0))
+    assertIterableEquals([new Date(0)], min([[new Date(1)], [new Date(0)]], [0]))
+    [[1, 'NA', 3], ['NA', 1, 3], [new Date(0), 1], [1, new Date(0)]].each { values ->
+      def rows = values.collect { [it] }
+      assertThrows(IllegalArgumentException) { min(rows, [0]) }
+      assertThrows(IllegalArgumentException) { min(rows, 0) }
+      assertIterableEquals([1], min(rows, [0], true))
+    }
+  }
+
+
+  @Test
+  void testExtremaRejectMixedComparableClasses() {
+    ['A', '-', '?', 'AB', 'A' as Character, new Date(0)].each { stray ->
+      [[200, stray], [stray, 200]].each { values ->
+        def grid = values.collect { [it] }
+        def table = Matrix.builder().data(value: values).types(Object).build()
+        assertThrows(IllegalArgumentException) { min(values) }
+        assertThrows(IllegalArgumentException) { max(values) }
+        assertThrows(IllegalArgumentException) { min(grid, [0]) }
+        assertThrows(IllegalArgumentException) { min(grid, 0) }
+        assertThrows(IllegalArgumentException) { max(grid, [0]) }
+        assertThrows(IllegalArgumentException) { max(grid, 0) }
+        assertThrows(IllegalArgumentException) { min(table, ['value']) }
+        assertThrows(IllegalArgumentException) { max(table, ['value']) }
+        assertThrows(IllegalArgumentException) { max(table, 'value') }
+        assertEquals(200, min(values, true))
+        assertEquals(200, max(values, true))
+        assertIterableEquals([200], min(grid, [0], true))
+        assertIterableEquals([200], max(grid, [0], true))
+      }
+    }
+    assertEquals(1, min([2L, 1.0, 3]))
+    assertEquals(3, max([2L, 1.0, 3]))
+    assertEquals('A', min(['B', 'A']))
+    assertEquals('B', max(['B', 'A']))
+    assertEquals('A' as Character, min(['B' as Character, 'A' as Character]))
+    assertEquals('A', min(['A', 'B' as Character]))
+    assertEquals(new java.sql.Date(1), max([new Date(0), new java.sql.Date(1)]))
+  }
+
+
+  @Test
+  void testExtremaPreserveGroovyComparableCompatibility() {
+    int i = 2
+    def examples = [
+        ['a', "b$i"],
+        [new Date(0), new java.sql.Timestamp(1000)],
+        [Operation.MINUS, Operation.PLUS]]
+    examples.each { values ->
+      [values, values.reverse()].each { ordered ->
+        def grid = ordered.collect { [it] }
+        def table = Matrix.builder().data(value: ordered).types(Object).build()
+        assertSame(values[0], min(ordered))
+        assertSame(values[1], max(ordered))
+        assertSame(values[0], min(grid, [0])[0])
+        assertSame(values[1], max(grid, [0])[0])
+        assertSame(values[0], min(grid, 0)[0])
+        assertSame(values[1], max(grid, 0))
+        assertSame(values[0], min(table, ['value'])[0])
+        assertSame(values[1], max(table, ['value'])[0])
+        assertSame(values[1], max(table, 'value'))
+      }
+    }
+  }
+
+  private enum Operation {
+    MINUS {
+      @Override
+      int apply(int value) {
+        -value
+      }
+    },
+    PLUS {
+      @Override
+      int apply(int value) {
+        value
+      }
+    }
+
+    abstract int apply(int value)
   }
 }

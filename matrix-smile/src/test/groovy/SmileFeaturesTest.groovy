@@ -942,4 +942,66 @@ class SmileFeaturesTest {
     assertEquals('value', result.columnNames().last())
   }
 
+
+  @Test
+  void testLegacyNullAdapterContracts() {
+    def matrix = Matrix.builder('legacy').data(a: [null, 2], b: ['x', null]).types(Integer, String).build()
+    matrix.createIndex('a')
+    def filled = SmileFeatures.fillna(matrix, 'a', '5')
+    assertEquals(Integer, filled.type('a'))
+    assertEquals('5', filled.column('a').get(0))
+    assertEquals([], filled.indexedColumns())
+    assertNull(matrix.column('a').get(0))
+    assertEquals(0, SmileFeatures.dropna(matrix).rowCount())
+    assertEquals(1, SmileFeatures.dropna(matrix, ['a']).rowCount())
+    assertEquals(2, SmileFeatures.dropna(matrix, []).rowCount())
+    assertEquals([], SmileFeatures.dropna(matrix, ['a']).indexedColumns())
+    assertThrows(IllegalArgumentException) { SmileFeatures.dropna(matrix, ['absent']) }
+    assertThrows(IndexOutOfBoundsException) { SmileFeatures.fillna(matrix, 'absent', 0) }
+    assertEquals('legacy', filled.matrixName)
+  }
+
+  @Test
+  void testLegacyFillKeepsNumericReplacementClass() {
+    def matrix = Matrix.builder().data(amount: [1.25, null]).types(BigDecimal).build()
+    def filled = SmileFeatures.fillna(matrix, 'amount', 0)
+    assertEquals(BigDecimal, filled.type('amount'))
+    assertEquals(Integer, filled.column('amount').get(1).getClass())
+    assertEquals(0, filled.column('amount').get(1))
+    assertNull(matrix.column('amount').get(1))
+    assertEquals(BigDecimal, matrix.type('amount'))
+  }
+
+  @Test
+  void testLegacyNumericFillCopiesOnlyOnce() {
+    def copies = [0]
+    def matrix = new CountingMatrix(copies)
+    def filled = SmileFeatures.fillna(matrix, 'amount', 0)
+    assertEquals(1, copies[0])
+    assertEquals(BigDecimal, filled.type('amount'))
+    assertEquals(Integer, filled.column('amount').get(0).getClass())
+    assertNull(matrix.column('amount').get(0))
+    filled.column('other').set(0, 'changed')
+    assertEquals('original', matrix.column('other').get(0))
+  }
+
+  private static class CountingMatrix extends Matrix {
+    private final List<Integer> copies
+
+    CountingMatrix(List<Integer> copies) {
+      super('counted', ['amount', 'other'], [[null, 1.25], ['original', 'other']], [BigDecimal, String])
+      this.copies = copies
+    }
+
+    @Override
+    Matrix clone() {
+      copies[0] = copies[0] + 1
+      def copy = new CountingMatrix(copies)
+      columns().eachWithIndex { column, index ->
+        copy.column(index).clear()
+        copy.column(index).addAll(column)
+      }
+      copy
+    }
+  }
 }

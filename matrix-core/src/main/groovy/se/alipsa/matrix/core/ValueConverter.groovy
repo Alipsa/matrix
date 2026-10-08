@@ -1,5 +1,7 @@
 package se.alipsa.matrix.core
 
+import static se.alipsa.matrix.core.util.ClassUtils.primitiveWrapper
+
 import java.sql.Date
 import java.sql.Time
 import java.sql.Timestamp
@@ -96,6 +98,41 @@ class ValueConverter {
         o.asType(type)
       }
     }
+  }
+
+  /**
+   * Converts a numeric value only when its mathematical value is preserved.
+   * Already assignable values are unchanged. Failed, narrowing, overflow, and
+   * nonfinite conversions retain the original value rather than lose information.
+   * @param value numeric value, or null
+   * @param type target Number declaration (primitive numeric declarations also supported); null preserves value
+   * @return converted Number when lossless, otherwise the original Number
+   */
+  static Number convertNumberLosslessly(Number value, Class<? extends Number> type) {
+    if (value == null || type == null) {
+      return value
+    }
+    Class target = primitiveWrapper(type)
+    if (target.isInstance(value)) {
+      return value
+    }
+    BigDecimal original = asBigDecimal(value)
+    if (original == null) {
+      return value
+    }
+    Object converted
+    try {
+      converted = convert(value, target)
+    } catch (IllegalArgumentException ignored) {
+      return value
+    }
+    if (converted instanceof Number) {
+      BigDecimal decimal = asBigDecimal(converted)
+      if (decimal != null && original == decimal) {
+        return converted
+      }
+    }
+    value
   }
 
   static BigDecimal asBigDecimal(BigDecimal num) {
