@@ -59,4 +59,24 @@ class JoinCardinalityTest {
       Joiner.merge(composite, repeated, ['id', 'part'], JoinType.INNER, JoinCardinality.MANY_TO_ONE)
     }
   }
+
+  @Test
+  void testDuplicateErrorUsesRawKeys() {
+    def repeated = Matrix.builder().data(id: [10, 10, 20]).types(Integer).build()
+    def unique = Matrix.builder().data(id: [10, 20]).types(Integer).build()
+    def left = assertThrows(IllegalArgumentException) {
+      repeated.merge(unique, 'id', JoinType.INNER, JoinCardinality.ONE_TO_ONE)
+    }
+    assertEquals('Duplicate key [10] on left input violates ONE_TO_ONE', left.message)
+    def right = assertThrows(IllegalArgumentException) {
+      unique.merge(repeated, 'id', JoinType.LEFT, JoinCardinality.MANY_TO_ONE)
+    }
+    assertEquals('Duplicate key [10] on right input violates MANY_TO_ONE', right.message)
+    def composite = Matrix.builder().data(id: [10.00, 10L], part: ['x', 'x']).types(Number, String).build()
+    def error = assertThrows(IllegalArgumentException) {
+      composite.merge(composite, ['id', 'part'], JoinType.SEMI, JoinCardinality.ONE_TO_ONE)
+    }
+    assertEquals('Duplicate key [10.00, x] on left input violates ONE_TO_ONE', error.message)
+  }
+
 }

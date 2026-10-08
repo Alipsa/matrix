@@ -960,4 +960,15 @@ class SmileFeaturesTest {
     assertThrows(IndexOutOfBoundsException) { SmileFeatures.fillna(matrix, 'absent', 0) }
     assertEquals('legacy', filled.matrixName)
   }
+
+  @Test
+  void testLegacyFillKeepsNumericReplacementClass() {
+    def matrix = Matrix.builder().data(amount: [1.25, null]).types(BigDecimal).build()
+    def filled = SmileFeatures.fillna(matrix, 'amount', 0)
+    assertEquals(BigDecimal, filled.type('amount'))
+    assertEquals(Integer, filled.column('amount').get(1).getClass())
+    assertEquals(0, filled.column('amount').get(1))
+    assertNull(matrix.column('amount').get(1))
+    assertEquals(BigDecimal, matrix.type('amount'))
+  }
 }

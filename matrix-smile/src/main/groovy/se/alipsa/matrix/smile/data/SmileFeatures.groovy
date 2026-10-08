@@ -1,5 +1,7 @@
 package se.alipsa.matrix.smile.data
 
+import static se.alipsa.matrix.core.util.ClassUtils.primitiveWrapper
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.smile.SmileUtil
 
@@ -324,7 +326,15 @@ class SmileFeatures {
   static Matrix fillna(Matrix matrix, String column, Object value) {
     matrix.column(column) // Preserve the existing unknown-column validation.
     Class declaredType = matrix.type(matrix.columnNames().indexOf(column))
-    Matrix result = matrix.fillNulls([(column): value])
+    Matrix source = matrix
+    Class numericType = primitiveWrapper(declaredType)
+    if (value instanceof Number && numericType != null && Number.isAssignableFrom(numericType)
+        && !numericType.isInstance(value)) {
+      // Legacy fillna keeps the replacement's runtime type; disable core numeric coercion on a copy.
+      source = matrix.clone()
+      source.column(column).type = Object
+    }
+    Matrix result = source.fillNulls([(column): value])
     result.column(column).type = declaredType // Legacy fillna preserves declarations, even when incompatible.
     result.resetIndex() // Legacy transformations do not carry index configuration.
     result

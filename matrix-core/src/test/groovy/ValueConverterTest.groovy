@@ -444,4 +444,22 @@ class ValueConverterTest {
     assertEquals('-1', ValueConverter.fixNegationFormat(format, '-1'))
   }
 
+
+  @Test
+  void testLosslessNumberConversion() {
+    def decimal = ValueConverter.convertNumberLosslessly(0, BigDecimal)
+    assertEquals(BigDecimal, decimal.getClass())
+    assertEquals(0, decimal)
+    assertEquals(Integer, ValueConverter.convertNumberLosslessly(1L, int).getClass())
+    assertEquals(1.5, ValueConverter.convertNumberLosslessly(1.5, Integer))
+    assertEquals(BigDecimal, ValueConverter.convertNumberLosslessly(1.5, Integer).getClass())
+    assertEquals(2147483648L, ValueConverter.convertNumberLosslessly(2147483648L, Integer))
+    assertEquals(9007199254740993L, ValueConverter.convertNumberLosslessly(9007199254740993L, Double))
+    assertNull(ValueConverter.convertNumberLosslessly(null, BigDecimal))
+    assertEquals(1L, ValueConverter.convertNumberLosslessly(1L, null))
+    assertEquals(Long, ValueConverter.convertNumberLosslessly(1L, Number).getClass())
+    [Double.NaN, Float.NaN, Double.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY].each { value ->
+      assertSame(value, ValueConverter.convertNumberLosslessly(value, BigDecimal))
+    }
+  }
 }

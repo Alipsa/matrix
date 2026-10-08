@@ -5,7 +5,7 @@
 
 - Fix Row sublist assignment bounds and atomicity, and enforce Grid declared types through all row views.
 - Preserve unmatched outer-join keys across value families (e.g. integer 1 vs string '01'); only lossless numeric-to-numeric conversion is permitted.
-- Grid minima now support Comparable strings/dates by default. Mixed incomparable values throw IllegalArgumentException; pass ignoreNonNumerics=true to retain numeric-only behavior (`Stat.min([[1], ['NA'], [3]], [0], true)` returns `[1]`).
+- Grid minima now support Comparable strings/dates by default. All list/grid/Matrix min/max paths reject compared pairs unless both values are Numbers or their runtime classes match, including one-character String/Number pairs; pass ignoreNonNumerics=true to retain numeric-only behavior (`Stat.min([[1], ['NA'], [3]], [0], true)` returns `[1]`).
 - Selected-column means skip NaN/infinity, retain numeric-only filtering (`Stat.means([['5'], [3]], [0]) == [3]`).
 - Rows retain snapshot reads and write-through assignments; tracked positional mutations now reject old attached writes with ConcurrentModificationException. Direct exposed Column structural mutations remain untracked. Fetch fresh Rows after structural edits; detach keeps old snapshots editable.
 - Share metadata snapshots within rows() batches. **Migration:** Row.columnNames()/types() now return unmodifiable lists; editing throws UnsupportedOperationException. Use `new ArrayList<>(row.columnNames())` / `new ArrayList<>(row.types())` for editable metadata copies. `row as List` returns a shallow copy instead of exposing cached content. Mutable cells remain shared.
@@ -24,9 +24,9 @@ assert matrix[0, 'b'] == 3
 matrix.row(0)['b'] = 4
 ```
 
-- Add explicit JoinCardinality validation for shared or paired keys; existing joins remain MANY_TO_MANY. Orders/customers example: `orders.merge(customers, 'customerId', JoinType.LEFT, JoinCardinality.MANY_TO_ONE)` rejects duplicate customer keys anywhere in the right input.
+- Add explicit JoinCardinality validation for shared or paired keys; existing joins remain MANY_TO_MANY. Duplicate-key errors show the first raw input key (e.g. `[10]`, not normalized `[1E+1]`). Orders/customers example: `orders.merge(customers, 'customerId', JoinType.LEFT, JoinCardinality.MANY_TO_ONE)` rejects duplicate customer keys anywhere in the right input.
 - Add `validate(checkTypes=false)` immutable ordered structural/name diagnostics, optionally raw assignability diagnostics; e.g. `matrix.validate(true)` reports a String '5' stored in an Integer column.
-- Add nonmutating null cleanup (`data.withoutNullRows(['price']).fillNulls([country: 'Unknown'])`) with schema/index preservation and type widening when required. Only null counts as missing.
+- Add nonmutating null cleanup (`data.withoutNullRows(['price']).fillNulls([country: 'Unknown'])`) with schema/index preservation. Numeric fills first convert losslessly to the declared numeric type: `fillNulls([amount: 0])` preserves a BigDecimal declaration and stores BigDecimal zero. Lossy fills retain their raw replacement and widen types. Only null counts as missing.
 - Add duplicate masks and nonmutating first-occurrence selection (`events.duplicated(['source', 'eventId'])`, `events.withoutDuplicateRows(['source', 'eventId'])`) using normalized numeric keys, null and nonfinite categories.
 - Align core/BOM to 3.10.0-SNAPSHOT; Smile 0.3.0-SNAPSHOT requires core 3.10.0 and publishes it transitively. See [cookbook](../docs/cookbook/matrix-core.md#matrix-core-3100-checked-snapshots-and-data-cleanup) for complete API defaults, examples, and migration details.
 

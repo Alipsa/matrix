@@ -936,15 +936,19 @@ this operation returns a new Matrix. Ignoring its result leaves the receiver unc
 
 `fillNulls(Map<String, ?> replacements)` uses constant values for existing column
 names. A null map or unknown name throws `IllegalArgumentException`; an empty map
-returns an independent copy; a null replacement leaves nulls unchanged. Only actual
-incompatible replacements widen declared types (Number for differing numeric
-families; common assignable type or Object otherwise). Null/Object declarations
+returns an independent copy; a null replacement leaves nulls unchanged. For actual
+fills, numeric replacements first convert losslessly to the declared numeric type
+(e.g. `fillNulls([amount: 0])` keeps a BigDecimal amount column and stores a
+BigDecimal zero). If that conversion loses precision, the original replacement
+is retained and the declaration widens to Number for differing numeric families;
+other incompatible replacements widen to a common assignable type or Object. Null/Object declarations
 remain unconstrained. Both operations preserve name, schema, row/column order, and
 index configuration, including empty results; copied indexes rebuild as needed.
 Copies own their lists, but mutable cell objects are shared.
 
 Smile 0.3.0's existing `SmileFeatures.fillna`/`dropna` calls delegate to these core
-operations while preserving legacy type declarations, empty dropna selection,
+operations while preserving legacy type declarations and replacement runtime
+classes, empty dropna selection,
 unknown-column checks, and results without indexes. Mean/median imputation remains
 available through the existing Smile methods.
 
@@ -975,3 +979,23 @@ Null matches null, Float/Double NaNs share a category, positive and negative
 infinities are separate categories across both types. Other objects use their
 `equals`/`hashCode` contracts. Detection uses temporary normalized compound keys,
 not mutable Row keys. It does not change Matrix indexes' existing raw-key policy.
+
+### Comparable extrema
+
+List, grid, and Matrix `Stat.min`/`Stat.max` compare only pairs that are both
+Numbers or have exactly the same runtime class. This rejects Groovy's character
+code comparisons between one-character strings and numbers. Null and
+non-Comparable values remain skipped; `ignoreNonNumerics` defaults to false and
+true retains numeric-only filtering where that parameter is available.
+
+```groovy
+import se.alipsa.matrix.core.Stat
+assert Stat.min([[200], ['A']], [0], true) == [200]
+try {
+  Stat.min([[200], ['A']], [0])
+  assert false
+} catch (IllegalArgumentException expected) {
+  assert expected.message.contains('String')
+}
+assert Stat.max([1, 2L, 3.0]) == 3
+```

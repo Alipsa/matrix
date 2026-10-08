@@ -185,6 +185,8 @@ class Matrix implements Iterable<Row>, Cloneable {
    * Copies this Matrix, filling only null cells with the supplied constants.
    * @param replacements existing column names to constants; null constants leave nulls;
    *                     an empty map returns an independent copy; null map is rejected
+   * Numeric replacements are converted to the declared numeric type when lossless;
+   * otherwise the original replacement is preserved and the type widened.
    * @return copy retaining schema unless actual replacements require widening; indexes are rebuilt lazily
    * @throws IllegalArgumentException for null map or unknown columns
    */
@@ -197,14 +199,21 @@ class Matrix implements Iterable<Row>, Cloneable {
     replacements.each { String name, Object replacement ->
       Column column = result.column(name)
       boolean replaced = false
+      Object fillValue = replacement
+      Class declaredType = primitiveWrapper(column.type)
       column.eachWithIndex { Object value, int row ->
         if (value == null && replacement != null) {
-          column.set(row, replacement)
+          if (!replaced && replacement instanceof Number && declaredType != null
+              && Number.isAssignableFrom(declaredType)) {
+            fillValue = ValueConverter.convertNumberLosslessly(replacement as Number,
+                declaredType as Class<? extends Number>)
+          }
+          column.set(row, fillValue)
           replaced = true
         }
       }
-      if (replaced && column.type != null && column.type != Object) {
-        column.type = commonDeclaredType(column.type, replacement.getClass())
+      if (replaced && declaredType != null && !declaredType.isInstance(fillValue)) {
+        column.type = commonDeclaredType(column.type, fillValue.getClass())
       }
     }
     result.invalidateIndex()

@@ -702,6 +702,21 @@ class Stat {
         q[1] - q[0]
     }
 
+    private static void validateComparablePair(Comparable value, Comparable current) {
+        if (current != null && !(value instanceof Number && current instanceof Number)
+                && value.getClass() != current.getClass()) {
+            throw new IllegalArgumentException(
+                "Cannot compare ${value.getClass().simpleName} with ${current.getClass().simpleName}; extrema require Numbers or values of the same class")
+        }
+    }
+
+    /**
+     * Finds the minimum among comparable non-null values.
+     * @param list input values; non-Comparable values are skipped
+     * @param ignoreNonNumerics false by default; true keeps only Numbers
+     * @return extremum or null when no eligible values exist
+     * @throws IllegalArgumentException when a compared pair is neither both Numbers nor the same runtime class
+     */
     static <T> T min(List<T> list, boolean ignoreNonNumerics = false) {
         def minVal = null
         for (value in list) {
@@ -710,6 +725,7 @@ class Stat {
                 skip = true
             }
             if (value instanceof Comparable && !skip) {
+                validateComparablePair(value, minVal as Comparable)
                 if (minVal == null || value < minVal) {
                     minVal = value
                 }
@@ -722,6 +738,14 @@ class Stat {
         return min(matrix, [colNum], ignoreNonNumerics)
     }
 
+    /**
+     * Finds the minimum in each selected grid column.
+     * @param matrix row-oriented input values
+     * @param colNums column indices in result order
+     * @param ignoreNonNumerics false by default; true keeps only Numbers
+     * @return one extremum per column, null for columns with no eligible values
+     * @throws IllegalArgumentException when a compared pair is neither both Numbers nor the same runtime class
+     */
     static <T extends Comparable> List<T> min(List<List<T>> matrix, List<Integer> colNums, boolean ignoreNonNumerics = false) {
         def value
         def minVal
@@ -737,6 +761,7 @@ class Stat {
                 }
                 if (value instanceof Comparable && !skip) {
                     minVal = minVals[idx]
+                    validateComparablePair(value, minVal as Comparable)
                     if (minVal == null || value < minVal) {
                         minVals[idx] = value
                     }
@@ -751,6 +776,13 @@ class Stat {
         colNames.collect { colName -> min(table.column(colName) as List<T>, ignoreNonNumerics) }
     }
 
+    /**
+     * Finds the maximum among comparable non-null values.
+     * @param list input values; non-Comparable values are skipped
+     * @param ignoreNonNumerics false by default; true keeps only Numbers
+     * @return extremum or null when no eligible values exist
+     * @throws IllegalArgumentException when a compared pair is neither both Numbers nor the same runtime class
+     */
     static <T> T max(List<T> list, boolean ignoreNonNumerics = false) {
         def maxVal = null
         for (value in list) {
@@ -759,6 +791,7 @@ class Stat {
                 skip = true
             }
             if (value instanceof Comparable && !skip) {
+                validateComparablePair(value, maxVal as Comparable)
                 if (maxVal == null || value > maxVal) {
                     maxVal = value
                 }
@@ -771,6 +804,14 @@ class Stat {
         return max(matrix, [colNum], ignoreNonNumerics)[0]
     }
 
+    /**
+     * Finds the maximum in each selected grid column.
+     * @param matrix row-oriented input values
+     * @param colNums column indices in result order
+     * @param ignoreNonNumerics false by default; true keeps only Numbers
+     * @return one extremum per column, null for columns with no eligible values
+     * @throws IllegalArgumentException when a compared pair is neither both Numbers nor the same runtime class
+     */
     static <T extends Comparable> List<T> max(List<List<T>> matrix, List<Integer> colNums, boolean ignoreNonNumerics = false) {
         def value
         def maxVal
@@ -786,6 +827,7 @@ class Stat {
                 }
                 if (value instanceof Comparable && !skip) {
                     maxVal = maxVals[idx]
+                    validateComparablePair(value, maxVal as Comparable)
                     if (maxVal == null || value > maxVal) {
                         maxVals[idx] = value
                     }

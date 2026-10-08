@@ -102,12 +102,14 @@ class StatTest {
     ]
 
     assertEquals(0.3, min(matrix[0]))
-    def m = min(matrix, 1..2)
+    assertThrows(IllegalArgumentException) { min(matrix, 1..2) }
+    def m = min(matrix, 1..2, true)
     assertEquals(1, m[0])
     assertEquals(0.9, m[1])
 
     def table = Matrix.builder().columnNames(["v0", "v1", "v2"]).rows(matrix).build()
-    def m2 = min(table, ["v1", "v2"])
+    assertThrows(IllegalArgumentException) { min(table, ["v1", "v2"]) }
+    def m2 = min(table, ["v1", "v2"], true)
     assertIterableEquals(m, m2)
   }
 
@@ -672,6 +674,37 @@ class StatTest {
       assertThrows(IllegalArgumentException) { min(rows, 0) }
       assertIterableEquals([1], min(rows, [0], true))
     }
+  }
+
+
+  @Test
+  void testExtremaRejectMixedComparableClasses() {
+    ['A', '-', '?', 'AB', 'A' as Character, new Date(0)].each { stray ->
+      [[200, stray], [stray, 200]].each { values ->
+        def grid = values.collect { [it] }
+        def table = Matrix.builder().data(value: values).types(Object).build()
+        assertThrows(IllegalArgumentException) { min(values) }
+        assertThrows(IllegalArgumentException) { max(values) }
+        assertThrows(IllegalArgumentException) { min(grid, [0]) }
+        assertThrows(IllegalArgumentException) { min(grid, 0) }
+        assertThrows(IllegalArgumentException) { max(grid, [0]) }
+        assertThrows(IllegalArgumentException) { max(grid, 0) }
+        assertThrows(IllegalArgumentException) { min(table, ['value']) }
+        assertThrows(IllegalArgumentException) { max(table, ['value']) }
+        assertThrows(IllegalArgumentException) { max(table, 'value') }
+        assertEquals(200, min(values, true))
+        assertEquals(200, max(values, true))
+        assertIterableEquals([200], min(grid, [0], true))
+        assertIterableEquals([200], max(grid, [0], true))
+      }
+    }
+    assertEquals(1, min([2L, 1.0, 3]))
+    assertEquals(3, max([2L, 1.0, 3]))
+    assertEquals('A', min(['B', 'A']))
+    assertEquals('B', max(['B', 'A']))
+    assertEquals('A' as Character, min(['B' as Character, 'A' as Character]))
+    assertThrows(IllegalArgumentException) { min(['A', 'B' as Character]) }
+    assertThrows(IllegalArgumentException) { max([new Date(0), new java.sql.Date(1)]) }
   }
 
 }

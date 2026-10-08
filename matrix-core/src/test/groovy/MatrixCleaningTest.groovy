@@ -42,11 +42,13 @@ class MatrixCleaningTest {
     matrix.createIndex('a')
     matrix.lookup((Object) null) // Build the original index before copying.
     def filled = matrix.fillNulls([a: 1L, b: 'unknown'])
-    assertEquals(Number, filled.type('a'))
+    assertEquals(Integer, filled.type('a'))
     assertEquals(String, filled.type('b'))
-    assertEquals(1L, filled.column('a').get(0))
+    assertEquals(1, filled.column('a').get(0))
+    assertEquals(Integer, filled.column('a').get(0).getClass())
     assertEquals('unknown', filled[0, 'b'])
-    assertEquals(1, filled.lookup(1L).rowCount())
+    assertEquals(1, filled.lookup(1).rowCount())
+    assertEquals(0, filled.lookup(1L).rowCount())
     assertEquals(1, matrix.lookup((Object) null).rowCount())
     assertEquals('fill', filled.matrixName)
     assertNull(matrix.column('a').get(0))
@@ -103,4 +105,32 @@ class MatrixCleaningTest {
     def values = Matrix.builder().data(a: [new Date(0), new Date(0), new Date(1)]).build()
     assertIterableEquals([false, true, false], values.duplicated())
   }
+
+  @Test
+  void testNumericFillPreservesLosslessDeclarations() {
+    def amounts = Matrix.builder().data(amount: [1.25, null, 2.50]).types(BigDecimal).build()
+    def filled = amounts.fillNulls([amount: 0])
+    assertEquals(BigDecimal, filled.type('amount'))
+    assertEquals(BigDecimal, filled.column('amount').get(1).getClass())
+    assertEquals(0, filled.column('amount').get(1))
+    assertNull(amounts.column('amount').get(1))
+    def integers = Matrix.builder().data(value: [null, 2]).types(int).build()
+    assertEquals(Integer, integers.fillNulls([value: 1L]).column('value').get(0).getClass())
+    assertEquals(Integer, integers.fillNulls([value: 1L]).type('value'))
+    def lossy = integers.fillNulls([value: 1.5])
+    assertEquals(Number, lossy.type('value'))
+    assertEquals(BigDecimal, lossy.column('value').get(0).getClass())
+    def overflow = integers.fillNulls([value: 2147483648L])
+    assertEquals(Number, overflow.type('value'))
+    assertEquals(2147483648L, overflow.column('value').get(0))
+    def doubles = Matrix.builder().data(value: [null]).types(Double).build()
+    def precise = doubles.fillNulls([value: 9007199254740993L])
+    assertEquals(Number, precise.type('value'))
+    assertEquals(Long, precise.column('value').get(0).getClass())
+    def nonfinite = amounts.fillNulls([amount: Double.NaN])
+    assertEquals(Number, nonfinite.type('amount'))
+    assertEquals(Double, nonfinite.column('amount').get(1).getClass())
+    assertEquals(true, nonfinite.column('amount').get(1).isNaN())
+  }
+
 }

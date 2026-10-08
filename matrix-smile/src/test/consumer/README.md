@@ -2,7 +2,9 @@
 
 This standalone Gradle consumer declares only Smile and Groovy. It verifies that
 published metadata resolves core 3.10.0-SNAPSHOT transitively and that fillna and
-both dropna overloads execute without missing core APIs. Java 21 is required.
+both dropna overloads execute without missing core APIs. It also checks lossless
+BigDecimal fills, legacy Smile replacement classes, mixed extrema rejection, and
+raw duplicate-key diagnostics. Java 21 is required.
 From the repository root:
 
 ```sh

@@ -857,4 +857,15 @@ class JoinerTest {
     assertEquals(Object, joined.types()[0])
   }
 
+
+  @Test
+  void testOuterJoinPreservesOverflowingNumericKeys() {
+    def left = Matrix.builder().data(id: [1]).types(Integer).build()
+    def right = Matrix.builder().data(id: [2147483648L, -2147483649L]).types(Long).build()
+    def result = Joiner.merge(left, right, 'id', JoinType.FULL)
+    assertEquals(Number, result.type('id'))
+    assertIterableEquals([1, 2147483648L, -2147483649L], result['id'])
+    assertEquals(Long, result.column('id').get(1).getClass())
+    assertEquals(Long, result.column('id').get(2).getClass())
+  }
 }

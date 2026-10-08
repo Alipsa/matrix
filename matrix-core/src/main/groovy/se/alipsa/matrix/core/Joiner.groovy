@@ -206,7 +206,7 @@ class Joiner {
 
     JoinIndex yJoinIndex = buildIndex(y, yKeyIndices, yNonKeyIndices)
     Map<List<Object>, List<List<Object>>> yIndex = yJoinIndex.rows
-    validateInputs(x, xKeyIndices, yIndex, cardinality)
+    validateInputs(x, xKeyIndices, yJoinIndex, cardinality)
 
     List<List<Object>> resultRows = []
     boolean needsMatchTracking = joinType == JoinType.RIGHT || joinType == JoinType.FULL
@@ -302,18 +302,7 @@ class Joiner {
     if (target.isInstance(rawKey) || !(rawKey instanceof Number) || !Number.isAssignableFrom(target)) {
       return rawKey
     }
-    Object converted = ValueConverter.convert(rawKey, target)
-    if (converted == null) {
-      return rawKey
-    }
-    if (rawKey instanceof Number && converted instanceof Number) {
-      BigDecimal rawDecimal = ValueConverter.asBigDecimal(rawKey as Number)
-      BigDecimal convertedDecimal = ValueConverter.asBigDecimal(converted as Number)
-      if (rawDecimal == null || convertedDecimal == null || rawDecimal != convertedDecimal) {
-        return rawKey
-      }
-    }
-    converted
+    ValueConverter.convertNumberLosslessly(rawKey as Number, target as Class<? extends Number>)
   }
 
   private static void validateJoinPolicy(JoinType joinType, JoinCardinality cardinality) {
@@ -326,21 +315,21 @@ class Joiner {
   }
 
   private static void validateInputs(Matrix x, List<Integer> xKeyIndices,
-                                     Map<List<Object>, List<List<Object>>> yIndex,
+                                     JoinIndex yIndex,
                                      JoinCardinality cardinality) {
     if (cardinality in [JoinCardinality.ONE_TO_ONE, JoinCardinality.ONE_TO_MANY]) {
-      validateCardinality(buildIndex(x, xKeyIndices, []).rows, 'left', cardinality)
+      validateCardinality(buildIndex(x, xKeyIndices, []), 'left', cardinality)
     }
     if (cardinality in [JoinCardinality.ONE_TO_ONE, JoinCardinality.MANY_TO_ONE]) {
       validateCardinality(yIndex, 'right', cardinality)
     }
   }
 
-  private static void validateCardinality(Map<List<Object>, List<List<Object>>> index,
+  private static void validateCardinality(JoinIndex index,
                                           String side, JoinCardinality cardinality) {
-    index.each { List<Object> key, List<List<Object>> rows ->
+    index.rows.each { List<Object> key, List<List<Object>> rows ->
       if (isMatchableKey(key) && rows.size() > 1) {
-        throw new IllegalArgumentException("Duplicate key $key on $side input violates $cardinality")
+        throw new IllegalArgumentException("Duplicate key ${index.rawKeys[key]} on $side input violates $cardinality")
       }
     }
   }

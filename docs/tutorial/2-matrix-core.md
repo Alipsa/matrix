@@ -663,7 +663,9 @@ assert report['name'] == ['Ada']
 No-argument null/duplicate methods select all columns. Explicit selections must
 contain existing names and be nonempty. `fillNulls` takes existing column names
 mapped to constants; null means unchanged, an empty map copies, and a null map is
-invalid. Only null is missing; actual incompatible fills widen types. Results
+invalid. Only null is missing; numeric fills preserve declared numeric types when
+lossless (BigDecimal columns filled with integer zero store BigDecimal zero);
+lossy or incompatible fills retain their values and widen types. Results
 preserve schema, name, order, and index configuration. Duplicate keys compare finite
 numbers mathematically, preserve String/Character families, match nulls and NaNs,
 and distinguish signed infinity categories. `validate(checkTypes=false)` reports
