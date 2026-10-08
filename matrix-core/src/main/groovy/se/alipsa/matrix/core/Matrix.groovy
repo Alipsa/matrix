@@ -196,6 +196,10 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     replacements.keySet().each { String name -> requireColumnIndex(name) }
     Matrix result = clone()
+    // Cloning sanitizes primitive declarations; filling preserves the original schema.
+    mColumns.eachWithIndex { Column column, int index ->
+      result.mColumns[index].type = column.type
+    }
     replacements.each { String name, Object replacement ->
       Column column = result.column(name)
       if (replacement == null || !column.hasNulls()) {

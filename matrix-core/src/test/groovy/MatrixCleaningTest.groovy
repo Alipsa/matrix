@@ -107,6 +107,26 @@ class MatrixCleaningTest {
   }
 
   @Test
+  void testCompatibleFillsPreservePrimitiveDeclarations() {
+    def matrix = Matrix.builder().data(count: [null, 2], enabled: [null, true]).build()
+    matrix.column('count').type = Integer.TYPE
+    matrix.column('enabled').type = Boolean.TYPE
+
+    def filled = matrix.fillNulls([count: 1, enabled: false])
+    assertEquals(Integer.TYPE, filled.type('count'))
+    assertEquals(Boolean.TYPE, filled.type('enabled'))
+    assertIterableEquals([1, 2], filled.column('count'))
+    assertIterableEquals([false, true], filled.column('enabled'))
+    assertNull(matrix.column('count').get(0))
+    assertNull(matrix.column('enabled').get(0))
+    assertEquals(Integer.TYPE, matrix.type('count'))
+    assertEquals(Boolean.TYPE, matrix.type('enabled'))
+    assertIterableEquals([Integer.TYPE, Boolean.TYPE], matrix.fillNulls([:]).types())
+    assertEquals(Number, matrix.fillNulls([count: 1.5]).type('count'))
+    assertEquals(Boolean.TYPE, matrix.fillNulls([count: 1L]).type('enabled'))
+  }
+
+  @Test
   void testNumericFillPreservesLosslessDeclarations() {
     def amounts = Matrix.builder().data(amount: [1.25, null, 2.50]).types(BigDecimal).build()
     def filled = amounts.fillNulls([amount: 0])
