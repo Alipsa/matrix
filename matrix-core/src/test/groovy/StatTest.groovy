@@ -637,4 +637,41 @@ class StatTest {
     assertEquals(0.7071067811865476, sd(values) as double, 1e-15, 'sd')
     assertEquals(0.5, variance(values), 'variance')
   }
+
+  @Test
+  void testSelectedMeansExcludeNonfiniteAndStrings() {
+    def data = [[1d, '5'], [Double.NaN, 3], [Float.NaN, null],
+                [Double.POSITIVE_INFINITY, '7'], [Float.NEGATIVE_INFINITY, null]]
+    assertEquals(1, means(data, [0, 1])[0])
+    assertEquals(3, means(data, [0, 1])[1])
+    assertEquals(1, means(data, 0..1)[0])
+    assertEquals(3, means(data, 0..1)[1])
+    assertIterableEquals([null], means([['5'], ['7']], [0]))
+    assertIterableEquals([null], means([[Double.NaN], [Float.POSITIVE_INFINITY]], [0]))
+    assertEquals(mean(['5', 3]), means([['5'], [3]], [0])[0])
+    def table = Matrix.builder().columnNames(['a', 'b']).rows(data).types(Object, Object).build()
+    means(data, [0, 1]).eachWithIndex { value, index ->
+      assertEquals(mean(data.collect { it[index] }), value)
+      assertEquals(means(table, ['a', 'b'])[index], value)
+    }
+  }
+
+  @Test
+  void testComparableGridMinima() {
+    assertIterableEquals(['a'], min([['b'], ['a'], [null]], [0]))
+    assertIterableEquals([null], min([['b'], ['a']], [0], true))
+    assertIterableEquals([null], min([], [0]))
+    assertIterableEquals([null], min([[null]], [0]))
+    def dates = [[LocalDate.of(2026, 2, 1)], [LocalDate.of(2026, 1, 1)]]
+    assertIterableEquals([LocalDate.of(2026, 1, 1)], min(dates, [0]))
+    assertIterableEquals(min(dates, [0]), min(dates, 0))
+    assertIterableEquals([new Date(0)], min([[new Date(1)], [new Date(0)]], [0]))
+    [[1, 'NA', 3], ['NA', 1, 3], [new Date(0), 1], [1, new Date(0)]].each { values ->
+      def rows = values.collect { [it] }
+      assertThrows(IllegalArgumentException) { min(rows, [0]) }
+      assertThrows(IllegalArgumentException) { min(rows, 0) }
+      assertIterableEquals([1], min(rows, [0], true))
+    }
+  }
+
 }

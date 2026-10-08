@@ -667,13 +667,14 @@ assert c[1..3].type == Integer
 
 Other operations are just like the groovy default behavior
 
-`Row` is a live view of its parent Matrix. Indexed value updates and
+`Row` caches snapshot values and metadata from its parent Matrix. Parent edits
+do not refresh retained Rows. Indexed value updates and
 `replaceAll` write through to the parent. Structural iterator operations and
 `sort` are rejected. Sorting is blocked so Groovy's implicit `sort()` cannot
 silently move values into columns with different declared types; explicit
 set-based reordering with `reverse(true)`, `shuffle()`, or
 `Collections.swap` remains the caller's responsibility. The `(int, int)`
-`subList` overload is a live checked view: indexed replacement writes through,
+`subList` overload is a checked view of the Row snapshot: indexed replacement writes through,
 while structural changes are rejected. The `IntRange`, `Collection`, and
 `String...` overloads return copies and are disconnected from the row.
 
@@ -792,3 +793,185 @@ Map<String, Matrix> legacy = grouped.toStringKeyMap()
 ```
 
 [Back to index](cookbook.md)  |  [Next (Matrix Stats)](matrix-stats.md)
+
+## Matrix core 3.10.0: checked snapshots and data cleanup
+
+These examples require matrix-core 3.10.0 (development artifact
+`se.alipsa.matrix:matrix-core:3.10.0-SNAPSHOT`) and Groovy 5 on Java 21.
+Add that dependency to your Gradle `implementation` configuration, then run the
+examples as Groovy scripts with the imports below.
+
+### Retaining and editing Rows
+
+Rows cache their values and metadata. Parent edits do not refresh old Rows.
+Assignments write through by position, but sorting/moving/inserting/removing rows,
+adding/inserting/dropping/moving columns, and the public cell append operation
+invalidate previously attached writes (`ConcurrentModificationException`). Reads
+and `detach()` continue to work. Renames, declared-type-only changes, and
+same-position/same-length column replacement leave writes valid.
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+
+def matrix = Matrix.builder().data(a: [1]).types(Integer).build()
+def kept = matrix.row(0)
+matrix[0, 'a'] = 2
+assert kept['a'] == 1
+assert matrix.row(0)['a'] == 2
+matrix.rename('a', 'b')
+kept['a'] = 3             // original physical column, now called b
+assert matrix[0, 'b'] == 3
+// kept['b'] = 4 throws IllegalArgumentException: old snapshot has no b.
+matrix.row(0)['b'] = 4    // fetch a fresh Row after renaming
+assert matrix[0, 'b'] == 4
+matrix.addRow([5])
+assert kept['a'] == 3     // snapshot reads still valid
+// kept['a'] = 6 throws ConcurrentModificationException.
+kept.detach()
+kept['a'] = 6             // changes only the snapshot
+assert matrix[0, 'b'] == 4
+```
+
+If parent columns swap names, retained Rows still resolve names to their original
+positions: old `row.a` can target the column the parent now calls `b`. Fetch a new
+Row after renaming to use current names. `Row.columnNames()` and `Row.types()` now
+return unmodifiable lists; mutations throw `UnsupportedOperationException`.
+Use `new ArrayList<>(row.columnNames())` or `new ArrayList<>(row.types())` for editable
+metadata copies; use Matrix APIs for parent schema edits. `row as List` now returns
+an independent shallow list. Mutable cell objects remain shared; Row's own successful
+assignments can still change its hash, so detach/copy appropriately before using
+mutable values as hash keys. Parent changes alone leave cached equality/hash/rendering stable.
+
+The exposed `Column` still extends a mutable list. Direct Column add/remove/sort
+and metadata edits bypass structural tracking; bounds checks catch missing targets
+but cannot detect an in-range reorder. Prefer Matrix structural methods and fetch
+fresh Rows after direct Column changes. `markIndexDirty()` refreshes indexes only,
+not Row versions.
+
+### Validating join cardinality
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Joiner
+import se.alipsa.matrix.core.JoinType
+import se.alipsa.matrix.core.JoinCardinality
+
+def orders = Matrix.builder().data(customerId: [1, 1, 2], amount: [10, 20, 30]).build()
+def customers = Matrix.builder().data(customerId: [1, 2], name: ['Ada', 'Bo']).build()
+def joined = Joiner.merge(orders, customers, 'customerId', JoinType.LEFT,
+    JoinCardinality.MANY_TO_ONE)
+assert joined.rowList() == [[1, 10, 'Ada'], [1, 20, 'Ada'], [2, 30, 'Bo']]
+customers.addRow([1, 'Other'])
+try {
+  orders.merge(customers, 'customerId', JoinType.LEFT, JoinCardinality.MANY_TO_ONE)
+  assert false
+} catch (IllegalArgumentException expected) {
+  assert expected.message.contains('right')
+}
+```
+
+Both Joiner and Matrix offer the extra `(joinType, cardinality)` arguments for a
+String key, List of shared keys, or paired map `[x: ['id'], y: ['customerId']]`.
+Both policies are required/non-null in these overloads; older overloads default to
+`MANY_TO_MANY`. `ONE_TO_ONE` requires unique keys on both complete inputs,
+`ONE_TO_MANY` on the left, and `MANY_TO_ONE` on the right. Duplicate keys absent
+from the other side still fail. Null/nonfinite compound keys cannot match and do
+not count toward uniqueness. Finite numeric keys use mathematical equality;
+strings remain distinct from numbers. SEMI/ANTI use the same policy. CROSS permits
+only MANY_TO_MANY. Failures identify key, side, and policy and do not change inputs.
+
+### Integrity diagnostics
+
+`validate(boolean checkTypes = false)` returns ordered immutable
+`MatrixValidationIssue` objects; an empty list means valid. Default checks compare
+column lengths with the first column and detect null/blank or duplicated names.
+`checkTypes=true` additionally checks every raw non-null cell for runtime
+assignability, with primitive declarations normalized to wrappers; null/Object
+declarations are unconstrained. It does not coerce data, inspect stale indexes,
+or change data/schema/Row versions.
+
+Illustration only: deliberately corrupting a Matrix to demonstrate diagnostics;
+do not use direct Column structural edits in normal code.
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.MatrixValidationCode
+
+def matrix = Matrix.builder().data(a: [1, 2], b: [3, 4]).types(Integer, Integer).build()
+matrix.column('b').remove(0)
+def issues = matrix.validate()
+assert issues[0].code == MatrixValidationCode.UNEQUAL_COLUMN_LENGTH
+assert issues[0].expectedLength == 2
+assert issues[0].actualLength == 1
+matrix.column('b').set(0, '5')
+assert matrix.validate(true)*.code == [MatrixValidationCode.UNEQUAL_COLUMN_LENGTH,
+    MatrixValidationCode.INCOMPATIBLE_CELL_TYPE]
+```
+
+Each issue has `code`, `columnIndex`, `columnName`, nullable `rowIndex`,
+`expectedLength`/`actualLength`, and `expectedType`/`actualType` (irrelevant fields
+are null). Codes are `UNEQUAL_COLUMN_LENGTH`, `MISSING_COLUMN_NAME`,
+`DUPLICATE_COLUMN_NAME`, `INCOMPATIBLE_CELL_TYPE`. Ordering is ascending column
+index, structural/name issues first, then ascending row index for type issues.
+A String `'5'` in an Integer column is an incompatibility, not a conversion.
+
+### Null operations
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+
+def data = Matrix.builder('sales').data(price: [null, 10, 20], country: ['SE', null, '']).
+    types(Integer, String).build()
+def cleaned = data.withoutNullRows(['price'])
+def filled = cleaned.fillNulls([country: 'Unknown'])
+assert filled.rowList() == [[10, 'Unknown'], [20, '']]
+assert data.rowCount() == 3
+```
+
+`withoutNullRows()` checks every column; `withoutNullRows(List<String> columns)`
+checks a required nonempty selection of existing names and removes any row with
+any selected null. Only null is missing: blanks, NaN, and infinity remain. Unlike
+`removeEmptyRows()` (mutating, removes wholly empty rows including blank strings),
+this operation returns a new Matrix. Ignoring its result leaves the receiver unchanged.
+
+`fillNulls(Map<String, ?> replacements)` uses constant values for existing column
+names. A null map or unknown name throws `IllegalArgumentException`; an empty map
+returns an independent copy; a null replacement leaves nulls unchanged. Only actual
+incompatible replacements widen declared types (Number for differing numeric
+families; common assignable type or Object otherwise). Null/Object declarations
+remain unconstrained. Both operations preserve name, schema, row/column order, and
+index configuration, including empty results; copied indexes rebuild as needed.
+Copies own their lists, but mutable cell objects are shared.
+
+Smile 0.3.0's existing `SmileFeatures.fillna`/`dropna` calls delegate to these core
+operations while preserving legacy type declarations, empty dropna selection,
+unknown-column checks, and results without indexes. Mean/median imputation remains
+available through the existing Smile methods.
+
+### Duplicate rows
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+
+def events = Matrix.builder('events').data(source: ['app', 'app', 'app', 'web'],
+    eventId: [1, 1L, 2, 1], payload: ['first', 'retry', 'next', 'other']).build()
+def repeated = events.duplicated(['source', 'eventId'])
+def uniqueEvents = events.withoutDuplicateRows(['source', 'eventId'])
+assert repeated == [false, true, false, false]
+assert uniqueEvents['payload'] == ['first', 'next', 'other']
+assert events.rowCount() == 4
+```
+
+`duplicated()` and `withoutDuplicateRows()` default to all columns. Their
+`List<String> columns` overloads require a nonempty selection of existing names
+(null/empty/unknown throws `IllegalArgumentException`). The mask has one boolean
+per row; the first occurrence is false, subsequent equal keys true. Removal keeps
+the first row in original order and returns an independent Matrix preserving name,
+schema, and indexes, even if empty. Zero-column rows share the same empty key.
+
+Finite numeric keys normalize via `ValueComparison.normalizeKey`, preserving
+precision beyond double; String/Character/Number keys retain their families.
+Null matches null, Float/Double NaNs share a category, positive and negative
+infinities are separate categories across both types. Other objects use their
+`equals`/`hashCode` contracts. Detection uses temporary normalized compound keys,
+not mutable Row keys. It does not change Matrix indexes' existing raw-key policy.

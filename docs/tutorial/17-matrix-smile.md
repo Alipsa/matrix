@@ -18,12 +18,17 @@ The matrix-smile module complements matrix-stats with ML-focused functionality:
 
 ## Installation
 
+The development examples require local SNAPSHOT artifacts. From a Matrix checkout,
+run `./gradlew :matrix-groovy-ext:publishToMavenLocal :matrix-core:publishToMavenLocal :matrix-smile:publishToMavenLocal`.
+Gradle consumers add `repositories { mavenLocal(); mavenCentral() }`; Maven uses
+the local repository automatically.
+
 ### Gradle Configuration
 
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.5'
-implementation "se.alipsa.matrix:matrix-core:3.9.0"
-implementation "se.alipsa.matrix:matrix-smile:0.2.1"
+implementation "se.alipsa.matrix:matrix-core:3.10.0-SNAPSHOT"
+implementation "se.alipsa.matrix:matrix-smile:0.3.0-SNAPSHOT"
 ```
 
 ### Maven Configuration
@@ -38,12 +43,12 @@ implementation "se.alipsa.matrix:matrix-smile:0.2.1"
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-core</artifactId>
-        <version>3.7.1</version>
+        <version>3.10.0-SNAPSHOT</version>
     </dependency>
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-smile</artifactId>
-        <version>0.1.0</version>
+        <version>0.3.0-SNAPSHOT</version>
     </dependency>
 </dependencies>
 ```
@@ -1016,3 +1021,11 @@ The matrix-smile module brings the power of the Smile machine learning library t
 Combined with matrix-arff for data interchange, matrix-smile provides a complete pipeline for machine learning workflows in Groovy.
 
 Go to [previous section](16-matrix-arff.md) | Go to [next section](18-advanced-operations.md) | Back to [outline](outline.md)
+
+### Core 3.10.0 compatibility
+
+Smile 0.3.0 requires core 3.10.0 or later; the development pair above uses both
+SNAPSHOT artifacts. Core is now a transitive API dependency. Maven consumers
+also declaring core directly must use 3.10.0+ because their direct declaration
+can override the transitive version. `fillna` and `dropna` delegate to core null
+operations while preserving their existing schema and empty-selection behavior.

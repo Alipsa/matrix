@@ -1,5 +1,17 @@
 # Matrix-smile release history
 
+
+## v0.3.0-SNAPSHOT (development)
+
+- Requires matrix-core 3.10.0 or later (development dependency 3.10.0-SNAPSHOT).
+  Publish core as an API dependency because Smile is excluded from matrix-bom.
+  Direct Maven core declarations must select 3.10.0+ to avoid nearest-wins downgrades.
+- Delegate constant fillna and dropna to core's fillNulls/withoutNullRows; retain
+  legacy declared types, empty selected-column dropna behavior, unknown-column
+  checks, and results without index configuration. Existing calls remain valid:
+  `SmileFeatures.fillna(data, 'country', 'Unknown')` and `SmileFeatures.dropna(data, ['price'])`
+  return new matrices without changing data.
+
 ## v0.2.1, 2026-09-22
 - Use the centrally configured static compilation and remove redundant annotations.
 - Resolve CodeNarc violations without changing the public API.

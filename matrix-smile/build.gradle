@@ -11,7 +11,7 @@ plugins {
 
 group = 'se.alipsa.matrix'
 description = "Integration between Matrix and Smile ML library"
-version = '0.2.2-SNAPSHOT'
+version = '0.3.0-SNAPSHOT'
 
 JavaCompile javaCompile = compileJava {
   options.release = 21
@@ -24,10 +24,10 @@ compileGroovy {
 }
 
 dependencies {
-  compileOnly project(':matrix-core')
+  // Smile is excluded from the BOM; publish core as API to carry the required runtime version.
+  api project(':matrix-core')
   compileOnly libs.groovy
   api libs.smile.core
-  testImplementation project(':matrix-core')
   testImplementation libs.groovy
   testImplementation libs.junit.jupiter.api
   testImplementation libs.groovier.junit

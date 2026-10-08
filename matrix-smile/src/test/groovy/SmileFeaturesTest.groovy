@@ -942,4 +942,22 @@ class SmileFeaturesTest {
     assertEquals('value', result.columnNames().last())
   }
 
+
+  @Test
+  void testLegacyNullAdapterContracts() {
+    def matrix = Matrix.builder('legacy').data(a: [null, 2], b: ['x', null]).types(Integer, String).build()
+    matrix.createIndex('a')
+    def filled = SmileFeatures.fillna(matrix, 'a', '5')
+    assertEquals(Integer, filled.type('a'))
+    assertEquals('5', filled.column('a').get(0))
+    assertEquals([], filled.indexedColumns())
+    assertNull(matrix.column('a').get(0))
+    assertEquals(0, SmileFeatures.dropna(matrix).rowCount())
+    assertEquals(1, SmileFeatures.dropna(matrix, ['a']).rowCount())
+    assertEquals(2, SmileFeatures.dropna(matrix, []).rowCount())
+    assertEquals([], SmileFeatures.dropna(matrix, ['a']).indexedColumns())
+    assertThrows(IllegalArgumentException) { SmileFeatures.dropna(matrix, ['absent']) }
+    assertThrows(IndexOutOfBoundsException) { SmileFeatures.fillna(matrix, 'absent', 0) }
+    assertEquals('legacy', filled.matrixName)
+  }
 }

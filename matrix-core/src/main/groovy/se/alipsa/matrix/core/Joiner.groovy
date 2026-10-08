@@ -1,5 +1,6 @@
 package se.alipsa.matrix.core
 
+import static se.alipsa.matrix.core.util.ClassUtils.commonDeclaredType
 import static se.alipsa.matrix.core.util.ClassUtils.primitiveWrapper
 
 import se.alipsa.matrix.core.util.ValueComparison
@@ -97,6 +98,49 @@ class Joiner {
   }
 
   /**
+   * Joins with explicit uniqueness validation before producing output.
+   * @param x left input
+   * @param y right input
+   * @param by shared key name(s), or map of x/y key names
+   * @param joinType required join type
+   * @param cardinality required uniqueness policy (existing overloads default to MANY_TO_MANY)
+   * @return independent joined Matrix
+   * @throws IllegalArgumentException for null policies, incompatible CROSS policy, or duplicate keys
+   */
+  static Matrix merge(Matrix x, Matrix y, String by, JoinType joinType, JoinCardinality cardinality) {
+    doMerge(x, y, [by], [by], joinType, cardinality)
+  }
+
+  /**
+   * Joins with explicit uniqueness validation before producing output.
+   * @param x left input
+   * @param y right input
+   * @param by shared key name(s), or map of x/y key names
+   * @param joinType required join type
+   * @param cardinality required uniqueness policy (existing overloads default to MANY_TO_MANY)
+   * @return independent joined Matrix
+   * @throws IllegalArgumentException for null policies, incompatible CROSS policy, or duplicate keys
+   */
+  static Matrix merge(Matrix x, Matrix y, List<String> by, JoinType joinType, JoinCardinality cardinality) {
+    doMerge(x, y, by, by, joinType, cardinality)
+  }
+
+  /**
+   * Joins with explicit uniqueness validation before producing output.
+   * @param x left input
+   * @param y right input
+   * @param by shared key name(s), or map of x/y key names
+   * @param joinType required join type
+   * @param cardinality required uniqueness policy (existing overloads default to MANY_TO_MANY)
+   * @return independent joined Matrix
+   * @throws IllegalArgumentException for null policies, incompatible CROSS policy, or duplicate keys
+   */
+  static Matrix merge(Matrix x, Matrix y, Map<String, Object> by, JoinType joinType, JoinCardinality cardinality) {
+    List<List<String>> keys = normalizeKeys(by)
+    doMerge(x, y, keys[0], keys[1], joinType, cardinality)
+  }
+
+  /**
    * Produces the Cartesian product of two matrices (cross join). Every row from x
    * is paired with every row from y, producing {@code x.rowCount() * y.rowCount()} rows.
    * No key column is required. Columns with the same name are suffixed {@code _x} / {@code _y}.
@@ -141,7 +185,8 @@ class Joiner {
   @SuppressWarnings('ParameterCount')
   private static Matrix doMerge(Matrix x, Matrix y,
                                 List<String> xKeyNames, List<String> yKeyNames,
-                                JoinType joinType) {
+                                JoinType joinType, JoinCardinality cardinality = JoinCardinality.MANY_TO_MANY) {
+    validateJoinPolicy(joinType, cardinality)
     if (joinType == JoinType.CROSS) {
       return crossJoin(x, y)
     }
@@ -161,6 +206,7 @@ class Joiner {
 
     JoinIndex yJoinIndex = buildIndex(y, yKeyIndices, yNonKeyIndices)
     Map<List<Object>, List<List<Object>>> yIndex = yJoinIndex.rows
+    validateInputs(x, xKeyIndices, yIndex, cardinality)
 
     List<List<Object>> resultRows = []
     boolean needsMatchTracking = joinType == JoinType.RIGHT || joinType == JoinType.FULL
@@ -242,8 +288,9 @@ class Joiner {
   }
 
   /**
-   * Converts an unmatched y key to the x key column's declared type, but only
-   * when the conversion is lossless. Narrowing conversions that would change
+   * Preserves raw unmatched keys already assignable to the x declaration or from
+   * a different value family. Only Number-to-Number conversion is allowed, and
+   * only when lossless. Narrowing conversions that would change
    * the numeric value (4.5 to 4), or that collapse non-finite values (NaN,
    * infinity), keep the raw y key so the emitted value stays truthful.
    */
@@ -251,7 +298,11 @@ class Joiner {
     if (rawKey == null || xKeyType == null) {
       return rawKey
     }
-    Object converted = ValueConverter.convert(rawKey, xKeyType)
+    Class target = primitiveWrapper(xKeyType)
+    if (target.isInstance(rawKey) || !(rawKey instanceof Number) || !Number.isAssignableFrom(target)) {
+      return rawKey
+    }
+    Object converted = ValueConverter.convert(rawKey, target)
     if (converted == null) {
       return rawKey
     }
@@ -263,6 +314,35 @@ class Joiner {
       }
     }
     converted
+  }
+
+  private static void validateJoinPolicy(JoinType joinType, JoinCardinality cardinality) {
+    if (joinType == null || cardinality == null) {
+      throw new IllegalArgumentException('Join type and cardinality must not be null')
+    }
+    if (joinType == JoinType.CROSS && cardinality != JoinCardinality.MANY_TO_MANY) {
+      throw new IllegalArgumentException('CROSS joins require MANY_TO_MANY cardinality')
+    }
+  }
+
+  private static void validateInputs(Matrix x, List<Integer> xKeyIndices,
+                                     Map<List<Object>, List<List<Object>>> yIndex,
+                                     JoinCardinality cardinality) {
+    if (cardinality in [JoinCardinality.ONE_TO_ONE, JoinCardinality.ONE_TO_MANY]) {
+      validateCardinality(buildIndex(x, xKeyIndices, []).rows, 'left', cardinality)
+    }
+    if (cardinality in [JoinCardinality.ONE_TO_ONE, JoinCardinality.MANY_TO_ONE]) {
+      validateCardinality(yIndex, 'right', cardinality)
+    }
+  }
+
+  private static void validateCardinality(Map<List<Object>, List<List<Object>>> index,
+                                          String side, JoinCardinality cardinality) {
+    index.each { List<Object> key, List<List<Object>> rows ->
+      if (isMatchableKey(key) && rows.size() > 1) {
+        throw new IllegalArgumentException("Duplicate key $key on $side input violates $cardinality")
+      }
+    }
   }
 
   private static List<Integer> resolveIndices(Matrix m, List<String> colNames) {
@@ -329,7 +409,7 @@ class Joiner {
         return false
       }
       if (value instanceof Double || value instanceof Float) {
-        double number = value.doubleValue()
+        double number = (value as Number).doubleValue()
         return !Double.isNaN(number) && !Double.isInfinite(number)
       }
       true
@@ -367,21 +447,6 @@ class Joiner {
     resultTypes.addAll(yNonKeyTypes)
 
     new ResultColumns(names: resultNames, types: resultTypes)
-  }
-
-  private static Class commonDeclaredType(Class left, Class right) {
-    Class leftType = left.isPrimitive() ? primitiveWrapper(left) : left
-    Class rightType = right.isPrimitive() ? primitiveWrapper(right) : right
-    if (leftType == rightType || leftType.isAssignableFrom(rightType)) {
-      return leftType
-    }
-    if (rightType.isAssignableFrom(leftType)) {
-      return rightType
-    }
-    if (Number.isAssignableFrom(leftType) && Number.isAssignableFrom(rightType)) {
-      return Number
-    }
-    Object
   }
 
   private static class ResultColumns {

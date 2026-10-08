@@ -131,6 +131,30 @@ class ClassUtils {
     return NEAREST_TYPE_MAP.get(key, Number)
   }
 
+  /**
+   * Widens declared types by runtime assignability, using Number for differing numeric families.
+   * @param left existing declared type
+   * @param right additional runtime type
+   * @return compatible common declaration, or Object for unrelated/unconstrained types
+   */
+  static Class commonDeclaredType(Class left, Class right) {
+    if (left == null || right == null) {
+      return Object
+    }
+    Class leftType = primitiveWrapper(left)
+    Class rightType = primitiveWrapper(right)
+    if (leftType == rightType || leftType.isAssignableFrom(rightType)) {
+      return leftType
+    }
+    if (rightType.isAssignableFrom(leftType)) {
+      return rightType
+    }
+    if (Number.isAssignableFrom(leftType) && Number.isAssignableFrom(rightType)) {
+      return Number
+    }
+    Object
+  }
+
   static GroovyClassLoader findGroovyClassLoader(Object obj) {
     ClassLoader cl = obj.class.classLoader
     while (cl != null && !(cl instanceof GroovyClassLoader)) {

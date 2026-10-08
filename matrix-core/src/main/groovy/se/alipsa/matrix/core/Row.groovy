@@ -9,10 +9,21 @@ import se.alipsa.matrix.core.util.ValueComparison
 
 
 /**
- * A live row view backed by a parent {@link Matrix}.
+ * A snapshot row with assignments written through to its parent {@link Matrix}.
  *
- * <p>Reads and in-place updates are reflected in the owning matrix, while
+ * <p>Reads use cached values; assignments update both the snapshot and owning matrix, while
  * structural list operations such as adding or removing elements are rejected.</p>
+ * <p>Tracked Matrix positional changes reject attached writes with ConcurrentModificationException.
+ * Reads and detach remain valid. Direct mutations through exposed Columns are untracked;
+ * use Matrix structural methods and fetch fresh Rows after direct Column changes.
+ * Rename/type-only edits permit writes using the original cached name-to-position mapping.</p>
+ * <pre>
+ * def matrix = Matrix.builder().data(a: [1]).build()
+ * def kept = matrix.row(0)
+ * matrix[0, 'a'] = 2
+ * assert kept['a'] == 1
+ * assert matrix.row(0)['a'] == 2
+ * </pre>
  */
 class Row implements GroovyObject, List<Object> {
 
@@ -26,6 +37,7 @@ class Row implements GroovyObject, List<Object> {
     private final int rowNumber
     private final List<Object> content
     private Matrix parent
+    private final int parentVersion
     private final List<String> columnNames
     private final List<Class> types
 
@@ -34,17 +46,30 @@ class Row implements GroovyObject, List<Object> {
     Row(int rowNumber, Matrix parent) {
         this.rowNumber = rowNumber
         this.content = []
-        columnNames = parent.columnNames().collect()
-        types = parent.types().collect()
+        columnNames = Collections.unmodifiableList(parent.columnNames().collect())
+        types = Collections.unmodifiableList(parent.types().collect())
         this.parent = parent
+        this.parentVersion = parent.structuralVersion()
     }
 
     Row(int rowNumber, List<?> rowContent, Matrix parent) {
         this.rowNumber = rowNumber
         this.content = rowContent
-        columnNames = parent.columnNames().collect()
-        types = parent.types().collect()
+        columnNames = Collections.unmodifiableList(parent.columnNames().collect())
+        types = Collections.unmodifiableList(parent.types().collect())
         this.parent = parent
+        this.parentVersion = parent.structuralVersion()
+    }
+
+    /** Constructs a Row using immutable metadata snapshots shared within a rows() batch. */
+    @PackageScope
+    Row(int rowNumber, Matrix parent, List<String> names, List<Class> declaredTypes) {
+        this.rowNumber = rowNumber
+        this.content = []
+        this.columnNames = names
+        this.types = declaredTypes
+        this.parent = parent
+        this.parentVersion = parent.structuralVersion()
     }
 
     /**
@@ -224,11 +249,16 @@ class Row implements GroovyObject, List<Object> {
      */
     @Override
     Object set(int index, Object element) {
-        def result = content.set(index, element)
+        Objects.checkIndex(index, content.size())
         if (parent != null) {
-            parent[[rowNumber, index]] = element
+            if (parentVersion != parent.structuralVersion()) {
+                throw new ConcurrentModificationException('The parent Matrix structure changed; fetch a fresh Row before writing.')
+            }
+            Objects.checkIndex(index, parent.columnCount())
+            Objects.checkIndex(rowNumber, parent.column(index).size())
+            parent.putAt(rowNumber, index, element)
         }
-        return result
+        content.set(index, element)
     }
 
     /**
@@ -276,13 +306,13 @@ class Row implements GroovyObject, List<Object> {
     }
 
     /**
-     * Returns a live view of the specified range of this row.
+     * Returns a checked view of the specified range of this Row snapshot.
      * Value changes made through {@link List#set(int, Object)} are reflected in the
      * backing matrix; structural operations such as add or remove are rejected.
      *
      * @param fromIndex low endpoint (inclusive) of the subList
      * @param toIndex high endpoint (exclusive) of the subList
-     * @return a live view of the columns values specified in the range
+     * @return a checked view of the cached values specified in the range
      */
     @Override
     List<Object> subList(int fromIndex, int toIndex) {
@@ -448,6 +478,7 @@ class Row implements GroovyObject, List<Object> {
         return rowNumber
     }
 
+    /** @return unmodifiable snapshot of column names; fetch a fresh Row after parent renames */
     List<String> columnNames() {
         return columnNames
     }
@@ -456,6 +487,7 @@ class Row implements GroovyObject, List<Object> {
         return columnNames[index]
     }
 
+    /** @return unmodifiable snapshot of declared column types */
     List<Class> types() {
         return types
     }
@@ -561,6 +593,12 @@ class Row implements GroovyObject, List<Object> {
         content.set(index, e)
     }
 
+    /**
+     * Coerces this snapshot. List coercion returns an independent shallow copy;
+     * mutable cell objects remain shared with the snapshot.
+     * @param type requested target class
+     * @return converted snapshot (this Row when the requested type is Row)
+     */
     @SuppressWarnings('UnnecessaryCollectCall')
     def asType(Class type) {
         if (type == Row) {
@@ -570,7 +608,7 @@ class Row implements GroovyObject, List<Object> {
             return toMap()
         }
         if (type == List) {
-            return content
+            return new ArrayList<>(content)
         }
         if (type == Set) {
             return content as Set
@@ -671,7 +709,7 @@ class Row implements GroovyObject, List<Object> {
   }
 
   /**
-   * A live sublist view of a row. Value writes are reflected in the parent matrix;
+   * A sublist view of cached Row values. Assignments also write to the parent matrix;
    * structural operations are rejected.
    */
   private static class CheckedRowSubList extends AbstractList<Object> {
@@ -698,6 +736,7 @@ class Row implements GroovyObject, List<Object> {
 
     @Override
     Object set(int index, Object element) {
+      Objects.checkIndex(index, size())
       row.set(offset + index, element)
     }
 

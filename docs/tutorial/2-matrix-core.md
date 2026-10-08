@@ -636,3 +636,45 @@ The matrix-core module provides a solid foundation for working with tabular data
 In the next sections, we'll explore the additional modules that build upon this foundation to provide specialized functionality for various data formats and operations.
 
 Go to [previous section](1-introduction.md) | Go to [next section](3-matrix-stats.md) | Back to [outline](outline.md)
+
+## Cleaning data and validating joins (3.10.0)
+
+For Java 21/Groovy 5 projects, add `implementation 'se.alipsa.matrix:matrix-core:3.10.0-SNAPSHOT'`
+to your Gradle dependencies. Null filtering, filling, and duplicate removal return
+new matrices; ignoring the result leaves the original unchanged:
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.JoinType
+import se.alipsa.matrix.core.JoinCardinality
+
+def data = Matrix.builder('orders').data(customerId: [1, 1L, 2],
+    price: [10, 10, null], country: [null, null, 'SE']).build()
+def cleaned = data.withoutNullRows(['price']).fillNulls([country: 'Unknown'])
+assert cleaned.duplicated(['customerId', 'price']) == [false, true]
+def unique = cleaned.withoutDuplicateRows(['customerId', 'price'])
+assert unique.rowCount() == 1
+assert unique.validate(true).isEmpty()
+def customers = Matrix.builder().data(customerId: [1], name: ['Ada']).build()
+def report = unique.merge(customers, 'customerId', JoinType.LEFT, JoinCardinality.MANY_TO_ONE)
+assert report['name'] == ['Ada']
+```
+
+No-argument null/duplicate methods select all columns. Explicit selections must
+contain existing names and be nonempty. `fillNulls` takes existing column names
+mapped to constants; null means unchanged, an empty map copies, and a null map is
+invalid. Only null is missing; actual incompatible fills widen types. Results
+preserve schema, name, order, and index configuration. Duplicate keys compare finite
+numbers mathematically, preserve String/Character families, match nulls and NaNs,
+and distinguish signed infinity categories. `validate(checkTypes=false)` reports
+immutable structural/name issues and optionally raw assignability issues.
+`MANY_TO_ONE` requires unique matchable right keys across the entire input; older
+join overloads default to unrestricted MANY_TO_MANY.
+
+Rows retain snapshot reads with checked write-through assignments. After a tracked
+positional edit, fetch a fresh Row before writing; old reads and detach still work.
+Renames retain old Row name-to-position mapping, so fetch fresh Rows after renaming.
+Row metadata is now unmodifiable and `row as List` makes a shallow copy. Direct
+Column structural edits remain untracked. See the [complete cookbook examples and
+API policies](../cookbook/matrix-core.md#matrix-core-3100-checked-snapshots-and-data-cleanup)
+for cardinality modes, diagnostics fields, migration, and index behavior.

@@ -85,4 +85,27 @@ class PerformanceTest {
     assertEquals(LARGE_SIZE, result.size())
   }
 
+
+  @Test
+  void testRowMetadataBenchmark() {
+    def bean = java.lang.management.ManagementFactory.threadMXBean as com.sun.management.ThreadMXBean
+    [4, 80].each { width ->
+      def columns = (0..<width).collectEntries { [("c$it".toString()): (0..<2000).toList()] }
+      def matrix = Matrix.builder().data(columns).build()
+      5.times { matrix.rows() }
+      long allocated = bean.getThreadAllocatedBytes(Thread.currentThread().threadId())
+      long start = System.nanoTime()
+      10.times {
+        def rows = matrix.rows()
+        rows.each { row ->
+          row.each { value -> assertNotNull(value) }
+          assertEquals(row[0], row['c0'])
+          row.subList(0, 2).each { value -> assertNotNull(value) }
+          row.set(0, row[0])
+        }
+      }
+      println "Row benchmark width=$width rows=2000 repetitions=10 elapsedMs=${(System.nanoTime() - start) / 1e6} allocatedBytes=${bean.getThreadAllocatedBytes(Thread.currentThread().threadId()) - allocated}"
+    }
+  }
+
 }

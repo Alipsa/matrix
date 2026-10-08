@@ -88,7 +88,7 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   List<T> getAt(int row) {
-    new CheckedGridRowView<>(data.get(row))
+    new CheckedGridRowView<>(this, data.get(row))
   }
 
   T getAt(int row, int column) {
@@ -226,7 +226,7 @@ class Grid<T> implements Iterable<List<T>> {
    * but structural mutations of the outer list or any row are rejected.
    */
   List<List<T>> getData() {
-    new CheckedGridDataView<>(data)
+    new CheckedGridDataView<>(this, data)
   }
 
   /**
@@ -517,9 +517,11 @@ class Grid<T> implements Iterable<List<T>> {
    */
   private static class CheckedGridRowView<T> extends AbstractList<T> {
 
+    private final Grid<T> owner
     private final List<T> backingRow
 
-    CheckedGridRowView(List<T> backingRow) {
+    CheckedGridRowView(Grid<T> owner, List<T> backingRow) {
+      this.owner = owner
       this.backingRow = backingRow
     }
 
@@ -535,6 +537,8 @@ class Grid<T> implements Iterable<List<T>> {
 
     @Override
     T set(int index, T element) {
+      Objects.checkIndex(index, size())
+      owner.validateValue(element, "Value at column $index")
       backingRow.set(index, element)
     }
 
@@ -556,15 +560,17 @@ class Grid<T> implements Iterable<List<T>> {
    */
   private static class CheckedGridDataView<T> extends AbstractList<List<T>> {
 
+    private final Grid<T> owner
     private final List<List<T>> backingData
 
-    CheckedGridDataView(List<List<T>> backingData) {
+    CheckedGridDataView(Grid<T> owner, List<List<T>> backingData) {
+      this.owner = owner
       this.backingData = backingData
     }
 
     @Override
     List<T> get(int index) {
-      new CheckedGridRowView<>(backingData.get(index))
+      new CheckedGridRowView<>(owner, backingData.get(index))
     }
 
     @Override

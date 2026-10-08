@@ -1,0 +1,26 @@
+plugins {
+  id 'groovy'
+  id 'application'
+}
+repositories {
+  mavenLocal {
+    if (providers.gradleProperty('pomOnly').isPresent()) {
+      metadataSources { mavenPom(); ignoreGradleMetadataRedirection() }
+    }
+  }
+  mavenCentral()
+}
+dependencies {
+  implementation 'org.apache.groovy:groovy:5.1.3'
+  implementation 'se.alipsa.matrix:matrix-smile:0.3.0-SNAPSHOT'
+}
+application { mainClass = 'Consumer' }
+tasks.register('verifyCore') {
+  doLast {
+    def core = configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts.find {
+      it.moduleVersion.id.name == 'matrix-core'
+    }
+    assert core.moduleVersion.id.version == '3.10.0-SNAPSHOT'
+    println "Resolved core: ${core.moduleVersion.id}"
+  }
+}

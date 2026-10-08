@@ -439,8 +439,11 @@ class Stat {
             for (colNum in colNums) {
                 value = row[colNum]
                 if (value != null && value instanceof Number) {
-                    sums[idx] = sums[idx] + (value as BigDecimal)
-                    ncols[idx] = ncols[idx] + 1
+                    BigDecimal decimal = ValueConverter.asBigDecimal(value as Number)
+                    if (decimal != null) {
+                        sums[idx] = sums[idx] + decimal
+                        ncols[idx] = ncols[idx] + 1
+                    }
                 }
                 idx++
             }
@@ -732,7 +735,7 @@ class Stat {
                 if (ignoreNonNumerics && !(value instanceof Number)) {
                     skip = true
                 }
-                if (value instanceof Number && !skip) {
+                if (value instanceof Comparable && !skip) {
                     minVal = minVals[idx]
                     if (minVal == null || value < minVal) {
                         minVals[idx] = value
