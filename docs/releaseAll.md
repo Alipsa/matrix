@@ -186,3 +186,10 @@ standalone verifier (default `build/releaseAll/bom-verify`). The source-set fixt
 controlled authentication/HTTP checks and deliberately confirms a bad method signature
 fails static compilation. CI runs portable helpers on macOS/Linux and both verifier modes
 on Linux. Live Portal fixture capture remains a separate credentialed read-only prerequisite.
+
+Read-only checkout, home and Maven Local paths may contain symlinks and are
+canonicalized during preflight. Staging and verification cache paths being written
+or deleted must have no symlink components. Manifest-mode BOM verification checks
+matching BOM modules within staging; other selected modules, including matrix-smile
+or modules newer than an unselected BOM pin, may coexist there. Its generated Maven
+settings live in a fresh temporary directory and are removed on exit.

@@ -19,6 +19,8 @@ class ReleaseScopeCoverageTest {
   void productionOperationsRequestCoveredScopes() {
     Matrix matrix = Matrix.builder('Scope test').data(x: [1]).types([Integer]).build()
     List<Closure> operations = [
+        { new GsUtilTest().testGetSheetNames() },
+        { new GsUtilTest().testGetSheetNamesWithMultipleSheets() },
         { GsUtil.deleteSheet('id') },
         { GsUtil.getSheetNames('id') },
         { GsheetsReader.read('id', 'A1', true) },

@@ -16,7 +16,7 @@ if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
   docker_available=true
 fi
 
-BOM_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+BOM_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 ROOT_DIR=$(dirname "$BOM_DIR")
 USER_REPO_SET=${BOM_VERIFY_REPO+x}
 REPO="${BOM_VERIFY_REPO:-$ROOT_DIR/.bom-verify-repo}"
@@ -63,7 +63,7 @@ assert_safe_repo_path() {
   fi
 
   local normalized root bom m2 user_home
-  normalized=$(RELEASE_PATHS_LINES=true groovy "$ROOT_DIR/scripts/release-all/Paths.groovy" "$REPO" "$ROOT_DIR" "$BOM_DIR" "${HOME}/.m2/repository" "$HOME")
+  normalized=$(RELEASE_PATHS_STRICT_COUNT=1 RELEASE_PATHS_LINES=true groovy "$ROOT_DIR/scripts/release-all/Paths.groovy" "$REPO" "$ROOT_DIR" "$BOM_DIR" "${HOME}/.m2/repository" "$HOME")
   local paths
   mapfile -t paths <<< "$normalized"
   REPO=${paths[0]}
@@ -249,7 +249,7 @@ while IFS='|' read -r listing_path entries directories; do
   path_directories["$listing_path"]=$directories
 done <<< "$listing_output"
 if (( ${#releasing[@]} == 0 )); then
-  if [[ -e "$matrix_repo" ]] && find "$matrix_repo" -mindepth 1 -print -quit | grep -q .; then
+  if [[ "$manifest_mode" != true && -e "$matrix_repo" ]] && find "$matrix_repo" -mindepth 1 -print -quit | grep -q .; then
     echo "$matrix_repo is not empty although no modules were under release" >&2
     exit 1
   fi
@@ -261,7 +261,8 @@ else
     expected_entries+=("$(property_to_module "$property")")
   done
   mapfile -t expected_entries < <(printf '%s\n' "${expected_entries[@]}" | sort)
-  [[ "${actual_entries[*]-}" == "${expected_entries[*]-}" ]] || {
+  # Manifest staging also includes selected modules absent from, or newer than, BOM pins.
+  [[ "$manifest_mode" == true || "${actual_entries[*]-}" == "${expected_entries[*]-}" ]] || {
     echo "published module set does not match detected BOM properties" >&2
     echo "expected: ${expected_entries[*]-<empty>}" >&2
     echo "actual:   ${actual_entries[*]-<empty>}" >&2
@@ -286,7 +287,9 @@ fi
 
 verification_settings="$BOM_DIR/verify-settings.xml"
 if [[ "$manifest_mode" == true ]]; then
-  verification_settings="$(dirname "$REPO")/verify-settings.xml"
+  settings_directory=$(mktemp -d "${TMPDIR:-/tmp}/matrix-bom-settings.XXXXXX")
+  verification_settings="$settings_directory/verify-settings.xml"
+  trap 'rm -f "$verification_settings"; rmdir "$settings_directory"' EXIT
   groovy "$ROOT_DIR/scripts/release-all/staged-settings.groovy" "$BOM_DIR/verify-settings.xml" "$staging_repo" "$verification_settings"
 fi
 MVN_ISOLATED=(-s "$verification_settings" -gs "$verification_settings" -Dmaven.repo.local="$REPO")

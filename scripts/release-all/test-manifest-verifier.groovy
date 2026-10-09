@@ -68,10 +68,18 @@ try {
     }
     components.add([projectPath: ':' + artifact, groupId: dependency.groupId.text(), artifactId: artifact, version: release, files: files])
   }
+  // Selected GPL module is intentionally absent from the BOM; its staged output must be allowed.
+  Map unpinned = [projectPath: ':matrix-smile', groupId: 'se.alipsa.matrix', artifactId: 'matrix-smile',
+    version: '1.0.0-fixture', files: ['matrix-smile-1.0.0-fixture.pom', 'matrix-smile-1.0.0-fixture.jar']]
+  File extra = new File(staging, 'se/alipsa/matrix/matrix-smile/1.0.0-fixture'); extra.mkdirs()
+  new File(extra, unpinned.files[0]).text = '<project><modelVersion>4.0.0</modelVersion><groupId>se.alipsa.matrix</groupId><artifactId>matrix-smile</artifactId><version>1.0.0-fixture</version></project>'
+  new File(extra, unpinned.files[1]).bytes = new byte[0]
+  components.add(unpinned)
   def fixtureBom = new XmlSlurper().parse(new File(bom, 'bom.xml'))
   components.add([groupId: fixtureBom.groupId.text(), artifactId: 'matrix-bom', version: fixtureBom.version.text(), files: []])
   File manifest = new File(fixture, 'manifest.json'); manifest.text = JsonOutput.toJson([selected: components])
-  File cache = new File(fixture, 'download-cache')
+  String originalSettings = new File(bom, 'verify-settings.xml').text
+  File cache = new File(bom, 'cache')
   copyTree(warm, cache)
   // This is a new fixture copy, never the user's Maven Local or the warm repository.
   File baseline = new File(fixture, 'baseline')
@@ -90,10 +98,39 @@ try {
   File log = new File(output, 'manifest-verifier-test.log')
   log.withOutputStream { process.inputStream.transferTo(it) }
   assert process.waitFor() == 0: "Manifest verifier failed; inspect ${log}"
+  assert new File(bom, 'verify-settings.xml').text == originalSettings: 'Tracked settings were overwritten'
   assert fingerprint(staging) == before: 'Maven modified the read-only staged artifacts'
   assert log.text.contains('no Gradle publishing')
   assert !log.text.contains('maven-deploy-plugin')
   assert log.text.contains('japicmp: comparing')
+  Map arff = components.find { it.artifactId == 'matrix-arff' }
+  String pinnedVersion = arff.version
+  String newerVersion = pinnedVersion + '-newer'
+  Files.walk(staging.toPath()).withCloseable { stream ->
+    stream.filter { Files.isDirectory(it) }.forEach { Files.setPosixFilePermissions(it, PosixFilePermissions.fromString('rwx------')) }
+  }
+  File newer = new File(staging, "se/alipsa/matrix/matrix-arff/${newerVersion}"); newer.mkdirs()
+  arff.files = arff.files.collect { String name ->
+    String renamed = name.replace(pinnedVersion, newerVersion)
+    File source = new File(staging, "se/alipsa/matrix/matrix-arff/${pinnedVersion}/${name}")
+    File target = new File(newer, renamed)
+    if (renamed.endsWith('.pom')) target.text = source.text.replace(pinnedVersion, newerVersion)
+    else target.bytes = source.bytes
+    renamed
+  }
+  arff.version = newerVersion
+  manifest.text = JsonOutput.toJson([selected: components.findAll { it.artifactId != 'matrix-bom' }])
+  before = fingerprint(staging)
+  Files.walk(staging.toPath()).withCloseable { stream ->
+    stream.forEach { path -> Files.setPosixFilePermissions(path, PosixFilePermissions.fromString(Files.isDirectory(path) ? 'r-x------' : 'r--------')) }
+  }
+  process = builder.start()
+  File staleLog = new File(output, 'manifest-verifier-stale-pin-test.log')
+  staleLog.withOutputStream { process.inputStream.transferTo(it) }
+  assert process.waitFor() == 0: "Stale-pin verifier failed; inspect ${staleLog}"
+  assert new File(bom, 'verify-settings.xml').text == originalSettings
+  assert fingerprint(staging) == before
+  assert staleLog.text.contains('not installing the source BOM')
   println "Manifest-mode verifier passed for ${components.size() - 1} unreleased release-coordinate fixtures, read-only staging, separate cache, API tests and japicmp. Log: ${log}"
 } finally {
   if (staging.exists()) {

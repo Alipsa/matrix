@@ -30,7 +30,12 @@ try {
   File link = new File(temporary, 'link')
   Files.createSymbolicLink(link.toPath(), withSpace.toPath())
   assert run(['groovy', paths.path, new File(link, 'child').path]).code != 0
-  assertions += 2
+  def writableAndProtected = run(['groovy', paths.path, withSpace.path, link.path], [RELEASE_PATHS_STRICT_COUNT: '1'])
+  assert writableAndProtected.code == 0
+  assert new JsonSlurper().parseText(writableAndProtected.text)[1].path == withSpace.path
+  def rejectedLink = run(['groovy', paths.path, new File(link, 'child').path])
+  assert rejectedLink.text.contains(link.path)
+  assertions += 5
 
   // Exercise the verifier's actual guards without including or executing any deletion/build code.
   String verifier = new File(root, 'matrix-bom/verifyBomApi.sh').text
@@ -122,6 +127,23 @@ USER_REPO_SET=x
   assert run(['groovy', inventory.path, manifest.path, project.path], [RUN_EXTERNAL_TESTS: 'true']).code == 0
   javaTest.text = 'import org.junit.jupiter.api.Tag; @Tag("external") class JavaFixture { @org.junit.jupiter.api.Test void testUnknown() {} }'
   assert run(['groovy', inventory.path, manifest.path, project.path], [RUN_EXTERNAL_TESTS: 'true']).code != 0
+  javaTest.delete()
+  Map fixtureMappings = new JsonSlurper().parse(mapping) as Map
+  fixtureMappings['test.alipsa.matrix.gsheets.Outer$Inner#nested'] = [module: ':matrix-gsheets', requirements: ['gsheets']]
+  mapping.text = JsonOutput.toJson(fixtureMappings)
+  ['groovy', 'java'].each { language ->
+    File nested = language == 'java' ? javaTest : test
+    nested.text = language == 'java' ?
+      'package test.alipsa.matrix.gsheets; import org.junit.jupiter.api.*; @Tag("external") class Outer { @Nested class Inner { @Test void nested() {} } }' :
+      "package test.alipsa.matrix.gsheets\nimport org.junit.jupiter.api.*\n@Tag('external') class Outer { @Nested class Inner { @Test void nested() {} } }"
+    result = run(['groovy', inventory.path, manifest.path, project.path], [RUN_EXTERNAL_TESTS: 'true'])
+    assert result.code == 0 && result.text.readLines().last() == 'gsheets': result.text
+    nested.text = nested.text.replace('class Outer', '@Disabled class Outer')
+    result = run(['groovy', inventory.path, manifest.path, project.path], [RUN_EXTERNAL_TESTS: 'true'])
+    assert result.code == 0 && !result.text.trim(): result.text
+    nested.delete()
+    assertions += 2
+  }
   javaTest.delete()
   assertions += 2
   assertions += 5

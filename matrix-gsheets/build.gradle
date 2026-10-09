@@ -264,6 +264,9 @@ tasks.register('releaseAuthPreflight', JavaExec) {
   mainClass = 'se.alipsa.matrix.gsheets.preflight.AuthPreflight'
 }
 
-test {
-  systemProperty 'authInventoryClasspath', sourceSets.main.compileClasspath.asPath
+tasks.named('test', Test) {
+  def inventoryClasspath = sourceSets.main.compileClasspath
+  jvmArgumentProviders.add({
+    ["-DauthInventoryClasspath=${inventoryClasspath.asPath}".toString()]
+  } as org.gradle.process.CommandLineArgumentProvider)
 }

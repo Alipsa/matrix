@@ -241,3 +241,39 @@ rejects; a marked fixture directory passes; project-looking, symlink and dot-dot
 Both use `feature/release-all`; no commits or pushes were made to main.
 Only operational fixture capture and the separate published-plugin release/version switch remain
 unchecked. Mock fixture tests cannot substitute for credentialed live Portal capture.
+
+7. PR #476 review fixes
+
+7.1 [x] Import `GsAuthenticator` in `GsUtilTest`; exercise both external entry points
+through offline authentication interception. Passed
+`./gradlew :matrix-gsheets:codenarcMain :matrix-gsheets:codenarcAuthPreflight --no-configuration-cache --max-workers=2`,
+`./gradlew :matrix-gsheets:spotlessApply :matrix-gsheets:spotlessCheck :matrix-gsheets:test --no-configuration-cache --max-workers=2`
+(161 tests), and `./gradlew test -Pheadless=true --no-configuration-cache --max-workers=3`.
+
+7.2 [x] In manifest mode, validate matching BOM modules as a subset of staging;
+keep standalone exact-set validation. Place generated settings in a fresh temporary
+directory and remove them on exit. Passed
+`groovy scripts/release-all/test-manifest-verifier.groovy . build/releaseAll/bom-verify`:
+unpinned matrix-smile, selected newer arff with an older unselected BOM pin,
+read-only staging, API ITs/japicmp, and a cache inside matrix-bom without modifying
+its source settings.
+
+7.3 [x] Canonicalize read-only checkout/home/Maven paths while rejecting symlinks in
+write/delete targets; include the offending path in errors. Document exact verifier
+tools. Inherit outer-class tags and Disabled annotations in both source languages.
+Passed `groovy scripts/release-all/test-tools.groovy .` (46 assertions),
+`groovy scripts/release-all/test-workflow.groovy .`,
+`bash -n releaseAll.sh matrix-bom/verifyBomApi.sh scripts/release-all/preflight.sh`,
+and `shellcheck releaseAll.sh matrix-bom/verifyBomApi.sh scripts/release-all/preflight.sh`.
+
+7.4 [x] Supply the authentication inventory classpath through a lazy JVM argument
+provider. A guarded offline `help` invocation rejects any compile-classpath resolution
+and passed. `./gradlew :matrix-gsheets:test --configuration-cache --configuration-cache-problems=fail --max-workers=2`
+passed twice, storing and reusing the configuration cache.
+
+7.5 [x] Re-run the standalone verifier and isolated authentication classpath acceptance,
+including the persistent guarded-help regression. Passed
+`RUN_EXTERNAL_TESTS=false RUN_SLOW_TESTS=false BOM_VERIFY_REPO="$PWD/build/releaseAll/bom-verify" bash matrix-bom/verifyBomApi.sh`
+and `groovy scripts/release-all/test-auth-classpath.groovy .`.
+
+7.6 [ ] Push the verified fixes and update PR #476; record CI results.

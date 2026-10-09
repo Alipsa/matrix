@@ -17,6 +17,19 @@ def run = { List<String> command, File directory, boolean succeeds = true ->
   text
 }
 try {
+  File lazyGuard = new File(fixture, 'lazy-classpath.init.gradle')
+  lazyGuard.text = """gradle.beforeProject { module ->
+  if (module.name == 'matrix-gsheets') {
+    module.configurations.configureEach { configuration ->
+      if (configuration.name == 'compileClasspath') {
+        configuration.incoming.beforeResolve {
+          throw new GradleException('GSheets compileClasspath resolved during help')
+        }
+      }
+    }
+  }
+}"""
+  run([new File(root, 'gradlew').path, 'help', '-I', lazyGuard.path, '--no-configuration-cache', '--offline'], root)
   File init = new File(fixture, 'classpath.init.gradle')
   File classpathFile = new File(fixture, 'classpath.json')
   init.text = """allprojects { module ->

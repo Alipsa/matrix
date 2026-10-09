@@ -4,20 +4,26 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 // One invocation handles every path/listing in a workflow phase; no GNU utilities.
+// Only writable targets reject links; protected read-only paths are canonicalized.
+String configuredCount = System.getenv('RELEASE_PATHS_STRICT_COUNT')
+int strictCount = configuredCount == null ?
+  (System.getenv('RELEASE_PATHS_RELEASE') == 'true' ? 2 : args.length) : configuredCount.toInteger()
+int index = 0
 def result = args.collect { String input ->
+  boolean strict = index++ < strictCount
   Path path = Path.of(input).toAbsolutePath()
-  if (path.any { it.toString() == '..' }) throw new IllegalArgumentException('Path contains dot-dot')
+  if (path.any { it.toString() == '..' }) throw new IllegalArgumentException("Path contains dot-dot: ${input}")
   Path cursor = path
   List<String> missing = []
   while (!Files.exists(cursor)) {
-    if (Files.isSymbolicLink(cursor)) throw new IllegalArgumentException('Symlink path component')
+    if (Files.isSymbolicLink(cursor)) throw new IllegalArgumentException("Symlink path component: ${cursor} (input: ${input})")
     missing.add(0, cursor.fileName.toString())
     cursor = cursor.parent
   }
-  if (missing && !Files.isDirectory(cursor)) throw new IllegalArgumentException('Existing path ancestor is not a directory')
+  if (missing && !Files.isDirectory(cursor)) throw new IllegalArgumentException("Existing path ancestor is not a directory: ${input}")
   Path check = cursor
   while (check != null) {
-    if (Files.isSymbolicLink(check)) throw new IllegalArgumentException('Symlink path component')
+    if (strict && Files.isSymbolicLink(check)) throw new IllegalArgumentException("Symlink path component: ${check} (input: ${input})")
     check = check.parent
   }
   Path canonical = cursor.toRealPath()

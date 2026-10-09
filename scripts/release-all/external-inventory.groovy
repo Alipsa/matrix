@@ -55,8 +55,8 @@ modules.each { String module ->
           tree.accept(new TreeScanner<Void, Map>() {
             @Override
             Void visitClass(ClassTree cls, Map parent) {
-              Map context = [name: "${tree.packageName}.${cls.simpleName}", tags: tags(cls.modifiers.annotations),
-                disabled: cls.modifiers.annotations.any { owner(it) == 'org.junit.jupiter.api.Disabled' }]
+              Map context = [name: parent ? "${parent.name}\$${cls.simpleName}" : "${tree.packageName}.${cls.simpleName}", tags: (parent?.tags ?: [] as Set) + tags(cls.modifiers.annotations),
+                disabled: parent?.disabled || cls.modifiers.annotations.any { owner(it) == 'org.junit.jupiter.api.Disabled' }]
               super.visitClass(cls, context)
             }
             @Override
@@ -90,8 +90,14 @@ modules.each { String module ->
       } as Set<String>
     }
     unit.AST.classes.each { cls ->
-      Set<String> classTags = tags(cls.annotations)
-      if (excluded(classTags) || cls.annotations.any { owner(it) == 'org.junit.jupiter.api.Disabled' }) return
+      List ancestors = []
+      def enclosing = cls
+      while (enclosing != null) {
+        ancestors.add(enclosing)
+        enclosing = enclosing.outerClass
+      }
+      Set<String> classTags = ancestors.collectMany { tags(it.annotations) }.toSet()
+      if (excluded(classTags) || ancestors.any { ancestor -> ancestor.annotations.any { owner(it) == 'org.junit.jupiter.api.Disabled' } }) return
       cls.methods.each { method ->
         Set<String> effective = classTags + tags(method.annotations)
         if (method.annotations.any { owner(it) in testAnnotations } && effective.contains('external') && !excluded(effective) &&

@@ -14,5 +14,5 @@ release_tools_preflight() {
   (( BASH_REMATCH[1] > 3 || (BASH_REMATCH[1] == 3 && (BASH_REMATCH[2] > 9 || (BASH_REMATCH[2] == 9 && BASH_REMATCH[3] >= 9))) )) || {
     echo 'Maven 3.9.9+ is required' >&2; return 1;
   }
-  groovy "$RELEASE_ROOT/scripts/release-all/Paths.groovy" "$RELEASE_ROOT" "$RELEASE_ROOT/matrix-bom" "$HOME" "$HOME/.m2/repository" >/dev/null
+  RELEASE_PATHS_STRICT_COUNT=0 groovy "$RELEASE_ROOT/scripts/release-all/Paths.groovy" "$RELEASE_ROOT" "$RELEASE_ROOT/matrix-bom" "$HOME" "$HOME/.m2/repository" >/dev/null
 }

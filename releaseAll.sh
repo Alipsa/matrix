@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-RELEASE_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+RELEASE_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 cd "$RELEASE_ROOT"
 source "$RELEASE_ROOT/scripts/release-all/preflight.sh"
 release_tools_preflight
