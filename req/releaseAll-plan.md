@@ -276,4 +276,6 @@ including the persistent guarded-help regression. Passed
 `RUN_EXTERNAL_TESTS=false RUN_SLOW_TESTS=false BOM_VERIFY_REPO="$PWD/build/releaseAll/bom-verify" bash matrix-bom/verifyBomApi.sh`
 and `groovy scripts/release-all/test-auth-classpath.groovy .`.
 
-7.6 [ ] Push the verified fixes and update PR #476; record CI results.
+7.6 [x] Push the verified fixes (`c5bd394f`) and update PR #476 with the successful
+commands above. CI [run 37993222681](https://github.com/Alipsa/matrix/actions/runs/37993222681)
+was queued when the PR was updated; local verification is complete.
