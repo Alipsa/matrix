@@ -1,0 +1,139 @@
+import groovy.json.JsonOutput
+import org.gradle.api.artifacts.ProjectDependency
+import org.gradle.api.publish.maven.MavenPublication
+
+def releaseLoader = rootProject.plugins.find { it.class.name == 'se.alipsa.gradle.plugin.release.ReleaseAllSupportPlugin' }.class.classLoader
+def ReleaseManifest = releaseLoader.loadClass('se.alipsa.gradle.plugin.release.ReleaseManifest')
+def CentralPortalClient = releaseLoader.loadClass('se.alipsa.gradle.plugin.release.CentralPortalClient')
+
+// Only loaded in the release workflow: the development plugin is resolved through includeBuild.
+def output = layout.buildDirectory.dir('releaseAll')
+def manifest = output.map { it.file('manifest.json') }
+def staged = output.map { it.dir('staging') }
+def credentialsUser = providers.gradleProperty('sonatypeUsername').orElse(providers.environmentVariable('SONATYPE_USERNAME'))
+def credentialsPassword = providers.gradleProperty('sonatypePassword').orElse(providers.environmentVariable('SONATYPE_PASSWORD'))
+def repository = providers.gradleProperty('releaseAllRepositoryUrl').orElse('https://repo.maven.apache.org/maven2')
+def portal = providers.gradleProperty('releaseAllPortalUrl').orElse(CentralPortalClient.CENTRAL_PORTAL_URL)
+
+tasks.named('releaseAllPlan') {
+  configuredRevision.set(providers.exec {
+    workingDir(rootDir)
+    commandLine('git', 'rev-parse', 'HEAD')
+  }.standardOutput.asText.get().trim())
+  sourceDirectory.set(layout.projectDirectory)
+  bomPom.set(layout.projectDirectory.file('matrix-bom/bom.xml'))
+  allPom.set(layout.projectDirectory.file('matrix-bom/pom.xml'))
+  manifestFile.set(manifest)
+  reportFile.set(output.map { it.file('report.txt') })
+  userName.set(credentialsUser)
+  password.set(credentialsPassword)
+  repositoryUrl.set(repository)
+  portalUrl.set(portal)
+  portalFixture.set(layout.projectDirectory.file('req/releaseAll-portal-fixture.json'))
+}
+tasks.named('bundleAll') {
+  receiptFile.set(output.map { it.file('bundle-receipt.json') })
+  sourceDirectory.set(layout.projectDirectory)
+  manifestFile.set(manifest)
+  stagingDirectory.set(staged)
+  bundleFile.set(output.map { it.file('bundle.zip') })
+}
+tasks.named('releaseAll') {
+  receiptFile.set(output.map { it.file('bundle-receipt.json') })
+  portalFixture.set(layout.projectDirectory.file('req/releaseAll-portal-fixture.json'))
+  sourceDirectory.set(layout.projectDirectory)
+  manifestFile.set(manifest)
+  bundleFile.set(output.map { it.file('bundle.zip') })
+  recordFile.set(output.map { it.file('deployment.json') })
+  userName.set(credentialsUser)
+  password.set(credentialsPassword)
+  portalUrl.set(portal)
+  repositoryUrl.set(repository)
+  resumeId.set(providers.gradleProperty('releaseAllResume').orElse(''))
+}
+
+// Discovery records serializable values; actions never access the live Gradle model.
+def configureRelease = {
+  List<Map> candidates = []
+  subprojects.findAll { !it.path.startsWith(':matrix-examples') }.each { Project module ->
+    def publishing = module.extensions.findByType(org.gradle.api.publish.PublishingExtension)
+    if (publishing == null) return
+    def releaseExtension = module.extensions.findByName('nexusReleasePlugin')
+    def publication = releaseExtension?.mavenPublication?.present ? releaseExtension.mavenPublication.get() : null
+    if (publication == null) return
+    List<Map> edges = []
+    ['compileClasspath', 'runtimeClasspath'].each { String configuration ->
+      module.configurations.findByName(configuration)?.hierarchy?.each { origin ->
+        origin.dependencies.withType(ProjectDependency).each { dependency ->
+        def target = rootProject.project(dependency.path)
+        def targetPublication = target.extensions.findByName('nexusReleasePlugin')?.mavenPublication?.get()
+        if (targetPublication == null) throw new GradleException('Production project dependency has no registered release publication')
+        edges.add([groupId: targetPublication.groupId, artifactId: targetPublication.artifactId,
+                   version: targetPublication.version, origin: "${origin.name} -> ${configuration}".toString()])
+        }
+      }
+    }
+    String taskName = "generatePomFileFor${publication.name.capitalize()}Publication"
+    String pomPath = "${module.name}/build/publications/${publication.name}/pom-default.xml"
+    String prefix = "${publication.artifactId}-${publication.version}"
+    def files = ["${prefix}.pom".toString()] + publication.artifacts.findAll { it.extension == 'jar' }.collect { artifact ->
+      "${prefix}${artifact.classifier ? '-' + artifact.classifier : ''}.${artifact.extension}".toString()
+    }
+    candidates.add([projectPath: module.path, publication: publication.name, pomFile: pomPath,
+                    groupId: publication.groupId, artifactId: publication.artifactId, version: publication.version,
+                    files: files, dependencies: edges.unique()])
+    tasks.named('releaseAllPlan') {
+      dependsOn(module.tasks.named(taskName))
+      candidatePoms.from(rootProject.file(pomPath))
+    }
+    module.publishing.repositories.maven {
+      name = 'releaseAllStaging'
+      url = staged.get().asFile.toURI()
+    }
+  }
+  tasks.named('releaseAllPlan') { candidatesJson.set(JsonOutput.toJson(candidates)) }
+  if (providers.gradleProperty('releaseAllPrepare').isPresent()) {
+    Map plan = ReleaseManifest.read(manifest.get().asFile)
+    tasks.named('releaseAllGuard') {
+      manifestFile.set(manifest)
+      sourceDirectory.set(layout.projectDirectory)
+      versionsJson.set(JsonOutput.toJson(candidates.collectEntries { [it.projectPath, it.version] }))
+    }
+    subprojects.each { module ->
+      module.tasks.configureEach { mustRunAfter(rootProject.tasks.named('releaseAllGuard')) }
+    }
+    tasks.register('releaseAllStage') {
+      dependsOn(tasks.named('releaseAllGuard'))
+      plan.selected.findAll { it.projectPath }.each { component ->
+        dependsOn("${component.projectPath}:publish${component.publication.capitalize()}PublicationToReleaseAllStagingRepository")
+      }
+    }
+  }
+}
+
+tasks.named('releaseAllPrepareMaven') {
+  mavenWorkDirectory.set(layout.projectDirectory.dir('matrix-bom'))
+  verifierFile.set(layout.projectDirectory.file('matrix-bom/verifyBomApi.sh'))
+  settingsHelperFile.set(layout.projectDirectory.file('scripts/release-all/staged-settings.groovy'))
+  sourceDirectory.set(layout.projectDirectory)
+  manifestFile.set(manifest)
+  stagingDirectory.set(staged)
+  localRepository.set(output.map { it.dir('maven-local') })
+}
+
+configureRelease()
+
+tasks.named('releaseAllSigningCheck') {
+  Map<String, Boolean> configured = subprojects.findAll { it.extensions.findByName('signing') != null }.collectEntries { module ->
+    boolean available
+    try {
+      available = module.extensions.getByType(org.gradle.plugins.signing.SigningExtension).signatory != null
+    } catch (Exception ignored) {
+      available = false
+    }
+    [module.path, available]
+  }
+  configuredSigningJson.set(JsonOutput.toJson(configured))
+  manifestFile.set(manifest)
+  strict.set(!providers.gradleProperty('releaseAllSigningReport').isPresent())
+}

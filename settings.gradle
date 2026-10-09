@@ -1,4 +1,7 @@
 pluginManagement {
+  if (providers.gradleProperty('releaseAllPluginDir').isPresent()) {
+    includeBuild(providers.gradleProperty('releaseAllPluginDir').get())
+  }
   repositories {
     mavenLocal() // For local development, use mavenLocal to resolve SNAPSHOT dependencies
     mavenCentral()

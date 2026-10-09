@@ -1,0 +1,278 @@
+{
+    "datasets.DatasetTest#testFromUrl": {
+        "module": ":matrix-datasets",
+        "requirements": [
+            "datasets"
+        ]
+    },
+    "datasets.RdatasetsTest#fetchInfo": {
+        "module": ":matrix-datasets",
+        "requirements": [
+            "datasets"
+        ]
+    },
+    "datasets.RdatasetsTest#testFetchData": {
+        "module": ":matrix-datasets",
+        "requirements": [
+            "datasets"
+        ]
+    },
+    "datasets.RdatasetsTest#testFetchDataKeepsMatrixName": {
+        "module": ":matrix-datasets",
+        "requirements": [
+            "datasets"
+        ]
+    },
+    "datasets.RdatasetsTest#testFetchDataSingleArgOverload": {
+        "module": ":matrix-datasets",
+        "requirements": [
+            "datasets"
+        ]
+    },
+    "datasets.RdatasetsTest#testFetchDataWithNonExistentDataset": {
+        "module": ":matrix-datasets",
+        "requirements": [
+            "datasets"
+        ]
+    },
+    "datasets.RdatasetsTest#testFetchInfoHtmlAndPlainText": {
+        "module": ":matrix-datasets",
+        "requirements": [
+            "datasets"
+        ]
+    },
+    "datasets.RdatasetsTest#testFetchInfoWithNonExistentDataset": {
+        "module": ":matrix-datasets",
+        "requirements": [
+            "datasets"
+        ]
+    },
+    "datasets.RdatasetsTest#testOverview": {
+        "module": ":matrix-datasets",
+        "requirements": [
+            "datasets"
+        ]
+    },
+    "datasets.RdatasetsTest#testOverviewReturnsIndependentCopy": {
+        "module": ":matrix-datasets",
+        "requirements": [
+            "datasets"
+        ]
+    },
+    "datasets.RdatasetsTest#testRefresh": {
+        "module": ":matrix-datasets",
+        "requirements": [
+            "datasets"
+        ]
+    },
+    "datasets.RdatasetsTest#testSearch": {
+        "module": ":matrix-datasets",
+        "requirements": [
+            "datasets"
+        ]
+    },
+    "datasets.RdatasetsTest#testSearchWithNoResults": {
+        "module": ":matrix-datasets",
+        "requirements": [
+            "datasets"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqDataTypesTest#testBigDecimal": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqDataTypesTest#testBigInteger": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqDataTypesTest#testBoolean": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqDataTypesTest#testByte": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqDataTypesTest#testByteArray": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqDataTypesTest#testComplexData": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqDataTypesTest#testDouble": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqDataTypesTest#testFloat": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqDataTypesTest#testInstant": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqDataTypesTest#testInteger": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqDataTypesTest#testLegacyDate": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqDataTypesTest#testLegacyTime": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqDataTypesTest#testLocalDate": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqDataTypesTest#testLocalDateTime": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqDataTypesTest#testLocalTime": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqDataTypesTest#testLong": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqDataTypesTest#testShort": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqDataTypesTest#testString": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqDataTypesTest#testTypeMapping": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqDataTypesTest#testZonedDateTime": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqTest#testCreateAndRetrieve": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqTest#testCreateAndRetrieveAirquality": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqTest#testExample": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqTest#testListProjects": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.bigquery.BqTest#testListTableInfo": {
+        "module": ":matrix-bigquery",
+        "requirements": [
+            "bigquery"
+        ]
+    },
+    "test.alipsa.matrix.gsheets.GsTest#testExport": {
+        "module": ":matrix-gsheets",
+        "requirements": [
+            "gsheets"
+        ]
+    },
+    "test.alipsa.matrix.gsheets.GsTest#testExportImport": {
+        "module": ":matrix-gsheets",
+        "requirements": [
+            "gsheets"
+        ]
+    },
+    "test.alipsa.matrix.gsheets.GsTest#testExportWithSpaceInMatrixName": {
+        "module": ":matrix-gsheets",
+        "requirements": [
+            "gsheets"
+        ]
+    },
+    "test.alipsa.matrix.gsheets.GsTest#testImportAsObjectWithNull": {
+        "module": ":matrix-gsheets",
+        "requirements": [
+            "gsheets"
+        ]
+    },
+    "test.alipsa.matrix.gsheets.GsTest#testImportWithNull": {
+        "module": ":matrix-gsheets",
+        "requirements": [
+            "gsheets"
+        ]
+    },
+    "test.alipsa.matrix.gsheets.GsTest#testUpdatePreservesDecimalScale": {
+        "module": ":matrix-gsheets",
+        "requirements": [
+            "gsheets"
+        ]
+    },
+    "test.alipsa.matrix.gsheets.GsUtilTest#testGetSheetNames": {
+        "module": ":matrix-gsheets",
+        "requirements": [
+            "gsheets"
+        ]
+    },
+    "test.alipsa.matrix.gsheets.GsUtilTest#testGetSheetNamesWithMultipleSheets": {
+        "module": ":matrix-gsheets",
+        "requirements": [
+            "gsheets"
+        ]
+    }
+}

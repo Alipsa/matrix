@@ -428,3 +428,16 @@ tasks.register('latestMavenVersions') {
     }
   }
 }
+
+if (providers.gradleProperty('releaseAllMode').isPresent()) {
+  subprojects {
+    tasks.withType(Test).configureEach {
+      useJUnitPlatform { excludeTags 'flaky' }
+    }
+  }
+  gradle.projectsEvaluated {
+    def releasePlugin = subprojects.find { it.plugins.hasPlugin('se.alipsa.nexus-release-plugin') }.plugins.findPlugin('se.alipsa.nexus-release-plugin')
+    apply plugin: releasePlugin.class.classLoader.loadClass('se.alipsa.gradle.plugin.release.ReleaseAllSupportPlugin')
+    apply from: 'gradle/release-all.gradle'
+  }
+}

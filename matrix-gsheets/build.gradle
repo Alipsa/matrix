@@ -229,3 +229,41 @@ nexusReleasePlugin {
   password = project.ext.properties.sonatypePassword
   mavenPublication = publishing.publications.maven
 }
+
+// Release-only helpers remain outside every published artifact and publication dependency.
+sourceSets {
+  authPreflight {
+    groovy.srcDir 'src/authPreflight/groovy'
+    compileClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+  }
+}
+configurations {
+  authPreflightExecution
+}
+dependencies {
+  authPreflightImplementation platform(libs.groovy.bom)
+  authPreflightRuntimeOnly platform(libs.groovy.bom)
+  authPreflightImplementation libs.groovy
+  authPreflightImplementation libs.groovy.json
+  authPreflightImplementation project(':matrix-core')
+  authPreflightExecution platform(libs.groovy.bom)
+  authPreflightExecution libs.groovy
+  authPreflightExecution libs.groovy.json
+  authPreflightExecution project(':matrix-core')
+  testImplementation sourceSets.authPreflight.output
+}
+compileAuthPreflightGroovy {
+  groovyOptions.configurationScript = rootProject.file('config/groovy/compileStatic.groovy')
+}
+tasks.register('releaseAuthPreflight', JavaExec) {
+  group = 'verification'
+  description = 'Check external Sheets ADC scopes and endpoints without interactive login'
+  dependsOn tasks.named('authPreflightClasses'), tasks.named('classes')
+  classpath = sourceSets.authPreflight.runtimeClasspath + configurations.authPreflightExecution
+  mainClass = 'se.alipsa.matrix.gsheets.preflight.AuthPreflight'
+}
+
+test {
+  systemProperty 'authInventoryClasspath', sourceSets.main.compileClasspath.asPath
+}

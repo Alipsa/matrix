@@ -1,0 +1,74 @@
+name: Combined release tools
+
+on:
+  pull_request:
+    paths:
+      - 'releaseAll.sh'
+      - 'scripts/release-all/**'
+      - 'matrix-bom/verifyBomApi.sh'
+      - '.github/workflows/release-all-tools.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  portable-tools:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Install shell tools
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == macOS ]]; then
+            brew install bash ripgrep shellcheck
+          else
+            sudo apt-get update
+            sudo apt-get install -y ripgrep shellcheck
+          fi
+      - name: Prepare Groovy CLI
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/release-cli/bin"
+          cat > "$RUNNER_TEMP/release-cli/pom.xml" <<'XML'
+          <project xmlns="http://maven.apache.org/POM/4.0.0"><modelVersion>4.0.0</modelVersion>
+          <groupId>release.tools</groupId><artifactId>cli</artifactId><version>1</version>
+          <dependencies>
+          <dependency><groupId>org.apache.groovy</groupId><artifactId>groovy</artifactId><version>5.1.1</version></dependency>
+          <dependency><groupId>org.apache.groovy</groupId><artifactId>groovy-json</artifactId><version>5.1.1</version></dependency>
+          <dependency><groupId>org.apache.groovy</groupId><artifactId>groovy-xml</artifactId><version>5.1.1</version></dependency>
+          </dependencies></project>
+          XML
+          mvn -B -f "$RUNNER_TEMP/release-cli/pom.xml" org.apache.maven.plugins:maven-dependency-plugin:3.11.0:copy-dependencies -DoutputDirectory="$RUNNER_TEMP/release-cli/lib"
+          cat > "$RUNNER_TEMP/release-cli/bin/groovy" <<'SH'
+          #!/usr/bin/env bash
+          exec java -cp "$RUNNER_TEMP/release-cli/lib/*" groovy.ui.GroovyMain "$@"
+          SH
+          chmod +x "$RUNNER_TEMP/release-cli/bin/groovy"
+          echo "$RUNNER_TEMP/release-cli/bin" >> "$GITHUB_PATH"
+      - name: Verify portable helpers and workflow
+        shell: bash
+        run: |
+          bash -n releaseAll.sh matrix-bom/verifyBomApi.sh scripts/release-all/preflight.sh
+          shellcheck releaseAll.sh matrix-bom/verifyBomApi.sh scripts/release-all/preflight.sh
+          groovy scripts/release-all/test-tools.groovy .
+          groovy scripts/release-all/test-workflow.groovy .
+      - name: Verify BOM workflows on Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          RUN_EXTERNAL_TESTS: 'false'
+          RUN_SLOW_TESTS: 'false'
+          GRADLE_OPTS: '-Dorg.gradle.workers.max=2'
+        run: |
+          BOM_VERIFY_REPO="$GITHUB_WORKSPACE/build/releaseAll/bom-verify" bash matrix-bom/verifyBomApi.sh
+          groovy scripts/release-all/test-manifest-verifier.groovy . build/releaseAll/bom-verify
