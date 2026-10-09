@@ -90,7 +90,7 @@
 
 5.3 [x] Test combined JAR/POM bundles and the explicit `matrix-all` artifact policy, checksum correctness, missing signatures, duplicate paths, unexpected files, size rejection, and allow-list isolation from third-party downloads/bookkeeping. Verify existing single-module tests still pass.
 
-5.4 [ ] Exercise the adapted BOM verifier with non-SNAPSHOT release candidates, isolated read-only staging, a separate download cache, existing `--modules` and SNAPSHOT workflows, API ITs, japicmp, and signing configuration from user Maven settings. Test on macOS using BSD system utilities and on Linux; GNU realpath/find must not be needed. Cover nonexistent paths, spaces, symlink and dot-dot rejection, protected/ancestor directories, marker enforcement, and dry-run preflight failures before builds or uploads. Assert that all path/listing inputs at a phase are processed in one helper invocation, with no per-path JVM launches. Verify tracked files are unchanged and preparation/`--bundle-only` make no upload requests.
+5.4 [x] Exercise the adapted BOM verifier with non-SNAPSHOT release candidates, isolated read-only staging, a separate download cache, existing `--modules` and SNAPSHOT workflows, API ITs, japicmp, and signing configuration from user Maven settings. Test on macOS using BSD system utilities and on Linux; GNU realpath/find must not be needed. Cover nonexistent paths, spaces, symlink and dot-dot rejection, protected/ancestor directories, marker enforcement, and dry-run preflight failures before builds or uploads. Assert that all path/listing inputs at a phase are processed in one helper invocation, with no per-path JVM launches. Verify tracked files are unchanged and preparation/`--bundle-only` make no upload requests.
 
 5.5 Workflow acceptance. Mark each sub-task complete only after its tests pass and the exact commands/results are recorded in this plan or the PR description.
 
@@ -136,7 +136,7 @@ Then `./gradlew test :matrix-gsheets:jar :matrix-gsheets:sourcesJar :matrix-gshe
 passed. No external credentials or flaky suites were enabled during implementation verification.
 
 6.3 [x] Portable helpers and script orchestration passed:
-`groovy scripts/release-all/test-tools.groovy .` (28 assertions);
+`groovy scripts/release-all/test-tools.groovy .` (39 assertions);
 `groovy scripts/release-all/test-workflow.groovy .`;
 `bash -n releaseAll.sh matrix-bom/verifyBomApi.sh scripts/release-all/preflight.sh`;
 `shellcheck releaseAll.sh matrix-bom/verifyBomApi.sh scripts/release-all/preflight.sh`.
@@ -145,7 +145,7 @@ namespace-preserving Maven settings with existing signing properties and owner-o
 released-BOM pins, real external annotations versus comments, Java/Groovy tags, aliases,
 disabled/flaky/slow filtering, unmapped methods, empty selection, caller directory, scoped build order,
 bundle-only, one submission invocation, resume with dirty sources and contradictory flags.
-The macOS/Linux portable-tools CI workflow is added; its remote results are not yet claimed here.
+The macOS/Linux portable-tools CI workflow passed; remote results are recorded in 6.14.
 
 6.4 [x] Real macOS portable BOM verification passed in both modes:
 `RUN_EXTERNAL_TESTS=false RUN_SLOW_TESTS=false BOM_VERIFY_REPO="$PWD/build/releaseAll/bom-verify" bash matrix-bom/verifyBomApi.sh`;
@@ -153,7 +153,7 @@ The macOS/Linux portable-tools CI workflow is added; its remote results are not 
 The manifest fixture verifies 20 unreleased non-SNAPSHOT coordinates with API ITs and japicmp,
 read-only staging, separate download cache, no Gradle republishing, no deploy goal and unchanged
 staging hashes. Existing Docker-unavailable emulator skips and japicmp compatibility warnings
-remain unchanged. Linux integration remains unchecked in 5.4; actual signed Maven preparation passed in 6.10.
+remain unchanged. Linux integration passed in 6.14; actual signed Maven preparation passed in 6.10.
 
 6.5 [x] GSheets runtime, scope and publication checks passed:
 `./gradlew :matrix-gsheets:test --tests '*AuthPreflightTest' --tests '*AuthenticationInventoryTest' --tests '*ReleaseScopeCoverageTest' :matrix-gsheets:releaseAuthPreflight --args=--check-classpath --no-configuration-cache --max-workers=3`
@@ -178,7 +178,7 @@ This also leaves the live-fixture portion of 5.1 incomplete.
 The implementation uses the explicitly selected sibling composite; ordinary Matrix builds retain
 the existing plugin version. No plugin/Matrix publication, Git tag or version rewrite has occurred.
 
-6.9 [ ] Complete Linux verifier integration acceptance in 5.4. The CI workflow runs portable helper/workflow checks on both OSes plus standalone and manifest-mode BOM verification on Linux; record remote results before ticking this task. All local checks run on macOS.
+6.9 [x] Linux verifier integration acceptance passed in 6.14. Local checks run on macOS; the remote workflow verifies both OSes and both BOM modes on Linux.
 
 
 6.10 [x] Actual signed Maven preparation passed:
@@ -212,3 +212,32 @@ It generated Gradle POMs and the manifest/report, found all current publications
 reported an empty selection and exited without tests, signing, staging, credentials or uploads.
 The report exposed Maven test dependencies that flattening omits; those are now excluded from
 Maven eligibility, with a TestKit regression proving a test-only SNAPSHOT does not block an aggregate.
+
+
+6.14 [x] Remote CI passed on the implementation commit:
+[Matrix workflow](https://github.com/Alipsa/matrix/actions/runs/37967268614)
+ran `groovy scripts/release-all/test-tools.groovy .` and
+`groovy scripts/release-all/test-workflow.groovy .` on macOS and Linux, plus
+`BOM_VERIFY_REPO="$GITHUB_WORKSPACE/build/releaseAll/bom-verify" bash matrix-bom/verifyBomApi.sh`
+and `groovy scripts/release-all/test-manifest-verifier.groovy . build/releaseAll/bom-verify`
+on Linux with `RUN_EXTERNAL_TESTS=false RUN_SLOW_TESTS=false`.
+Both verifier modes completed API ITs/japicmp; manifest mode confirmed 20 unreleased fixture
+coordinates, immutable staging and separate cache. The
+[plugin workflow](https://github.com/Alipsa/nexus-release-plugin/actions/runs/37967189167)
+passed `./gradlew build` and Gradle 8.13/9.4 compatibility jobs.
+
+6.15 [x] Explicit standalone module selection and repository safeguards passed locally.
+`module_properties=$(groovy matrix-bom/BomSnapshots.groovy matrix-bom/bom.xml | cut -d= -f1 | paste -sd, -)`;
+`RUN_EXTERNAL_TESTS=false RUN_SLOW_TESTS=false BOM_VERIFY_REPO="$PWD/build/releaseAll/bom-verify" bash matrix-bom/verifyBomApi.sh --modules "$module_properties"`.
+This republished the explicit current SNAPSHOT list into the isolated marked repository and ran
+API ITs/japicmp successfully. `groovy scripts/release-all/test-tools.groovy .` now runs 39 assertions,
+including the verifier's actual guard functions extracted without any deletion/build code:
+project/BOM/home/Maven-cache roots and project ancestors reject; an unmarked existing directory
+rejects; a marked fixture directory passes; project-looking, symlink and dot-dot directories reject.
+
+6.16 [x] PRs opened after local implementation verification:
+[Matrix #476](https://github.com/Alipsa/matrix/pull/476) and
+[release plugin #6](https://github.com/Alipsa/nexus-release-plugin/pull/6).
+Both use `feature/release-all`; no commits or pushes were made to main.
+Only operational fixture capture and the separate published-plugin release/version switch remain
+unchecked. Mock fixture tests cannot substitute for credentialed live Portal capture.

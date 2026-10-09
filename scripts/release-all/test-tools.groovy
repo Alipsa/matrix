@@ -32,6 +32,31 @@ try {
   assert run(['groovy', paths.path, new File(link, 'child').path]).code != 0
   assertions += 2
 
+  // Exercise the verifier's actual guards without including or executing any deletion/build code.
+  String verifier = new File(root, 'matrix-bom/verifyBomApi.sh').text
+  String guards = verifier.substring(verifier.indexOf('reject_dotdot() {'), verifier.indexOf('\nnorm() {'))
+  File guardScript = new File(temporary, 'guards.sh')
+  guardScript.text = '''#!/usr/bin/env bash
+set -euo pipefail
+REPO=$1
+ROOT_DIR=$2
+BOM_DIR="$ROOT_DIR/matrix-bom"
+USER_REPO_SET=x
+''' + guards + '\nassert_safe_repo_path\n'
+  File homeDirectory = new File(System.getProperty('user.home'))
+  [root, root.parentFile, new File(root, 'matrix-bom'), homeDirectory, new File(homeDirectory, '.m2/repository'), new File('/')].each { protectedPath ->
+    assert run(['bash', guardScript.path, protectedPath.path, root.path]).code != 0
+  }
+  File repository = new File(temporary, 'guard repository'); repository.mkdirs()
+  assert run(['bash', guardScript.path, repository.path, root.path]).code != 0
+  new File(repository, '.matrix-bom-verify-repo').text = ''
+  assert run(['bash', guardScript.path, repository.path, root.path]).code == 0
+  new File(repository, 'settings.gradle').text = '// protected project'
+  assert run(['bash', guardScript.path, repository.path, root.path]).code != 0
+  assert run(['bash', guardScript.path, repository.path + '/../unsafe', root.path]).code != 0
+  assert run(['bash', guardScript.path, new File(link, 'repository').path, root.path]).code != 0
+  assertions += 11
+
   File settings = new File(temporary, 'settings.xml')
   settings.text = '''<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"><servers><server><id>existing</id><password>fixture-only</password></server></servers><profiles><profile><id>signing</id><properties><gpg.keyname>fixture-key</gpg.keyname></properties></profile></profiles><activeProfiles><activeProfile>signing</activeProfile></activeProfiles></settings>'''
   String originalSettings = settings.text
