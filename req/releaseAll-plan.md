@@ -206,3 +206,9 @@ Authentication failures in dry-run/bundle-only stop before analysis/build/stagin
 failure requires no Sheets preflight; dedicated BigQuery is absent by default and missing project,
 Docker or explicit ADC-file prerequisites block opt-in. The authentication and network responses in
 this shell fixture are controlled; real entry-point behavior is verified in 6.5 and 6.11.
+
+6.13 [x] The actual clean-checkout command `./releaseAll.sh --dry-run` passed after implementation commits.
+It generated Gradle POMs and the manifest/report, found all current publications to be SNAPSHOTs,
+reported an empty selection and exited without tests, signing, staging, credentials or uploads.
+The report exposed Maven test dependencies that flattening omits; those are now excluded from
+Maven eligibility, with a TestKit regression proving a test-only SNAPSHOT does not block an aggregate.
