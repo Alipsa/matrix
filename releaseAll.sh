@@ -16,7 +16,7 @@ case "${1:-}" in
   --resume) mode=resume; [[ $# == 2 && -n "$2" ]] || usage; resume=$2 ;;
   *) usage ;;
 esac
-release_tools_preflight
+release_tools_preflight release
 export RUN_EXTERNAL_TESTS=${RUN_EXTERNAL_TESTS:-true}
 export RUN_SLOW_TESTS=${RUN_SLOW_TESTS:-true}
 export RELEASE_ALL_DEDICATED_EXTERNAL_TESTS=${RELEASE_ALL_DEDICATED_EXTERNAL_TESTS:-false}
