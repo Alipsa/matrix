@@ -23,7 +23,7 @@ REPO="${BOM_VERIFY_REPO:-$ROOT_DIR/.bom-verify-repo}"
 cd "$BOM_DIR"
 RELEASE_ROOT=$ROOT_DIR
 source "$ROOT_DIR/scripts/release-all/preflight.sh"
-release_tools_preflight
+release_tools_preflight bom
 
 reject_dotdot() {
   case "/$1/" in
@@ -328,13 +328,13 @@ else
     echo "japicmp failed to run (exit $japicmp_rc) — infrastructure problem, not a compatibility result" >&2
     exit 1
   fi
-  if rg -q -e 'binaryCompatible="false"|sourceCompatible="false"' "$japicmp_report"; then
+  if grep -Eq -e 'binaryCompatible="false"|sourceCompatible="false"' "$japicmp_report"; then
     echo "japicmp: COMPATIBILITY CHANGES FOUND in matrix-core — review before releasing:"
     japicmp_diff=japicmp/target/japicmp/cmp.diff
     if [[ -f "$japicmp_diff" ]]; then
       changed_entries=$(
-        rg '^[[:space:]]*===\*' "$japicmp_diff" |
-          rg -v '===\* UNCHANGED CLASS:' |
+        grep '^[[:space:]]*===\*' "$japicmp_diff" |
+          grep -v '===\* UNCHANGED CLASS:' |
           sed -E \
             -e 's/^[[:space:]]*===\* UNCHANGED (METHOD|CONSTRUCTOR|FIELD):/  AFFECTED \1:/' \
             -e 's/^[[:space:]]*===\* /  /' || true

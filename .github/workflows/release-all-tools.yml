@@ -30,10 +30,10 @@ jobs:
         shell: bash
         run: |
           if [[ "$RUNNER_OS" == macOS ]]; then
-            brew install bash ripgrep shellcheck
+            brew install bash shellcheck
           else
             sudo apt-get update
-            sudo apt-get install -y ripgrep shellcheck
+            sudo apt-get install -y shellcheck
           fi
       - name: Prepare Groovy CLI
         shell: bash

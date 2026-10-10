@@ -7,8 +7,8 @@ rewritten, no baseline is advanced, and no Git tag is created.
 
 ## First run
 
-1. Install Java 21, Maven 3.9.9 or later, Bash 4 or later, Groovy CLI, Git and ripgrep.
-   On macOS, run `brew install bash ripgrep` and put Homebrew's `bin` on PATH before
+1. Install Java 21, Maven 3.9.9 or later, Bash 4 or later, Groovy CLI, Git and grep.
+   On macOS, run `brew install bash` and put Homebrew's `bin` on PATH before
    `/bin`, so `#!/usr/bin/env bash` selects modern Bash. GNU realpath/find are unnecessary.
 2. Check out the enhanced sibling `../nexus-release-plugin`. Its Gradle build also needs
    a discoverable JDK 17 toolchain. Until the enhancement is published separately, the
@@ -193,3 +193,9 @@ or deleted must have no symlink components. Manifest-mode BOM verification check
 matching BOM modules within staging; other selected modules, including matrix-smile
 or modules newer than an unselected BOM pin, may coexist there. Its generated Maven
 settings live in a fresh temporary directory and are removed on exit.
+
+The external-test inventory resolves literal JUnit tags and composed annotations defined in
+local Groovy test sources (for example `@Slow`). Unresolved custom annotations, container
+`@Tags`, nonliteral tag values, and inheritance from another test-source class fail with a
+diagnostic rather than silently skipping prerequisites. Use explicit `@Tag` annotations
+and tests without test-source inheritance for unsupported cases.

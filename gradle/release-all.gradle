@@ -65,16 +65,17 @@ def configureRelease = {
     ['compileClasspath', 'runtimeClasspath'].each { String configuration ->
       module.configurations.findByName(configuration)?.hierarchy?.each { origin ->
         origin.dependencies.withType(ProjectDependency).each { dependency ->
-        def target = rootProject.project(dependency.path)
-        def targetPublication = target.extensions.findByName('nexusReleasePlugin')?.mavenPublication?.get()
-        if (targetPublication == null) throw new GradleException('Production project dependency has no registered release publication')
-        edges.add([groupId: targetPublication.groupId, artifactId: targetPublication.artifactId,
-                   version: targetPublication.version, origin: "${origin.name} -> ${configuration}".toString()])
+          def target = rootProject.project(dependency.path)
+          def targetPublication = target.extensions.findByName('nexusReleasePlugin')?.mavenPublication?.getOrNull()
+          if (targetPublication == null) throw new GradleException("Production project dependency ${module.path} -> ${dependency.path} has no registered release publication")
+          edges.add([groupId: targetPublication.groupId, artifactId: targetPublication.artifactId,
+                     version: targetPublication.version, origin: "${origin.name} -> ${configuration}".toString()])
         }
       }
     }
     String taskName = "generatePomFileFor${publication.name.capitalize()}Publication"
-    String pomPath = "${module.name}/build/publications/${publication.name}/pom-default.xml"
+    def pomFile = module.layout.buildDirectory.file("publications/${publication.name}/pom-default.xml")
+    String pomPath = rootDir.toPath().relativize(pomFile.get().asFile.toPath()).toString()
     String prefix = "${publication.artifactId}-${publication.version}"
     def files = ["${prefix}.pom".toString()] + publication.artifacts.findAll { it.extension == 'jar' }.collect { artifact ->
       "${prefix}${artifact.classifier ? '-' + artifact.classifier : ''}.${artifact.extension}".toString()
@@ -84,7 +85,7 @@ def configureRelease = {
                     files: files, dependencies: edges.unique()])
     tasks.named('releaseAllPlan') {
       dependsOn(module.tasks.named(taskName))
-      candidatePoms.from(rootProject.file(pomPath))
+      candidatePoms.from(pomFile)
     }
     module.publishing.repositories.maven {
       name = 'releaseAllStaging'

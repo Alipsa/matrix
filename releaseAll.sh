@@ -3,16 +3,20 @@ set -euo pipefail
 RELEASE_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 cd "$RELEASE_ROOT"
 source "$RELEASE_ROOT/scripts/release-all/preflight.sh"
-release_tools_preflight
+usage() {
+  echo 'usage: ./releaseAll.sh [--dry-run|--bundle-only|--resume deployment-id]' >&2
+  exit 2
+}
 mode=release
 resume=
 case "${1:-}" in
-  '') [[ $# == 0 ]] || exit 2 ;;
-  --dry-run) mode=plan; [[ $# == 1 ]] || exit 2 ;;
-  --bundle-only) mode=bundle; [[ $# == 1 ]] || exit 2 ;;
-  --resume) mode=resume; [[ $# == 2 ]] || exit 2; resume=$2 ;;
-  *) echo 'usage: ./releaseAll.sh [--dry-run|--bundle-only|--resume deployment-id]' >&2; exit 2 ;;
+  '') [[ $# == 0 ]] || usage ;;
+  --dry-run) mode=plan; [[ $# == 1 ]] || usage ;;
+  --bundle-only) mode=bundle; [[ $# == 1 ]] || usage ;;
+  --resume) mode=resume; [[ $# == 2 ]] || usage; resume=$2 ;;
+  *) usage ;;
 esac
+release_tools_preflight
 export RUN_EXTERNAL_TESTS=${RUN_EXTERNAL_TESTS:-true}
 export RUN_SLOW_TESTS=${RUN_SLOW_TESTS:-true}
 export RELEASE_ALL_DEDICATED_EXTERNAL_TESTS=${RELEASE_ALL_DEDICATED_EXTERNAL_TESTS:-false}
@@ -47,7 +51,7 @@ else
 fi
 maven_selected=$(groovy -e 'println new groovy.json.JsonSlurper().parse(new File(args[0])).selected.any { !it.projectPath }' "$manifest")
 if [[ "$maven_selected" == true ]]; then
-  if [[ ! -d "${GNUPGHOME:-$HOME/.gnupg}" ]] || ! command -v gpg >/dev/null || ! gpg --batch --list-secret-keys --with-colons 2>/dev/null | rg '^sec:' >/dev/null; then
+  if [[ ! -d "${GNUPGHOME:-$HOME/.gnupg}" ]] || ! command -v gpg >/dev/null || ! gpg --batch --list-secret-keys --with-colons 2>/dev/null | grep '^sec:' >/dev/null; then
     echo 'Maven signing requires GPG and an available secret key; configure your existing release-profile GPG settings.' >&2
     [[ "$mode" == plan ]] || exit 1
   fi

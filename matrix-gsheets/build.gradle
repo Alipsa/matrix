@@ -266,6 +266,7 @@ tasks.register('releaseAuthPreflight', JavaExec) {
 
 tasks.named('test', Test) {
   def inventoryClasspath = sourceSets.main.compileClasspath
+  inputs.files(inventoryClasspath).withPropertyName('authInventoryClasspath').withNormalizer(ClasspathNormalizer)
   jvmArgumentProviders.add({
     ["-DauthInventoryClasspath=${inventoryClasspath.asPath}".toString()]
   } as org.gradle.process.CommandLineArgumentProvider)

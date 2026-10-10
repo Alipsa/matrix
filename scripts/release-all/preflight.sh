@@ -3,10 +3,20 @@
 release_tools_preflight() {
   (( BASH_VERSINFO[0] >= 4 )) || { echo 'Use Bash 4+ (macOS: brew install bash)' >&2; return 1; }
   local tool
-  for tool in java mvn groovy git rg; do
+  for tool in java mvn groovy grep; do
     command -v "$tool" >/dev/null || { echo "Required tool missing: $tool" >&2; return 1; }
   done
-  java -version 2>&1 | rg -q 'version "21\.' || { echo 'Java 21 is required' >&2; return 1; }
+  if [[ "${1:-release}" == release ]]; then
+    command -v git >/dev/null || { echo 'Required tool missing: git' >&2; return 1; }
+    java -version 2>&1 | grep -Eq 'version "21([."]|$)' || { echo 'Java 21 is required' >&2; return 1; }
+  else
+    local java_version
+    java_version=$(java -version 2>&1)
+    if [[ ! "$java_version" =~ version\ \"([0-9]+) ]]; then
+      echo 'Java 21+ is required' >&2; return 1
+    fi
+    (( BASH_REMATCH[1] >= 21 )) || { echo 'Java 21+ is required' >&2; return 1; }
+  fi
   local maven_version
   maven_version=$(mvn --version)
   maven_version=${maven_version%%$'\n'*}

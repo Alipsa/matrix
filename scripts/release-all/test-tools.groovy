@@ -15,6 +15,15 @@ try {
     int code = process.waitFor()
     [code: code, text: text]
   }
+  File preflight = new File(root, 'scripts/release-all/preflight.sh')
+  ['release', 'bom'].each { mode ->
+    ['21', '21.0.12.1', '20.0.2', '22', '210'].each { version ->
+      def checked = run(['bash', '-c', 'source "$1"; fixture_version=$2; java() { echo "openjdk version \\"$fixture_version\\"" >&2; }; mvn() { echo "Apache Maven 3.9.9"; }; groovy() { :; }; RELEASE_ROOT=$3; release_tools_preflight "$4"', 'fixture', preflight.path, version, root.path, mode])
+      boolean accepted = mode == 'release' ? version in ['21', '21.0.12.1'] : version != '20.0.2'
+      assert (checked.code == 0) == accepted: checked.text
+      assertions++
+    }
+  }
   File paths = new File(root, 'scripts/release-all/Paths.groovy')
   File withSpace = new File(temporary, 'with space'); withSpace.mkdirs()
   new File(withSpace, 'module').mkdirs()
@@ -120,6 +129,21 @@ USER_REPO_SET=x
   assertions += 4
   assert run(['groovy', inventory.path, manifest.path, project.path], [RUN_EXTERNAL_TESTS: 'false']).code == 0
   assert run(['groovy', inventory.path, manifest.path, project.path], [RUN_EXTERNAL_TESTS: 'false', RELEASE_ALL_DEDICATED_EXTERNAL_TESTS: 'true']).code != 0
+  File composed = new File(test.parentFile, 'Slow.groovy')
+  composed.text = "package testutil\n@org.junit.jupiter.api.Tag('slow') @interface Slow {}"
+  test.text = "package test.alipsa.matrix.gsheets\nimport testutil.Slow\n@org.junit.jupiter.api.Tag('external') @Slow class GsTest { @org.junit.jupiter.api.Test void testExport() {} }"
+  result = run(['groovy', inventory.path, manifest.path, project.path], [RUN_EXTERNAL_TESTS: 'true', RUN_SLOW_TESTS: 'false'])
+  assert result.code == 0 && !result.text.trim(): result.text
+  composed.delete()
+  result = run(['groovy', inventory.path, manifest.path, project.path], [RUN_EXTERNAL_TESTS: 'true'])
+  assert result.code != 0 && result.text.contains('Cannot resolve test annotation testutil.Slow')
+  File base = new File(test.parentFile, 'Base.groovy')
+  base.text = "@org.junit.jupiter.api.Tag('external') class Base {}"
+  test.text = 'class Child extends Base { @org.junit.jupiter.api.Test void inherited() {} }'
+  result = run(['groovy', inventory.path, manifest.path, project.path], [RUN_EXTERNAL_TESTS: 'true'])
+  assert result.code != 0 && result.text.contains('inherited test tags')
+  base.delete()
+  assertions += 3
   test.delete()
   File javaTest = new File(project, 'matrix-gsheets/src/test/java/JavaFixture.java')
   javaTest.parentFile.mkdirs()
@@ -127,6 +151,14 @@ USER_REPO_SET=x
   assert run(['groovy', inventory.path, manifest.path, project.path], [RUN_EXTERNAL_TESTS: 'true']).code == 0
   javaTest.text = 'import org.junit.jupiter.api.Tag; @Tag("external") class JavaFixture { @org.junit.jupiter.api.Test void testUnknown() {} }'
   assert run(['groovy', inventory.path, manifest.path, project.path], [RUN_EXTERNAL_TESTS: 'true']).code != 0
+  javaTest.text = 'import custom.Slow; @Slow class JavaFixture { @org.junit.jupiter.api.Test void testUnknown() {} }'
+  result = run(['groovy', inventory.path, manifest.path, project.path], [RUN_EXTERNAL_TESTS: 'true'])
+  assert result.code != 0 && result.text.contains('Cannot resolve test annotation custom.Slow')
+  // The base name intentionally differs from its filename to exercise AST indexing.
+  javaTest.text = '@org.junit.jupiter.api.Tag("external") class TaggedBase {} class Child extends TaggedBase {}'
+  result = run(['groovy', inventory.path, manifest.path, project.path], [RUN_EXTERNAL_TESTS: 'true'])
+  assert result.code != 0 && result.text.contains('inherited test tags')
+  assertions += 2
   javaTest.delete()
   Map fixtureMappings = new JsonSlurper().parse(mapping) as Map
   fixtureMappings['test.alipsa.matrix.gsheets.Outer$Inner#nested'] = [module: ':matrix-gsheets', requirements: ['gsheets']]
