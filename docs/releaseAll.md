@@ -196,9 +196,10 @@ settings live in a fresh temporary directory and are removed on exit.
 
 The external-test inventory resolves literal JUnit tags and composed annotations defined in
 local Groovy test sources (for example `@Slow`). Unresolved custom annotations, container
-`@Tags`, nonliteral tag values, and inheritance from a test-source class whose ancestor
-chain declares tags or `@Disabled` fail with a diagnostic rather than silently skipping
+`@Tags`, nonliteral tag values, and inheritance from a test-source class or interface whose ancestor
+tree declares tags or `@Disabled` fail with a diagnostic rather than silently skipping
 prerequisites. For tagged inheritance, move tags and `@Disabled` onto concrete test
-classes and leave base classes untagged. Untagged test bases and helper inheritance are allowed; superclass
-names are resolved using packages and imports, including generic Java superclasses.
+classes and leave base classes and interfaces untagged. Untagged test bases and helper
+inheritance are allowed; superclass and interface names are resolved using packages
+and imports, including generic Java types. Parent interfaces are checked recursively.
 An empty deployment ID passed to `--resume` prints usage and exits before invoking Gradle.

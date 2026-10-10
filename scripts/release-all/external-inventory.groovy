@@ -73,6 +73,7 @@ modules.each { String module ->
             String name = enclosing ? "${enclosing}.${cls.simpleName}" : [tree.packageName, cls.simpleName].findAll { it }.join('.')
             sourceClasses["${module}|${name}".toString()] = [name: name, module: module,
               packageName: tree.packageName?.toString() ?: '', superclass: cls.extendsClause?.toString(),
+              interfaces: cls.implementsClause.collect { it.toString() },
               annotations: cls.modifiers.annotations, owner: owner,
               imports: tree.imports.collect { it.qualifiedIdentifier.toString() }]
             super.visitClass(cls, name)
@@ -86,6 +87,7 @@ modules.each { String module ->
       String name = cls.name.replace('$', '.')
       sourceClasses["${module}|${name}".toString()] = [name: name, module: module,
         packageName: unit.AST.packageName?.replaceFirst(/\.$/, '') ?: '', superclass: cls.superClass?.name,
+        interfaces: cls.interfaces.collect { it.name },
         annotations: cls.annotations, owner: { annotation -> groovyOwner(unit, annotation) },
         imports: unit.AST.imports.collect { it.type.name },
         aliases: unit.AST.imports.collectEntries { [(it.alias): it.type.name] },
@@ -120,10 +122,10 @@ composedTags = { String name, Set<String> visiting ->
   result
 }
 // Resolve within the module, respecting explicit imports, packages and enclosing
-// classes. Never match a library superclass against an unrelated simple name.
-Closure<Map> superclass = { Map cls ->
+// classes. Never match a library type against an unrelated simple name.
+Closure<Map> resolveInheritedType = { Map cls, String inheritedName ->
   if (cls == null) return null
-  String name = cls.superclass?.replaceAll(/<.*>/, '')?.replace('$', '.')
+  String name = inheritedName?.replaceAll(/<.*>/, '')?.replace('$', '.')
   if (!name) return null
   String first = name.tokenize('.').first()
   String imported = cls.aliases?.get(first) ?: cls.imports.find { it.tokenize('.').last() == first }
@@ -144,20 +146,29 @@ Closure<Map> superclass = { Map cls ->
   }
   candidates.collect { sourceClasses["${cls.module}|${it}".toString()] }.find { it != null }
 }
-Closure checkSuperclass = { String site, String module ->
+Closure<List<Map>> parents = { Map cls ->
+  if (cls == null) return []
+  ([cls.superclass] + cls.interfaces).findAll { it }.collect { resolveInheritedType(cls, it) }.findAll { it != null }
+}
+Closure checkInheritance = { String site, String module ->
   Map cls = sourceClasses["${module}|${site.replace('$', '.')}".toString()]
-  Set<String> visited = []
-  while ((cls = superclass(cls)) != null) {
-    if (!visited.add(cls.name)) throw new IllegalStateException("Cyclic test-source inheritance for ${site}")
-    boolean affectsTags = cls.annotations.any { annotation ->
-      String name = cls.owner(annotation)
+  Set<String> completed = []
+  Closure visit
+  visit = { Map ancestor, Set<String> path ->
+    if (ancestor.name in path) throw new IllegalStateException("Cyclic test-source inheritance for ${site}")
+    if (ancestor.name in completed) return
+    boolean affectsTags = ancestor.annotations.any { annotation ->
+      String name = ancestor.owner(annotation)
       name in ['org.junit.jupiter.api.Tag', 'org.junit.jupiter.api.Tags', 'org.junit.jupiter.api.Disabled'] ||
         !composedTags(name, [] as Set<String>).empty
     }
     if (affectsTags) {
-      throw new IllegalStateException("Cannot resolve inherited test tags for ${site} from ${cls.name}; declare the effective tags and disabled state explicitly on a test without tagged test-source inheritance")
+      throw new IllegalStateException("Cannot resolve inherited test tags for ${site} from ${ancestor.name}; declare the effective tags and disabled state explicitly on a test without tagged test-source inheritance")
     }
+    parents(ancestor).each { visit(it, path + ancestor.name) }
+    completed.add(ancestor.name)
   }
+  parents(cls).each { visit(it, [cls.name] as Set<String>) }
 }
 modules.each { String module ->
   if (module == ':matrix-bigquery' && !dedicated) return
@@ -181,7 +192,7 @@ modules.each { String module ->
           Void visitClass(ClassTree cls, Map parent) {
             Map context = [name: parent ? "${parent.name}\$${cls.simpleName}" : [tree.packageName, cls.simpleName].findAll { it }.join('.'), tags: (parent?.tags ?: [] as Set) + tags(cls.modifiers.annotations),
               disabled: parent?.disabled || cls.modifiers.annotations.any { owner(it) == 'org.junit.jupiter.api.Disabled' }]
-            checkSuperclass(context.name.toString(), module)
+            checkInheritance(context.name.toString(), module)
             super.visitClass(cls, context)
           }
           @Override
@@ -209,7 +220,7 @@ modules.each { String module ->
       } as Set<String>)
     }
     unit.AST.classes.each { cls ->
-      checkSuperclass(cls.name, module)
+      checkInheritance(cls.name, module)
       List ancestors = []
       def enclosing = cls
       while (enclosing != null) {

@@ -59,6 +59,27 @@ try {
     result = scan(temporary, false)
     assert result.code != 0 && result.output.contains('inherited test tags'): result.output
     annotation.delete()
+
+    // JUnit inherits interface tags too, including generic interfaces and parent interfaces.
+    base.text = 'package fixture; @org.junit.jupiter.api.Tag("external") interface Ext<T> {}'
+    child.text = 'package fixture; class Child implements Ext<String> { @org.junit.jupiter.api.Test void test() {} }'
+    result = scan(temporary, true)
+    assert result.code != 0 && result.output.contains('inherited test tags') && result.output.contains('fixture.Ext'): result.output
+
+    base.text = 'package fixture; interface Ext<T> extends Left, Right {}'
+    unrelated.text = 'package fixture; interface Left {}\ninterface Right extends Tagged {}\n@org.junit.jupiter.api.Tag("external") interface Tagged {}'
+    result = scan(temporary, true)
+    assert result.code != 0 && result.output.contains('inherited test tags') && result.output.contains('fixture.Tagged'): result.output
+
+    // Reaching an untagged interface via both sides of a diamond is not a cycle.
+    unrelated.text = 'package fixture; interface Left extends Shared {}\ninterface Right extends Shared {}\ninterface Shared {}'
+    result = scan(temporary, true)
+    assert result.code == 0: result.output
+
+    unrelated.text = 'package fixture; interface Left extends Right {}\ninterface Right extends Left {}'
+    result = scan(temporary, true)
+    assert result.code != 0 && result.output.contains('Cyclic test-source inheritance'): result.output
+    unrelated.delete()
     sources.deleteDir()
   }
   // Exercise the actual repository, including untagged test bases and nested helpers.
@@ -69,7 +90,7 @@ try {
     def result = scan(root, slow)
     assert result.code == 0: result.output
   }
-  println 'Inheritance inventory checks passed: untagged helpers, ancestor tags, disabled bases, generic Java bases, qualified/imported library names, composed tags and all repository modules with slow tests on/off.'
+  println 'Inheritance inventory checks passed: untagged helpers, ancestor tags, disabled bases, generic Java bases, qualified/imported library names, composed tags, interface trees/diamonds/cycles and all repository modules with slow tests on/off.'
 } finally {
   temporary.deleteDir()
 }
