@@ -84,9 +84,11 @@ dependency with its own version rather than via the BOM or `matrix-all`.
 ## Verifying a release
 
 The BOM consumer suite verifies the resolved, published artifacts from an isolated Maven repository.
-The verification runner requires Bash 4+, JDK 21+, Maven, and the Groovy CLI on `PATH` (matching the
-project's Groovy version, currently 5.0.8). The Groovy CLI is a developer prerequisite; the Gradle
-Groovy dependency alone is not sufficient.
+The verification runner requires Bash 4+, JDK 21+, Maven 3.9.9+, grep, and the Groovy CLI on `PATH` (matching the
+project's Groovy version, currently 5.1.1). The Groovy CLI is a developer prerequisite; the Gradle
+Groovy dependency alone is not sufficient. On macOS, install Bash with
+`brew install bash`. Symlinked checkout and Maven Local paths are allowed for
+read-only path checks; repositories being written or deleted must have no symlink components.
 
 From the repository root, run:
 

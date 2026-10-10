@@ -40,6 +40,8 @@ The Matrix project consists of the following modules:
 1. _[matrix-xchart](https://github.com/Alipsa/matrix/blob/main/matrix-xchart/README.md)_ allows you to create charts in various formats (file, svg, swing) based on Matrix data and the [XChart library](https://github.com/knowm/XChart).
 
 ## Setup
+Maintainers can use [`releaseAll.sh`](docs/releaseAll.md) to release eligible modules together in one Central bundle.
+
 Matrix targets Groovy 5 and JDK 21. Binary builds can be downloaded
 from the [Matrix project release page](https://github.com/Alipsa/matrix/releases) but if you use a build system that 
 handles dependencies via maven central (gradle, maven ivy etc.) you can add your dependencies from there
