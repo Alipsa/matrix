@@ -13,7 +13,7 @@ case "${1:-}" in
   '') [[ $# == 0 ]] || usage ;;
   --dry-run) mode=plan; [[ $# == 1 ]] || usage ;;
   --bundle-only) mode=bundle; [[ $# == 1 ]] || usage ;;
-  --resume) mode=resume; [[ $# == 2 ]] || usage; resume=$2 ;;
+  --resume) mode=resume; [[ $# == 2 && -n "$2" ]] || usage; resume=$2 ;;
   *) usage ;;
 esac
 release_tools_preflight

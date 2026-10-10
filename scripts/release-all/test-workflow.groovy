@@ -40,9 +40,10 @@ done
     execute(['bash', new File(fixture, 'releaseAll.sh').path] + options,
       [RUN_EXTERNAL_TESTS: 'false', RUN_SLOW_TESTS: 'false', RELEASE_ALL_DEDICATED_EXTERNAL_TESTS: 'false', RELEASE_ALL_PLUGIN_DIR: new File(temporary, 'plugin').path] + overrides)
   }
-  [['', 'foo'], ['--dry-run', 'x'], ['--bundle-only', 'x'], ['--resume'], ['--unknown']].each { options ->
+  [['', 'foo'], ['--dry-run', 'x'], ['--bundle-only', 'x'], ['--resume'], ['--resume', ''], ['--unknown']].each { options ->
     def invalid = release(options)
     assert invalid.code == 2 && invalid.output.contains('usage: ./releaseAll.sh'): invalid.output
+    assert !new File(fixture, 'build/commands.txt').exists(): 'Invalid arguments must not invoke Gradle'
   }
   def commands = { new File(fixture, 'build/commands.txt').readLines() }
   def result = release(['--dry-run'])

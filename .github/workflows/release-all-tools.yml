@@ -61,6 +61,7 @@ jobs:
           bash -n releaseAll.sh matrix-bom/verifyBomApi.sh scripts/release-all/preflight.sh
           shellcheck releaseAll.sh matrix-bom/verifyBomApi.sh scripts/release-all/preflight.sh
           groovy scripts/release-all/test-tools.groovy .
+          groovy scripts/release-all/test-inventory-inheritance.groovy .
           groovy scripts/release-all/test-workflow.groovy .
       - name: Verify BOM workflows on Linux
         if: runner.os == 'Linux'

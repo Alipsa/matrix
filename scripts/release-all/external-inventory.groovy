@@ -43,7 +43,7 @@ Closure parseJava = { File source, Closure inspect ->
 // Index local annotation definitions before scanning their usages. Unknown composed
 // annotations and test-source inheritance must not silently hide JUnit tags.
 Map<String, Map> localAnnotations = [:]
-Set<String> sourceClasses = []
+Map<String, Map> sourceClasses = [:]
 Closure groovyOwner = { unit, annotation ->
   String name = annotation.classNode.name
   if (name.contains('.')) return name
@@ -51,27 +51,46 @@ Closure groovyOwner = { unit, annotation ->
     (name in ['Override', 'Deprecated', 'SuppressWarnings'] ? 'java.lang.' + name :
       (unit.AST.starImports.any { it.packageName == 'org.junit.jupiter.api.' } ? 'org.junit.jupiter.api.' + name : name))
 }
+Closure javaOwner = { tree, annotation ->
+  String name = annotation.annotationType.toString()
+  if (name.contains('.')) return name
+  if (name in ['Override', 'Deprecated', 'SuppressWarnings']) return 'java.lang.' + name
+  def named = tree.imports.find { it.qualifiedIdentifier.toString().tokenize('.').last() == name }
+  named?.qualifiedIdentifier?.toString() ?: (tree.imports.any { it.qualifiedIdentifier.toString() == 'org.junit.jupiter.api.*' } ? 'org.junit.jupiter.api.' + name : name)
+}
 modules.each { String module ->
   if (module == ':matrix-bigquery' && !dedicated) return
   File sources = new File(root, module.substring(1) + '/src/test')
   if (!sources.exists()) return
   sources.eachFileRecurse { File source ->
     if (!(source.name.endsWith('.groovy') || source.name.endsWith('.java'))) return
-    sourceClasses.add(source.name.replaceFirst(/\.(groovy|java)$/, ''))
     if (source.name.endsWith('.java')) {
       parseJava(source) { tree ->
-        tree.accept(new TreeScanner<Void, Void>() {
+        Closure owner = { annotation -> javaOwner(tree, annotation) }
+        tree.accept(new TreeScanner<Void, String>() {
           @Override
-          Void visitClass(ClassTree cls, Void ignored) {
-            sourceClasses.add(cls.simpleName.toString())
-            super.visitClass(cls, ignored)
+          Void visitClass(ClassTree cls, String enclosing) {
+            String name = enclosing ? "${enclosing}.${cls.simpleName}" : [tree.packageName, cls.simpleName].findAll { it }.join('.')
+            sourceClasses["${module}|${name}".toString()] = [name: name, module: module,
+              packageName: tree.packageName?.toString() ?: '', superclass: cls.extendsClause?.toString(),
+              annotations: cls.modifiers.annotations, owner: owner,
+              imports: tree.imports.collect { it.qualifiedIdentifier.toString() }]
+            super.visitClass(cls, name)
           }
         }, null)
       }
       return
     }
     def unit = parseGroovy(source)
-    sourceClasses.addAll(unit.AST.classes.collect { it.nameWithoutPackage.tokenize('$').last() })
+    unit.AST.classes.each { cls ->
+      String name = cls.name.replace('$', '.')
+      sourceClasses["${module}|${name}".toString()] = [name: name, module: module,
+        packageName: unit.AST.packageName?.replaceFirst(/\.$/, '') ?: '', superclass: cls.superClass?.name,
+        annotations: cls.annotations, owner: { annotation -> groovyOwner(unit, annotation) },
+        imports: unit.AST.imports.collect { it.type.name },
+        aliases: unit.AST.imports.collectEntries { [(it.alias): it.type.name] },
+        starImports: unit.AST.starImports.collect { it.packageName + '*' }]
+    }
     unit.AST.classes.findAll { it.isAnnotationDefinition() }.each { cls ->
       localAnnotations[cls.name] = [annotations: cls.annotations, owner: { annotation -> groovyOwner(unit, annotation) }]
     }
@@ -100,9 +119,44 @@ composedTags = { String name, Set<String> visiting ->
   }
   result
 }
-Closure checkSuperclass = { String name, String site ->
-  if (name && name.tokenize('.').last() in sourceClasses) {
-    throw new IllegalStateException("Cannot resolve inherited test tags for ${site} extending test-source class ${name}; declare tests without test-source inheritance")
+// Resolve within the module, respecting explicit imports, packages and enclosing
+// classes. Never match a library superclass against an unrelated simple name.
+Closure<Map> superclass = { Map cls ->
+  if (cls == null) return null
+  String name = cls.superclass?.replaceAll(/<.*>/, '')?.replace('$', '.')
+  if (!name) return null
+  String first = name.tokenize('.').first()
+  String imported = cls.aliases?.get(first) ?: cls.imports.find { it.tokenize('.').last() == first }
+  List<String> candidates = []
+  if (imported) {
+    candidates.add(imported + name.substring(first.length()))
+  } else if (name.contains('.') && Character.isLowerCase(name.charAt(0))) {
+    candidates.add(name)
+  } else {
+    String enclosing = cls.name
+    while (enclosing.contains('.')) {
+      enclosing = enclosing.substring(0, enclosing.lastIndexOf('.'))
+      if (enclosing == cls.packageName) break
+      candidates.add(enclosing + '.' + name)
+    }
+    candidates.add(cls.packageName ? cls.packageName + '.' + name : name)
+    (cls.starImports ?: cls.imports.findAll { it.endsWith('.*') }).each { candidates.add(it.substring(0, it.length() - 1) + name) }
+  }
+  candidates.collect { sourceClasses["${cls.module}|${it}".toString()] }.find { it != null }
+}
+Closure checkSuperclass = { String site, String module ->
+  Map cls = sourceClasses["${module}|${site.replace('$', '.')}".toString()]
+  Set<String> visited = []
+  while ((cls = superclass(cls)) != null) {
+    if (!visited.add(cls.name)) throw new IllegalStateException("Cyclic test-source inheritance for ${site}")
+    boolean affectsTags = cls.annotations.any { annotation ->
+      String name = cls.owner(annotation)
+      name in ['org.junit.jupiter.api.Tag', 'org.junit.jupiter.api.Tags', 'org.junit.jupiter.api.Disabled'] ||
+        !composedTags(name, [] as Set<String>).empty
+    }
+    if (affectsTags) {
+      throw new IllegalStateException("Cannot resolve inherited test tags for ${site} from ${cls.name}; declare the effective tags and disabled state explicitly on a test without tagged test-source inheritance")
+    }
   }
 }
 modules.each { String module ->
@@ -112,13 +166,7 @@ modules.each { String module ->
   sources.eachFileRecurse { File source ->
     if (source.name.endsWith('.java')) {
       parseJava(source) { tree ->
-        Closure owner = { annotation ->
-          String name = annotation.annotationType.toString()
-          if (name.contains('.')) return name
-          if (name in ['Override', 'Deprecated', 'SuppressWarnings']) return 'java.lang.' + name
-          def named = tree.imports.find { it.qualifiedIdentifier.toString().tokenize('.').last() == name }
-          named?.qualifiedIdentifier?.toString() ?: (tree.imports.any { it.qualifiedIdentifier.toString() == 'org.junit.jupiter.api.*' } ? 'org.junit.jupiter.api.' + name : name)
-        }
+        Closure owner = { annotation -> javaOwner(tree, annotation) }
         Closure<Set<String>> tags = { annotations ->
           if (annotations.any { owner(it) == 'org.junit.jupiter.api.Tags' }) throw new IllegalStateException('Map container test tags explicitly')
           Set<String> indirect = annotations.findAll { !(owner(it) in ['org.junit.jupiter.api.Tag', 'org.junit.jupiter.api.Tags']) }.collectMany { composedTags(owner(it), [] as Set<String>) }.toSet()
@@ -131,9 +179,9 @@ modules.each { String module ->
         tree.accept(new TreeScanner<Void, Map>() {
           @Override
           Void visitClass(ClassTree cls, Map parent) {
-            checkSuperclass(cls.extendsClause?.toString(), cls.simpleName.toString())
-            Map context = [name: parent ? "${parent.name}\$${cls.simpleName}" : "${tree.packageName}.${cls.simpleName}", tags: (parent?.tags ?: [] as Set) + tags(cls.modifiers.annotations),
+            Map context = [name: parent ? "${parent.name}\$${cls.simpleName}" : [tree.packageName, cls.simpleName].findAll { it }.join('.'), tags: (parent?.tags ?: [] as Set) + tags(cls.modifiers.annotations),
               disabled: parent?.disabled || cls.modifiers.annotations.any { owner(it) == 'org.junit.jupiter.api.Disabled' }]
+            checkSuperclass(context.name.toString(), module)
             super.visitClass(cls, context)
           }
           @Override
@@ -161,7 +209,7 @@ modules.each { String module ->
       } as Set<String>)
     }
     unit.AST.classes.each { cls ->
-      checkSuperclass(cls.superClass?.name, cls.name)
+      checkSuperclass(cls.name, module)
       List ancestors = []
       def enclosing = cls
       while (enclosing != null) {
