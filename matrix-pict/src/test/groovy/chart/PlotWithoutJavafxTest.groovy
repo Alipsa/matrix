@@ -17,7 +17,7 @@ class PlotWithoutJavafxTest {
 
   @Test
   void svgExportsWithoutJavafx(@TempDir Path dir) {
-    assertThrows(ClassNotFoundException) { Class.forName('javafx.scene.Group') }
+    assertThrows(ClassNotFoundException) { getClass().classLoader.loadClass('javafx.scene.Group') }
     Matrix data = Matrix.builder().columns([x: [1, 2, 3], y: [2, 4, 3]])
         .types([Integer, Integer]).build()
     def chart = LineChart.builder(data).title('No JavaFX').x('x').y('y').build()

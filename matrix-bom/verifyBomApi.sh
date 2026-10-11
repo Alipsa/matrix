@@ -16,11 +16,14 @@ if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
   docker_available=true
 fi
 
-BOM_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+BOM_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 ROOT_DIR=$(dirname "$BOM_DIR")
 USER_REPO_SET=${BOM_VERIFY_REPO+x}
 REPO="${BOM_VERIFY_REPO:-$ROOT_DIR/.bom-verify-repo}"
 cd "$BOM_DIR"
+RELEASE_ROOT=$ROOT_DIR
+source "$ROOT_DIR/scripts/release-all/preflight.sh"
+release_tools_preflight bom
 
 reject_dotdot() {
   case "/$1/" in
@@ -31,13 +34,6 @@ reject_dotdot() {
   esac
 }
 
-canonicalize() {
-  command -v realpath >/dev/null || {
-    echo "realpath(1) is required to validate BOM_VERIFY_REPO" >&2
-    exit 1
-  }
-  realpath -m -- "$1"
-}
 
 reject_symlink_components() {
   local path=$1
@@ -66,14 +62,18 @@ assert_safe_repo_path() {
     exit 1
   fi
 
-  REPO=$(canonicalize "$REPO")
-  local root bom m2
-  root=$(canonicalize "$ROOT_DIR")
-  bom=$(canonicalize "$BOM_DIR")
-  m2=$(canonicalize "${HOME}/.m2/repository")
+  local normalized root bom m2 user_home
+  normalized=$(RELEASE_PATHS_STRICT_COUNT=1 RELEASE_PATHS_LINES=true groovy "$ROOT_DIR/scripts/release-all/Paths.groovy" "$REPO" "$ROOT_DIR" "$BOM_DIR" "${HOME}/.m2/repository" "$HOME")
+  local paths
+  mapfile -t paths <<< "$normalized"
+  REPO=${paths[0]}
+  root=${paths[1]}
+  bom=${paths[2]}
+  m2=${paths[3]}
+  user_home=${paths[4]}
 
   [[ "$REPO" != "/" ]] || { echo "refusing to delete /" >&2; exit 1; }
-  [[ "$REPO" != "$(canonicalize "$HOME")" ]] || { echo 'refusing to delete $HOME' >&2; exit 1; }
+  [[ "$REPO" != "$user_home" ]] || { echo 'refusing to delete the home directory' >&2; exit 1; }
   [[ "$REPO" != "$root" ]] || { echo "refusing to delete the repository root" >&2; exit 1; }
   [[ "$REPO" != "$bom" ]] || { echo "refusing to delete matrix-bom" >&2; exit 1; }
   [[ "$REPO" != "$m2" ]] || { echo "refusing to delete the real local repo" >&2; exit 1; }
@@ -126,13 +126,28 @@ done <<< "$all_output"
 
 declare -a releasing=()
 declare -A release_versions=()
-module_override=false
-if (( $# > 0 )); then
+manifest_mode=false
+if (( $# > 0 )) && [[ "$1" == --manifest ]]; then
+  [[ $# == 6 && "$3" == --staging && "$5" == --local ]] || { echo 'usage: --manifest FILE --staging DIR --local DIR' >&2; exit 1; }
+  manifest_mode=true
+  manifest_file=$2
+  staging_repo=$4
+  REPO=$6
+  manifest_properties=$(groovy "$ROOT_DIR/scripts/release-all/manifest-bom.groovy" "$manifest_file" "$BOM_DIR/bom.xml" "$staging_repo")
+  while IFS='=' read -r property value; do
+    [[ -n "$property" ]] || continue
+    if [[ "$property" == __bom_selected ]]; then
+      manifest_bom_selected=$value
+      continue
+    fi
+    releasing+=("$property")
+    release_versions["$property"]=$value
+  done <<< "$manifest_properties"
+elif (( $# > 0 )); then
   [[ "$1" == "--modules" && $# == 2 ]] || {
     echo "usage: $0 [--modules property[,property...]]" >&2
     exit 1
   }
-  module_override=true
   if [[ "$2" != "none" ]]; then
     IFS=',' read -r -a override_properties <<< "$2"
     for property in "${override_properties[@]}"; do
@@ -164,6 +179,11 @@ if [[ "$docker_available" != true ]]; then
 fi
 it_excluded_groups_csv=$(IFS=,; printf '%s' "${it_excluded_groups[*]}")
 
+if [[ "$manifest_mode" == true ]]; then
+  # Neither cache nor staging is ever deleted in manifest mode.
+  RELEASE_PATHS_RELEASE=true groovy "$ROOT_DIR/scripts/release-all/Paths.groovy" "$staging_repo" "$REPO" "$ROOT_DIR" "$BOM_DIR" "$HOME" "$HOME/.m2/repository" >/dev/null
+  mkdir -p "$REPO"
+else
 assert_safe_repo_path
 
 if [[ "${BOM_VERIFY_FULL_WIPE:-false}" == true ]]; then
@@ -179,7 +199,9 @@ if [[ ! -e "$REPO/.matrix-bom-verify-repo" ]]; then
   : > "$REPO/.matrix-bom-verify-repo"
 fi
 
-echo "BOM API verification ($WIPE_MODE)"
+fi
+
+echo "BOM API verification (${WIPE_MODE:-manifest})"
 echo "repository: $REPO"
 if [[ "$docker_available" == true ]]; then
   echo "Docker: available — emulator API tests enabled"
@@ -207,27 +229,40 @@ for property in "${releasing[@]}"; do
   }
   tasks+=(":$module:publishToMavenLocal")
 done
-if (( ${#tasks[@]} == 0 )); then
+if [[ "$manifest_mode" == true ]]; then
+  echo "using existing staged release artifacts — no Gradle publishing"
+elif (( ${#tasks[@]} == 0 )); then
   echo "no modules under release — skipping the Gradle publish"
 else
   "$ROOT_DIR/gradlew" -p "$ROOT_DIR" -Dmaven.repo.local="$REPO" "${tasks[@]}"
 fi
 
-matrix_repo="$REPO/se/alipsa/matrix"
+matrix_repo="${staging_repo:-$REPO}/se/alipsa/matrix"
+listing_paths=("$matrix_repo")
+for property in "${releasing[@]}"; do
+  listing_paths+=("$matrix_repo/$(property_to_module "$property")")
+done
+listing_output=$(RELEASE_PATHS_TSV=true groovy "$ROOT_DIR/scripts/release-all/Paths.groovy" "${listing_paths[@]}")
+declare -A path_entries=() path_directories=()
+while IFS='|' read -r listing_path entries directories; do
+  path_entries["$listing_path"]=$entries
+  path_directories["$listing_path"]=$directories
+done <<< "$listing_output"
 if (( ${#releasing[@]} == 0 )); then
-  if [[ -e "$matrix_repo" ]] && find "$matrix_repo" -mindepth 1 -print -quit | grep -q .; then
+  if [[ "$manifest_mode" != true && -e "$matrix_repo" ]] && find "$matrix_repo" -mindepth 1 -print -quit | grep -q .; then
     echo "$matrix_repo is not empty although no modules were under release" >&2
     exit 1
   fi
 else
   [[ -d "$matrix_repo" ]] || { echo "missing published repository subtree: $matrix_repo" >&2; exit 1; }
-  mapfile -t actual_entries < <(find "$matrix_repo" -mindepth 1 -maxdepth 1 -printf '%f\n' | sort)
+  IFS=',' read -r -a actual_entries <<< "${path_entries[$matrix_repo]-}"
   expected_entries=()
   for property in "${releasing[@]}"; do
     expected_entries+=("$(property_to_module "$property")")
   done
   mapfile -t expected_entries < <(printf '%s\n' "${expected_entries[@]}" | sort)
-  [[ "${actual_entries[*]-}" == "${expected_entries[*]-}" ]] || {
+  # Manifest staging also includes selected modules absent from, or newer than, BOM pins.
+  [[ "$manifest_mode" == true || "${actual_entries[*]-}" == "${expected_entries[*]-}" ]] || {
     echo "published module set does not match detected BOM properties" >&2
     echo "expected: ${expected_entries[*]-<empty>}" >&2
     echo "actual:   ${actual_entries[*]-<empty>}" >&2
@@ -240,7 +275,7 @@ else
     module_dir="$matrix_repo/$module"
     version_dir="$module_dir/$version"
     [[ -d "$version_dir" ]] || { echo "missing published version: $module:$version" >&2; exit 1; }
-    mapfile -t version_entries < <(find "$module_dir" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort)
+    IFS=',' read -r -a version_entries <<< "${path_directories[$module_dir]-}"
     [[ "${version_entries[*]-}" == "$version" ]] || {
       echo "$module contains an unexpected version directory: ${version_entries[*]-<empty>}" >&2
       exit 1
@@ -250,8 +285,19 @@ else
   done
 fi
 
-MVN_ISOLATED=(-s "$BOM_DIR/verify-settings.xml" -gs "$BOM_DIR/verify-settings.xml" -Dmaven.repo.local="$REPO")
-mvn "${MVN_ISOLATED[@]}" -f bom.xml install
+verification_settings="$BOM_DIR/verify-settings.xml"
+if [[ "$manifest_mode" == true ]]; then
+  settings_directory=$(mktemp -d "${TMPDIR:-/tmp}/matrix-bom-settings.XXXXXX")
+  verification_settings="$settings_directory/verify-settings.xml"
+  trap 'rm -f "$verification_settings"; rmdir "$settings_directory"' EXIT
+  groovy "$ROOT_DIR/scripts/release-all/staged-settings.groovy" "$BOM_DIR/verify-settings.xml" "$staging_repo" "$verification_settings"
+fi
+MVN_ISOLATED=(-s "$verification_settings" -gs "$verification_settings" -Dmaven.repo.local="$REPO")
+if [[ "$manifest_mode" != true || "${manifest_bom_selected:-false}" == true ]]; then
+  mvn "${MVN_ISOLATED[@]}" -f bom.xml install
+else
+  echo 'unselected matching BOM resolves from Central; not installing the source BOM'
+fi
 mvn "${MVN_ISOLATED[@]}" -Papi-it -Dit.excludedGroups="$it_excluded_groups_csv" clean verify
 
 japicmp_new=
@@ -282,13 +328,13 @@ else
     echo "japicmp failed to run (exit $japicmp_rc) — infrastructure problem, not a compatibility result" >&2
     exit 1
   fi
-  if rg -q -e 'binaryCompatible="false"|sourceCompatible="false"' "$japicmp_report"; then
+  if grep -Eq -e 'binaryCompatible="false"|sourceCompatible="false"' "$japicmp_report"; then
     echo "japicmp: COMPATIBILITY CHANGES FOUND in matrix-core — review before releasing:"
     japicmp_diff=japicmp/target/japicmp/cmp.diff
     if [[ -f "$japicmp_diff" ]]; then
       changed_entries=$(
-        rg '^[[:space:]]*===\*' "$japicmp_diff" |
-          rg -v '===\* UNCHANGED CLASS:' |
+        grep '^[[:space:]]*===\*' "$japicmp_diff" |
+          grep -v '===\* UNCHANGED CLASS:' |
           sed -E \
             -e 's/^[[:space:]]*===\* UNCHANGED (METHOD|CONSTRUCTOR|FIELD):/  AFFECTED \1:/' \
             -e 's/^[[:space:]]*===\* /  /' || true

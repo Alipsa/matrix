@@ -8,9 +8,11 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.gsheets.GsAuthenticator
 import se.alipsa.matrix.gsheets.GsConverter
 import se.alipsa.matrix.gsheets.GsExporter
 import se.alipsa.matrix.gsheets.GsUtil
+import se.alipsa.matrix.gsheets.preflight.ExternalAuthRequirements
 
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -57,6 +59,7 @@ class GsUtilTest {
   @Test
   @Tag('external')
   void testGetSheetNames() {
+    GsAuthenticator.authenticate(ExternalAuthRequirements.scopes())
     // Create a test spreadsheet with multiple sheets
     def empData = Matrix.builder()
         .matrixName('Employee Data')
@@ -94,6 +97,7 @@ class GsUtilTest {
   @Test
   @Tag('external')
   void testGetSheetNamesWithMultipleSheets() {
+    GsAuthenticator.authenticate(ExternalAuthRequirements.scopes())
     // This test verifies getSheetNames works with spreadsheets containing multiple sheets
     // Note: Currently GsExporter creates one sheet per export
     // This test creates a spreadsheet and verifies at least one sheet is returned

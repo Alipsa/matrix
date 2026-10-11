@@ -3,18 +3,26 @@ package test.alipsa.matrix.gsheets
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.gsheets.GsAuthenticator
 import se.alipsa.matrix.gsheets.GsUtil
 import se.alipsa.matrix.gsheets.GsheetsReader
 import se.alipsa.matrix.gsheets.GsheetsWriter
+import se.alipsa.matrix.gsheets.preflight.ExternalAuthRequirements
 
 import java.time.LocalDate
 
 @Tag('external')
 class GsTest {
+  @BeforeAll
+  static void authenticateExternalScopes() {
+    GsAuthenticator.authenticate(ExternalAuthRequirements.scopes())
+  }
+
 
   def empData = Matrix.builder()
       .matrixName('empData')

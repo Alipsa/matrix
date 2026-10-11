@@ -176,3 +176,14 @@ nexusReleasePlugin {
   password = project.ext.properties.sonatypePassword
   mavenPublication = publishing.publications.maven
 }
+
+// The existing externalTest still includes flaky tests; releases use this opt-in gate.
+tasks.register('releaseExternalTest', Test) {
+  group = 'verification'
+  testClassesDirs = sourceSets.test.output.classesDirs
+  classpath = sourceSets.test.runtimeClasspath
+  useJUnitPlatform {
+    includeTags 'external'
+    excludeTags 'flaky'
+  }
+}
