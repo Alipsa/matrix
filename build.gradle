@@ -398,42 +398,51 @@ tasks.register('dependencyUpdates') {
   finalizedBy tasks.named('dependencyUpdatesSummary')
 }
 
-if (!providers.gradleProperty('releaseAllMode').isPresent()) {
-  tasks.register('latestMavenVersions') {
-    description = 'Lists the latest Maven Central version for each published module'
-    group = 'Help'
-    // Resolve all data at configuration time to satisfy configuration cache
-    def modules = []
-    subprojects.findAll { it.plugins.hasPlugin('maven-publish') }.each {
-      modules << [name: it.name, group: it.group.toString(), artifact: it.name]
-    }
-    def bomFile = file('matrix-bom/bom.xml')
-    if (bomFile.exists()) {
-      def bom = new groovy.xml.XmlSlurper().parse(bomFile)
-      modules << [name: 'matrix-bom', group: bom.groupId.text(), artifact: bom.artifactId.text()]
-    }
-    modules.sort { it.name }
+// Each published subproject gets its own latestMavenVersions task from nexus-release-plugin.
+// This task only covers the Maven-built matrix-bom and matrix-all, which Gradle does not model.
+def latestMavenBomVersions = tasks.register('latestMavenBomVersions') {
+  description = 'Lists the latest Maven Central versions of matrix-bom and matrix-all'
+  group = 'help'
+  // Resolve coordinates at configuration time to satisfy the configuration cache.
+  List<Map<String, String>> modules = ['matrix-bom/bom.xml', 'matrix-bom/pom.xml'].collect { String path ->
+    def pom = new groovy.xml.XmlSlurper().parse(file(path))
+    [group: pom.groupId.text(), artifact: pom.artifactId.text()]
+  }
 
-    doLast {
-      def repoBase = 'https://repo1.maven.org/maven2'
-      modules.each { mod ->
-        try {
-          def groupPath = mod.group.replace('.', '/')
-          def metadataUrl = URI.create("${repoBase}/${groupPath}/${mod.artifact}/maven-metadata.xml").toURL()
-          def metadata = new groovy.xml.XmlSlurper().parseText(metadataUrl.text)
-          def latest = metadata.versioning.release.text() ?: metadata.versioning.latest.text()
-          if (latest) {
-            println "${mod.name}: ${mod.group}:${mod.artifact}:${latest}"
-          } else {
-            println "${mod.name}: no release version found"
-          }
-        } catch (FileNotFoundException e) {
-          println "${mod.name}: not found on Maven Central"
-        } catch (Exception e) {
-          println "${mod.name}: error querying Maven Central (${e.message})"
+  doLast {
+    modules.each { Map<String, String> mod ->
+      try {
+        def metadataUrl = URI.create("https://repo1.maven.org/maven2/${mod.group.replace('.', '/')}/${mod.artifact}/maven-metadata.xml").toURL()
+        def connection = metadataUrl.openConnection()
+        connection.connectTimeout = 5000
+        connection.readTimeout = 5000
+        def metadata = connection.inputStream.withCloseable { new groovy.xml.XmlSlurper().parse(it) }
+        def latest = metadata.versioning.release.text() ?: metadata.versioning.latest.text()
+        if (latest) {
+          println "${mod.artifact}: ${mod.group}:${mod.artifact}:${latest}"
+        } else {
+          println "${mod.artifact}: no release version found"
         }
+      } catch (FileNotFoundException ignored) {
+        println "${mod.artifact}: not found on Maven Central"
+      } catch (Exception e) {
+        println "${mod.artifact}: error querying Maven Central (${e.message})"
       }
     }
+  }
+}
+
+if (providers.gradleProperty('releaseAllMode').isPresent()) {
+  // The plugin's root task would list every subproject again; keep only the Maven-built modules.
+  tasks.named('latestMavenVersions') {
+    enabled = false
+    dependsOn latestMavenBomVersions
+  }
+} else {
+  tasks.register('latestMavenVersions') {
+    description = 'Lists the latest Maven Central version of matrix-bom and matrix-all; subprojects list their own'
+    group = 'help'
+    dependsOn latestMavenBomVersions
   }
 }
 
