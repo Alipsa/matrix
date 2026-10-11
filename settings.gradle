@@ -3,6 +3,16 @@ pluginManagement {
     includeBuild(providers.gradleProperty('releaseAllPluginDir').get())
   }
   repositories {
+    if (providers.gradleProperty('releaseAllMode').isPresent()) {
+      exclusiveContent {
+        forRepository { gradlePluginPortal() }
+        filter {
+          includeGroup 'se.alipsa.gradle'
+          includeGroup 'se.alipsa.nexus-release-plugin'
+          includeGroup 'se.alipsa.nexus-release-all'
+        }
+      }
+    }
     mavenLocal() // For local development, use mavenLocal to resolve SNAPSHOT dependencies
     mavenCentral()
     gradlePluginPortal()

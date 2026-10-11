@@ -11,6 +11,8 @@ rewritten, no baseline is advanced, and no Git tag is created.
    On macOS, run `brew install bash` and put Homebrew's `bin` on PATH before
    `/bin`, so `#!/usr/bin/env bash` selects modern Bash. GNU realpath/find are unnecessary.
 2. The build resolves the published `nexus-release-plugin` 2.3.0 automatically.
+   Release mode resolves this plugin exclusively from the Gradle Plugin Portal,
+   preventing a locally published build from replacing the released version.
    To test plugin changes locally, set `RELEASE_ALL_PLUGIN_DIR` to a plugin checkout;
    this optional composite build also needs a discoverable JDK 17 toolchain.
 3. Set `sonatypeUsername` and `sonatypePassword` in `~/.gradle/gradle.properties`, or set

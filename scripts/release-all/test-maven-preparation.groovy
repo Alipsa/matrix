@@ -4,6 +4,7 @@ import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermissions
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import java.util.zip.ZipFile
 
 // Signs only disposable fixture coordinates. No deploy goal or publishing endpoint is configured.
 File root = new File(args ? args[0] : '.').canonicalFile
@@ -67,18 +68,23 @@ bundleAll {
   run(['git', '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-m', 'Signed preparation fixture'])
   File stage = new File(fixture, 'build/staging')
   File libraryDir = new File(stage, group.replace('.', '/') + '/library/1'); libraryDir.mkdirs()
-  new File(libraryDir, 'library-1.pom').text = "<project><modelVersion>4.0.0</modelVersion><groupId>${group}</groupId><artifactId>library</artifactId><version>1</version></project>"
+  new File(libraryDir, 'library-1.pom').text = "<project><!-- do_not_remove: published-with-gradle-metadata --><modelVersion>4.0.0</modelVersion><groupId>${group}</groupId><artifactId>library</artifactId><version>1</version>${metadata}</project>"
   new ZipOutputStream(new FileOutputStream(new File(libraryDir, 'library-1.jar'))).withCloseable { zip ->
     zip.putNextEntry(new ZipEntry('fixture.txt')); zip.write('fixture'.bytes); zip.closeEntry()
   }
   Map edge = [groupId: group, artifactId: 'library', version: '1', scope: 'compile', type: 'jar', classifier: '']
+  File libraryMetadata = new File(libraryDir, 'library-1.module')
+  libraryMetadata.text = JsonOutput.toJson([formatVersion: '1.1', component: [group: group, module: 'library', version: '1'], variants: []])
+  run(['gpg', '--batch', '--yes', '--armor', '--detach-sign', libraryMetadata.path])
   List<Map> selected = [[groupId: group, artifactId: 'bom', version: version, packaging: 'pom', role: 'bom', pomFile: 'bom.xml', files: ["bom-${version}.pom"], publishedDependencies: [], publishedManagement: [edge]],
-    [groupId: group, artifactId: 'all', version: version, packaging: 'jar', role: 'aggregate', sourcesAndJavadocRequired: false, pomFile: 'pom.xml', files: ["all-${version}.pom", "all-${version}.jar"], publishedDependencies: [edge], publishedManagement: []]]
+    [groupId: group, artifactId: 'all', version: version, packaging: 'jar', role: 'aggregate', sourcesAndJavadocRequired: false, pomFile: 'pom.xml', files: ["all-${version}.pom", "all-${version}.jar"], publishedDependencies: [edge], publishedManagement: []],
+    [projectPath: ':library', groupId: group, artifactId: 'library', version: '1', packaging: 'jar', role: 'gradle', sourcesAndJavadocRequired: false, pomFile: 'build/staging/' + group.replace('.', '/') + '/library/1/library-1.pom', files: ['library-1.pom', 'library-1.jar', 'library-1.module'], publishedDependencies: [], publishedManagement: []]]
+  ['pom', 'jar'].each { extension -> run(['gpg', '--batch', '--yes', '--armor', '--detach-sign', new File(libraryDir, "library-1.${extension}").path]) }
   new File(fixture, 'build/manifest.json').text = JsonOutput.toJson([revision: run(['git', 'rev-parse', 'HEAD']), hashes: [:], versions: [:], selected: selected])
   run([new File(root, 'gradlew').path, '-p', fixture.path, 'releaseAllPrepareMaven', 'bundleAll', '--no-configuration-cache', '--max-workers=2'])
   selected.each { component ->
     component.files.each { name ->
-      File artifact = new File(stage, "${group.replace('.', '/')}/${component.artifactId}/${version}/${name}")
+      File artifact = new File(stage, "${group.replace('.', '/')}/${component.artifactId}/${component.version}/${name}")
       assert artifact.isFile() && new File(artifact.path + '.asc').isFile()
       run(['gpg', '--batch', '--verify', artifact.path + '.asc', artifact.path])
     }
@@ -88,6 +94,11 @@ bundleAll {
   assert log.text.contains('fixture-verifier-called') && log.text.contains('flatten:')
   assert !log.text.contains('maven-deploy-plugin')
   assert new File(fixture, 'build/bundle.zip').isFile()
+  new ZipFile(new File(fixture, 'build/bundle.zip')).withCloseable { zip ->
+    String metadataPath = "${group.replace('.', '/')}/library/1/library-1.module"
+    assert zip.getEntry(metadataPath) != null
+    assert zip.getEntry(metadataPath + '.asc') != null
+  }
   assert run(['git', 'status', '--porcelain']).empty
   println "Signed Maven preparation passed: exact staged dependency, BOM install, flattened aggregate POM, GPG signatures, allow-listed bundle and preserved user settings. Log: ${log}"
 } finally {

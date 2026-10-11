@@ -77,7 +77,10 @@ def configureRelease = {
     def pomFile = module.layout.buildDirectory.file("publications/${publication.name}/pom-default.xml")
     String pomPath = rootDir.toPath().relativize(pomFile.get().asFile.toPath()).toString()
     String prefix = "${publication.artifactId}-${publication.version}"
-    def files = ["${prefix}.pom".toString()] + publication.artifacts.findAll { it.extension == 'jar' }.collect { artifact ->
+    def metadataTask = module.tasks.findByName("generateMetadataFileFor${publication.name.capitalize()}Publication")
+    def files = ["${prefix}.pom".toString()] +
+      (metadataTask?.enabled ? ["${prefix}.module".toString()] : []) +
+      publication.artifacts.findAll { it.extension == 'jar' }.collect { artifact ->
       "${prefix}${artifact.classifier ? '-' + artifact.classifier : ''}.${artifact.extension}".toString()
     }
     candidates.add([projectPath: module.path, publication: publication.name, pomFile: pomPath,
