@@ -29,12 +29,13 @@ if [[ "$mode" != resume ]]; then
     exit 2
   fi
 fi
-# Until the enhanced plugin has its own release, use its explicit composite build.
-plugin_dir=${RELEASE_ALL_PLUGIN_DIR:-$RELEASE_ROOT/../nexus-release-plugin}
-[[ -f "$plugin_dir/src/main/groovy/se/alipsa/gradle/plugin/release/ReleaseAllPlanTask.groovy" ]] || {
-  echo 'Enhanced nexus-release-plugin checkout required; set RELEASE_ALL_PLUGIN_DIR' >&2; exit 1;
-}
-gradle=("$RELEASE_ROOT/gradlew" -p "$RELEASE_ROOT" "-PreleaseAllPluginDir=$plugin_dir" -PreleaseAllMode=true "-PrunExternalTests=$RUN_EXTERNAL_TESTS" "-PrunSlowTests=$RUN_SLOW_TESTS" --configuration-cache-problems=fail)
+gradle=("$RELEASE_ROOT/gradlew" -p "$RELEASE_ROOT" -PreleaseAllMode=true "-PrunExternalTests=$RUN_EXTERNAL_TESTS" "-PrunSlowTests=$RUN_SLOW_TESTS" --configuration-cache-problems=fail)
+if [[ -n "${RELEASE_ALL_PLUGIN_DIR:-}" ]]; then
+  [[ -f "$RELEASE_ALL_PLUGIN_DIR/src/main/groovy/se/alipsa/gradle/plugin/release/ReleaseAllPlanTask.groovy" ]] || {
+    echo 'Invalid nexus-release-plugin checkout: RELEASE_ALL_PLUGIN_DIR' >&2; exit 1;
+  }
+  gradle+=("-PreleaseAllPluginDir=$RELEASE_ALL_PLUGIN_DIR")
+fi
 if [[ "$mode" == resume ]]; then
   "${gradle[@]}" releaseAll "-PreleaseAllResume=$resume"
   exit

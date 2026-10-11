@@ -6,7 +6,7 @@ def releaseLoader = rootProject.plugins.find { it.class.name == 'se.alipsa.gradl
 def ReleaseManifest = releaseLoader.loadClass('se.alipsa.gradle.plugin.release.ReleaseManifest')
 def CentralPortalClient = releaseLoader.loadClass('se.alipsa.gradle.plugin.release.CentralPortalClient')
 
-// Only loaded in the release workflow: the development plugin is resolved through includeBuild.
+// Only loaded in the release workflow.
 def output = layout.buildDirectory.dir('releaseAll')
 def manifest = output.map { it.file('manifest.json') }
 def staged = output.map { it.dir('staging') }

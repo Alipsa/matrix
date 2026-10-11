@@ -50,6 +50,11 @@ done
   assert result.code == 0: result.output
   assert result.output.contains('No eligible unreleased components')
   assert commands().size() == 1 && commands().first().contains('releaseAllPlan')
+  assert commands().first().contains('-PreleaseAllPluginDir=')
+  new File(fixture, 'build/commands.txt').delete()
+  result = release(['--dry-run'], [RELEASE_ALL_PLUGIN_DIR: ''])
+  assert result.code == 0: result.output
+  assert commands().size() == 1 && !commands().first().contains('-PreleaseAllPluginDir=')
   new File(fixture, 'build/commands.txt').delete()
   seed.text = JsonOutput.toJson([selected: [[projectPath: ':matrix-core']], verificationScope: [':matrix-core', ':matrix-csv']])
   execute(['git', '-C', fixture.path, 'add', '.'])

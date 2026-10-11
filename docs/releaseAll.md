@@ -10,10 +10,9 @@ rewritten, no baseline is advanced, and no Git tag is created.
 1. Install Java 21, Maven 3.9.9 or later, Bash 4 or later, Groovy CLI, Git and grep.
    On macOS, run `brew install bash` and put Homebrew's `bin` on PATH before
    `/bin`, so `#!/usr/bin/env bash` selects modern Bash. GNU realpath/find are unnecessary.
-2. Check out the enhanced sibling `../nexus-release-plugin`. Its Gradle build also needs
-   a discoverable JDK 17 toolchain. Until the enhancement is published separately, the
-   release workflow resolves it through an explicit Gradle composite build. Ordinary
-   Matrix builds continue using the existing published plugin.
+2. The build resolves the published `nexus-release-plugin` 2.3.0 automatically.
+   To test plugin changes locally, set `RELEASE_ALL_PLUGIN_DIR` to a plugin checkout;
+   this optional composite build also needs a discoverable JDK 17 toolchain.
 3. Set `sonatypeUsername` and `sonatypePassword` in `~/.gradle/gradle.properties`, or set
    `SONATYPE_USERNAME` and `SONATYPE_PASSWORD` in the process environment. These must be
    Central Portal user-token credentials. Do not put secrets into tracked files.
@@ -58,7 +57,7 @@ rewritten, no baseline is advanced, and no Git tag is created.
 | `RUN_EXTERNAL_TESTS` | `true` | Enable normal externally tagged tests. Set `false` explicitly to omit their credentials/network prerequisites and tests. |
 | `RUN_SLOW_TESTS` | `true` | Preserve existing slow-test release behavior. Set `false` to override it. |
 | `RELEASE_ALL_DEDICATED_EXTERNAL_TESTS` | `false` | Opt in to dedicated BigQuery release tests; requires external tests enabled. Flaky tests are excluded. |
-| `RELEASE_ALL_PLUGIN_DIR` | sibling `../nexus-release-plugin` | Path to the enhanced plugin checkout for the composite build. |
+| `RELEASE_ALL_PLUGIN_DIR` | unset | Optional path to a plugin checkout for a development composite build; otherwise uses published 2.3.0. |
 
 Run from any working directory; the script anchors all paths at its own directory.
 For example, an explicitly offline test release is:

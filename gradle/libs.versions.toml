@@ -1,7 +1,7 @@
 [versions]
 v_aalto-xml = "1.4.0"
 v_alipsa-maven-module = "0.2.0"
-v_alipsa-nexus-release = "2.2.0"
+v_alipsa-nexus-release = "2.3.0"
 v_avro = "1.12.2"
 v_ben-manes-versions = "0.61.0"
 v_codenarc = "4.0.0"
