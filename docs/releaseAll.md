@@ -10,7 +10,7 @@ rewritten, no baseline is advanced, and no Git tag is created.
 1. Install Java 21, Maven 3.9.9 or later, Bash 4 or later, Groovy CLI, Git and grep.
    On macOS, run `brew install bash` and put Homebrew's `bin` on PATH before
    `/bin`, so `#!/usr/bin/env bash` selects modern Bash. GNU realpath/find are unnecessary.
-2. The build resolves the published `nexus-release-plugin` 2.3.0 automatically.
+2. The build resolves the published `nexus-release-plugin` 2.4.0 automatically.
    Release mode resolves this plugin exclusively from the Gradle Plugin Portal,
    preventing a locally published build from replacing the released version.
    To test plugin changes locally, set `RELEASE_ALL_PLUGIN_DIR` to a plugin checkout;
@@ -59,7 +59,7 @@ rewritten, no baseline is advanced, and no Git tag is created.
 | `RUN_EXTERNAL_TESTS` | `true` | Enable normal externally tagged tests. Set `false` explicitly to omit their credentials/network prerequisites and tests. |
 | `RUN_SLOW_TESTS` | `true` | Preserve existing slow-test release behavior. Set `false` to override it. |
 | `RELEASE_ALL_DEDICATED_EXTERNAL_TESTS` | `false` | Opt in to dedicated BigQuery release tests; requires external tests enabled. Flaky tests are excluded. |
-| `RELEASE_ALL_PLUGIN_DIR` | unset | Optional path to a plugin checkout for a development composite build; otherwise uses published 2.3.0. |
+| `RELEASE_ALL_PLUGIN_DIR` | unset | Optional path to a plugin checkout for a development composite build; otherwise uses published 2.4.0. |
 
 Run from any working directory; the script anchors all paths at its own directory.
 For example, an explicitly offline test release is:

@@ -9,7 +9,6 @@ pluginManagement {
         filter {
           includeGroup 'se.alipsa.gradle'
           includeGroup 'se.alipsa.nexus-release-plugin'
-          includeGroup 'se.alipsa.nexus-release-all'
         }
       }
     }

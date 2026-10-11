@@ -45,7 +45,8 @@ try {
   verifier.text = '#!/usr/bin/env bash\nset -euo pipefail\n[[ "$1" == --manifest && "$3" == --staging && "$5" == --local ]]\necho fixture-verifier-called\n'
   new File(fixture, '.gitignore').text = 'build/\n.gradle/\ngpg/\ntarget/\n.flattened-pom.xml\n'
   new File(fixture, 'settings.gradle').text = "pluginManagement { includeBuild(${JsonOutput.toJson(plugin.path)}) }; rootProject.name='signed-preparation-fixture'"
-  new File(fixture, 'build.gradle').text = '''plugins { id 'se.alipsa.nexus-release-all' }
+  new File(fixture, 'build.gradle').text = '''plugins { id 'se.alipsa.nexus-release-plugin' }
+nexusReleasePlugin.combinedRelease { }
 releaseAllPrepareMaven {
   sourceDirectory = layout.projectDirectory
   manifestFile = layout.buildDirectory.file('manifest.json')

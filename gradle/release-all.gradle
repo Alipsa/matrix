@@ -2,7 +2,7 @@ import groovy.json.JsonOutput
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.publish.maven.MavenPublication
 
-def releaseLoader = rootProject.plugins.find { it.class.name == 'se.alipsa.gradle.plugin.release.ReleaseAllSupportPlugin' }.class.classLoader
+def releaseLoader = rootProject.plugins.findPlugin('se.alipsa.nexus-release-plugin').class.classLoader
 def ReleaseManifest = releaseLoader.loadClass('se.alipsa.gradle.plugin.release.ReleaseManifest')
 def CentralPortalClient = releaseLoader.loadClass('se.alipsa.gradle.plugin.release.CentralPortalClient')
 
