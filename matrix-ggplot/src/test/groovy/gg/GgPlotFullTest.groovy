@@ -363,6 +363,21 @@ class GgPlotFullTest {
     }
 
     @Test
+    void testStatEllipseGeometry() {
+        def low = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length')) + stat_ellipse(type: 'norm', level: 0.5)
+        def high = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length')) + stat_ellipse(type: 'norm', level: 0.95)
+        Matrix inner = layer_data(low)
+        Matrix outer = layer_data(high)
+        double innerWidth = (inner['x'].max() - inner['x'].min()) as double
+        double outerWidth = (outer['x'].max() - outer['x'].min()) as double
+        assertTrue(outerWidth > innerWidth)
+        int right = outer['x'].indexOf(outer['x'].max())
+        double centerY = iris['Petal Length'].sum() / iris.rowCount() as double
+        assertTrue(Math.abs((outer['y'][right] as double) - centerY) > 0.1, 'Correlated data should produce a tilted ellipse')
+        assertTrue(high.render().descendants().any { it instanceof Path })
+    }
+
+    @Test
     void testStatEllipseLevels() {
         // Test that different confidence levels produce different sized ellipses
         def chart = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length')) +

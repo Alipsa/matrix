@@ -122,8 +122,8 @@ class SmoothStat {
           se = false
         }
       } else {
-        xtxInv = RegressionUtils.polynomialXtxInverse(xValues, polyDegree)
-        if (xtxInv == null) {
+        xtxInv = RegressionUtils.polynomialXtxInverse(xValues, polyDegree, (regression as PolynomialRegression).center, (regression as PolynomialRegression).scale)
+        if (xtxInv == null || xtxInv.length == 0) {
           se = false
         }
       }
@@ -151,7 +151,7 @@ class SmoothStat {
           BigDecimal dx = x - xBar
           seFit = (sigma2 * (1.0 / xValues.size() + (dx * dx) / sxx)).sqrt()
         } else {
-          BigDecimal leverage = RegressionUtils.polynomialLeverage(xtxInv, x, polyDegree)
+          BigDecimal leverage = RegressionUtils.polynomialLeverage(xtxInv, x, polyDegree, (regression as PolynomialRegression).center, (regression as PolynomialRegression).scale)
           seFit = (sigma2 * leverage.max(0.0)).sqrt()
         }
         BigDecimal margin = (tCrit * seFit) as BigDecimal

@@ -2,6 +2,8 @@
 [![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-stats/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-stats)
 # matrix-stats
 
+For changes in 2.6.0 and runnable migration examples, see [the 2.6.0 usage guide](../docs/tutorial/matrix-stats-2.6.md).
+
 `matrix-stats` adds statistical analysis to Matrix data: correlation, normalization, regression,
 formula/model-frame workflows, linear algebra, interpolation, hypothesis tests, time-series
 diagnostics, normality tests, native distributions, numerical solvers, and clustering.

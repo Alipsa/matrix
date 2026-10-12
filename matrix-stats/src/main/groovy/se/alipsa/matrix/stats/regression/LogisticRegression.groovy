@@ -427,7 +427,7 @@ class LogisticRegression {
    */
   @Override
   String toString() {
-    String sign = intercept >= 0 ? '+' : '-'
+    String sign = slope >= 0 ? '+' : '-'
     "P(${y}=1) = 1/(1 + exp(-(${getIntercept(2)} ${sign} ${getSlope(2).abs()}*${x})))"
   }
 }

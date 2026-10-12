@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.timeseries
 
+import se.alipsa.matrix.stats.util.NumericTolerance
+
 /**
  * Kwiatkowski–Phillips–Schmidt–Shin (KPSS) tests are used for testing a null hypothesis that an observable
  * time series is stationary around a deterministic trend (i.e. trend-stationary) against the alternative
@@ -72,7 +74,7 @@ class Kpss {
     if (!Double.isFinite(longRunVariance)) {
       throw new IllegalArgumentException('KPSS calculation produced a non-finite long-run variance')
     }
-    if (longRunVariance <= 0) {
+    if (longRunVariance <= 0 || NumericTolerance.isNegligible(Math.sqrt(longRunVariance), NumericTolerance.maxMagnitude(data*.doubleValue() as double[]))) {
       throw new IllegalArgumentException('Detrended residuals have no variation; cannot perform KPSS test')
     }
 

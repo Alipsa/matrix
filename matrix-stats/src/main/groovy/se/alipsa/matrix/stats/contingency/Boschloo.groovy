@@ -103,28 +103,23 @@ class Boschloo {
       throw new IllegalArgumentException('Table cannot have zero total count')
     }
 
-    // Calculate Fisher's exact p-value for the observed table
-    double observedFisherP = calculateFisherPValue(a, b, c, d)
-
-    // Find the nuisance parameter π that maximizes the p-value
-    int gridSize = Math.min(100, n + 1)
-    double maxPValue = 0.0
-    double optimalPi = 0.5
-
-    for (int i = 0; i <= gridSize; i++) {
-      double pi = i / (double) gridSize
-
-      // Calculate Boschloo p-value for this π
-      double pValue = calculateBoschlooForPi(n1, n2, observedFisherP, pi)
-
-      if (pValue > maxPValue) {
-        maxPValue = pValue
-        optimalPi = pi
+    double observedFisherP = 0
+    // The observed table is encountered during the single enumeration; compute its threshold first.
+    double[] factorial = new double[n + 1]
+    (1..n).each { int i -> factorial[i] = factorial[i - 1] + Math.log(i) }
+    observedFisherP = UnconditionalExact.fisher(a, n1, c, n2, factorial)
+    double[] optimum = UnconditionalExact.maximise(n1, n2) { int x1, int x2, double[] logs ->
+      double candidate
+      if (x1 == a && x2 == c) {
+        UnconditionalExact.COUNTERS.get().fisher++
+        candidate = observedFisherP
+      } else {
+        candidate = UnconditionalExact.fisher(x1, n1, x2, n2, logs)
       }
+      candidate <= observedFisherP * (1 + 1e-7)
     }
-
-    // Clamp p-value to [0, 1] to handle numerical precision issues
-    maxPValue = Math.max(0.0, Math.min(1.0, maxPValue))
+    double maxPValue = optimum[0]
+    double optimalPi = optimum[1]
 
     new BoschlooResult(
       pValue: BigDecimal.valueOf(maxPValue),
@@ -132,143 +127,6 @@ class Boschloo {
       nuisanceParameter: BigDecimal.valueOf(optimalPi),
       sampleSize: n
     )
-  }
-
-  /**
-   * Calculate Boschloo's p-value for a given nuisance parameter π.
-   * This is the probability of obtaining a table with Fisher p-value ≤ observed Fisher p-value.
-   */
-  private static double calculateBoschlooForPi(int n1, int n2, double observedFisherP, double pi) {
-    double pValue = 0.0
-
-    // Enumerate all possible values of x1 and x2
-    for (int x1 = 0; x1 <= n1; x1++) {
-      int y1 = n1 - x1
-
-      for (int x2 = 0; x2 <= n2; x2++) {
-        int y2 = n2 - x2
-
-        // Calculate Fisher's exact p-value for this table
-        double fisherP = calculateFisherPValue(x1, y1, x2, y2)
-
-        // If this table is as or more extreme (by Fisher's criterion), include its probability
-        if (fisherP <= observedFisherP + 1e-10) {
-          double prob = binomialProbability(n1, x1, pi) * binomialProbability(n2, x2, pi)
-          pValue += prob
-        }
-      }
-    }
-
-    pValue
-  }
-
-  /**
-   * Calculate Fisher's exact test p-value for a 2×2 table using the hypergeometric distribution.
-   * This is a two-sided p-value.
-   */
-  private static double calculateFisherPValue(int a, int b, int c, int d) {
-    int n1 = a + b
-    int n2 = c + d
-    int k1 = a + c
-    int k2 = b + d
-    int n = n1 + n2
-
-    if (n == 0) {
-      return 1.0
-    }
-
-    // Calculate probability of the observed table
-    double observedProb = hypergeometricProbability(a, n1, n2, k1)
-
-    // Sum probabilities of all tables as or more extreme
-    double pValue = 0.0
-
-    for (int x = 0; x <= Math.min(n1, k1); x++) {
-      int z = k1 - x
-      int w = n2 - z
-
-      // Check if this table is valid
-      if (z >= 0 && z <= n2 && w >= 0 && w <= k2) {
-        double prob = hypergeometricProbability(x, n1, n2, k1)
-
-        // Include if probability is less than or equal to observed (two-sided test)
-        if (prob <= observedProb + 1e-10) {
-          pValue += prob
-        }
-      }
-    }
-
-    // Clamp p-value to [0, 1] to handle numerical precision issues
-    Math.max(0.0, Math.min(1.0, pValue))
-  }
-
-  /**
-   * Calculate hypergeometric probability: P(X = k) where X ~ Hypergeometric(N, K, n)
-   * This is the probability of drawing k successes in n draws from a population of size N
-   * containing K successes.
-   */
-  private static double hypergeometricProbability(int k, int n, int m, int t) {
-    // P(X = k) = C(t, k) * C(N-t, n-k) / C(N, n)
-    // where N = n + m (total), t = column total, n = row 1 total
-    int N = n + m
-
-    if (k < 0 || k > n || k > t || (n - k) > (N - t)) {
-      return 0.0
-    }
-
-    // Use log probabilities for numerical stability
-    double logProb = logBinomialCoefficient(t, k) +
-                     logBinomialCoefficient(N - t, n - k) -
-                     logBinomialCoefficient(N, n)
-
-    Math.exp(logProb)
-  }
-
-  /**
-   * Calculate binomial probability: C(n,k) * p^k * (1-p)^(n-k)
-   */
-  private static double binomialProbability(int n, int k, double p) {
-    if (k < 0 || k > n) {
-      return 0.0
-    }
-
-    if (p <= 0.0) {
-      return k == 0 ? 1.0 : 0.0
-    }
-
-    if (p >= 1.0) {
-      return k == n ? 1.0 : 0.0
-    }
-
-    // Use log probabilities for numerical stability
-    double logProb = logBinomialCoefficient(n, k) + k * Math.log(p) + (n - k) * Math.log(1 - p)
-
-    Math.exp(logProb)
-  }
-
-  /**
-   * Calculate log of binomial coefficient: log(C(n,k))
-   */
-  private static double logBinomialCoefficient(int n, int k) {
-    if (k < 0 || k > n) {
-      return Double.NEGATIVE_INFINITY
-    }
-
-    if (k == 0 || k == n) {
-      return 0.0
-    }
-
-    // Use symmetry: C(n,k) = C(n, n-k)
-    if (k > n - k) {
-      k = n - k
-    }
-
-    double result = 0.0
-    for (int i = 1; i <= k; i++) {
-      result += Math.log(n - k + i) - Math.log(i)
-    }
-
-    result
   }
 
   private static void validateTable(int[][] table) {

@@ -162,6 +162,12 @@ class DecisionTree {
     }
   }
 
+  @groovy.transform.PackageScope
+  final List<Integer> splitEvaluations = []
+
+  @groovy.transform.PackageScope
+  final List<Integer> splitNodeSizes = []
+
   /** Root node of the decision tree */
   private Node root
 
@@ -379,56 +385,38 @@ class DecisionTree {
    * @return Best threshold, or null if no valid split found
    */
   private BigDecimal findBestSplit(List<BigDecimal> xData, List<BigDecimal> yData) {
-    BigDecimal parentVariance = calculateVariance(yData)
-
-    // Get unique sorted X values
-    List<BigDecimal> uniqueX = xData.toSet().sort()
-
-    if (uniqueX.size() < 2) {
-      return null
-    }
-
+    int n = xData.size()
+    splitNodeSizes << n
+    splitEvaluations << (n - 1)
+    List<Integer> order = (0..<n).toList().sort { int a, int b -> xData[a] <=> xData[b] }
+    // Centre before accumulating squares to preserve small variation at large offsets.
+    BigDecimal center = Stat.mean(yData)
+    List<BigDecimal> values = order.collect { int i -> yData[i] - center }
+    BigDecimal total = values.sum() as BigDecimal
+    BigDecimal squares = values.sum { BigDecimal value -> value * value } as BigDecimal
+    BigDecimal parent = squares - total * total / n
+    BigDecimal leftSum = 0
+    BigDecimal leftSquares = 0
     BigDecimal bestGain = 0
     BigDecimal bestThreshold = null
-    int n = yData.size()
-
-    // Try each midpoint between consecutive unique values
-    for (int i = 0; i < uniqueX.size() - 1; i++) {
-      BigDecimal threshold = (uniqueX[i] + uniqueX[i + 1]) / 2
-
-      // Split Y values by threshold
-      List<BigDecimal> leftY = []
-      List<BigDecimal> rightY = []
-
-      for (int j = 0; j < xData.size(); j++) {
-        if (xData[j] <= threshold) {
-          leftY << yData[j]
-        } else {
-          rightY << yData[j]
-        }
-      }
-
-      // Check minimum samples constraint
-      if (leftY.size() < minSamplesLeaf || rightY.size() < minSamplesLeaf) {
+    for (int i = 0; i < n - 1; i++) {
+      leftSum += values[i]
+      leftSquares += values[i] * values[i]
+      int leftCount = i + 1
+      int rightCount = n - leftCount
+      if (leftCount < minSamplesLeaf || rightCount < minSamplesLeaf || xData[order[i]] == xData[order[i + 1]]) {
         continue
       }
-
-      // Calculate weighted child variance
-      BigDecimal leftVariance = calculateVariance(leftY)
-      BigDecimal rightVariance = calculateVariance(rightY)
-      BigDecimal weightedChildVariance =
-        (leftY.size() * leftVariance + rightY.size() * rightVariance) / n
-
-      // Calculate variance reduction (information gain)
-      BigDecimal gain = parentVariance - weightedChildVariance
-
+      BigDecimal rightSum = total - leftSum
+      BigDecimal child = leftSquares - leftSum * leftSum / leftCount +
+          squares - leftSquares - rightSum * rightSum / rightCount
+      BigDecimal gain = parent - child
       if (gain > bestGain) {
         bestGain = gain
-        bestThreshold = threshold
+        bestThreshold = (xData[order[i]] + xData[order[i + 1]]) / 2
       }
     }
-
-    bestGain > 0 ? bestThreshold : null
+    bestThreshold
   }
 
   /**

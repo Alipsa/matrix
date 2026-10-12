@@ -61,7 +61,7 @@ class KMeansPlusPlusTest {
     assertEquals(4, centroids.length, 'Centroids should be 4')
 
     println('The within-cluster sum-of-squares (WCSS) = ' + wcss)
-    assertTrue(wcss < 250 && wcss > 230, 'WCSS should be approximately 240')
+    assertTrue(wcss < 16 && wcss > 14, 'Squared Euclidean WCSS should be approximately 15')
   }
 
   @Test

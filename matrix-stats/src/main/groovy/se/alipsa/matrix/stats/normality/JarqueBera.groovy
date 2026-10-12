@@ -142,7 +142,7 @@ class JarqueBera {
 
     // Calculate p-value using chi-squared distribution with 2 degrees of freedom
     ChiSquaredDistribution chiSq = new ChiSquaredDistribution(2)
-    double pValue = 1.0 - chiSq.cumulativeProbability(jbStatistic)
+    double pValue = chiSq.survivalProbability(jbStatistic)
 
     new JarqueBeraResult(
       jbStatistic: BigDecimal.valueOf(jbStatistic),

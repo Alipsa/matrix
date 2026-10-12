@@ -2,6 +2,8 @@ package se.alipsa.matrix.stats.regression
 
 import se.alipsa.matrix.core.Matrix
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * Shared utility methods for fit method implementations.
  */
@@ -19,7 +21,7 @@ final class FitUtils {
   static double[] toDoubleArray(List<Number> values) {
     double[] result = new double[values.size()]
     for (int i = 0; i < values.size(); i++) {
-      result[i] = values[i].doubleValue()
+      result[i] = NumericConversion.toFiniteDouble(values[i], 'response')
     }
     result
   }
@@ -65,7 +67,7 @@ final class FitUtils {
       }
       for (int j = 0; j < ncol; j++) {
         Object val = designMatrix[i, j]
-        predictors[i][col++] = val != null ? (val as Number).doubleValue() : 0.0d
+        predictors[i][col++] = NumericConversion.toFiniteDouble(val as Number, 'predictor')
       }
     }
     predictors
@@ -119,7 +121,9 @@ final class FitUtils {
     for (int i = 0; i < n; i++) {
       double sum = 0.0d
       for (int j = 0; j < coefficients.length; j++) {
-        sum += predictors[i][j] * coefficients[j]
+        if (!Double.isNaN(coefficients[j])) {
+          sum += predictors[i][j] * coefficients[j]
+        }
       }
       fitted[i] = sum
     }

@@ -10,7 +10,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '2.5.4-SNAPSHOT'
+version = '2.6.0-SNAPSHOT'
 description = "Statistical hypothesis tests based on Matrix data."
 
 JavaCompile javaCompile = compileJava {
@@ -48,7 +48,11 @@ dependencies {
 }
 
 test {
-  useJUnitPlatform()
+  useJUnitPlatform {
+    if (!providers.gradleProperty('runSlowTests').map { it.toBoolean() }.getOrElse(false)) {
+      excludeTags 'slow'
+    }
+  }
   testLogging {
     // set options for log level LIFECYCLE
     events TestLogEvent.FAILED,

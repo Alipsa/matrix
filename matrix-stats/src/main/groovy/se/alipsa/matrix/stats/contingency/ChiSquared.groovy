@@ -73,7 +73,7 @@ class ChiSquared {
 
     // Calculate p-value
     ChiSquaredDistribution distribution = new ChiSquaredDistribution(degreesOfFreedom)
-    double pValue = 1.0 - distribution.cumulativeProbability(chiSquared)
+    double pValue = distribution.survivalProbability(chiSquared)
 
     new ChiSquaredResult(
       testStatistic: BigDecimal.valueOf(chiSquared),
@@ -120,7 +120,7 @@ class ChiSquared {
 
     // Calculate p-value (G statistic is approximately chi-squared distributed)
     ChiSquaredDistribution distribution = new ChiSquaredDistribution(degreesOfFreedom)
-    double pValue = 1.0 - distribution.cumulativeProbability(gStatistic)
+    double pValue = distribution.survivalProbability(gStatistic)
 
     new ChiSquaredResult(
       testStatistic: BigDecimal.valueOf(gStatistic),
@@ -176,7 +176,7 @@ class ChiSquared {
 
     // Calculate p-value
     ChiSquaredDistribution distribution = new ChiSquaredDistribution(degreesOfFreedom)
-    double pValue = 1.0 - distribution.cumulativeProbability(chiSquared)
+    double pValue = distribution.survivalProbability(chiSquared)
 
     new ChiSquaredResult(
       testStatistic: BigDecimal.valueOf(chiSquared),

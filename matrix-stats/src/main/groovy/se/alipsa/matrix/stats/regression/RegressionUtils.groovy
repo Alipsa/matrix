@@ -1,7 +1,6 @@
 package se.alipsa.matrix.stats.regression
 
-import se.alipsa.matrix.stats.linear.MatrixAlgebra
-import se.alipsa.matrix.stats.linear.SingularMatrixException
+import se.alipsa.matrix.stats.util.LeastSquaresKernel
 
 /**
  * Internal helpers for regression diagnostics and standard error calculations.
@@ -14,26 +13,30 @@ class RegressionUtils {
   /**
    * Compute (X'X)^{-1} for a polynomial design matrix [1, x, x^2, ...].
    * Returns an empty array when the input is invalid or the matrix is singular.
+   * @param xValues predictor observations
+   * @param degree polynomial degree
+   * @param center basis center, default zero
+   * @param scale basis scale, default one; use the fitted PolynomialRegression scale
+   * @return unscaled covariance in the requested polynomial basis
    */
-  static BigDecimal[][] polynomialXtxInverse(List<? extends Number> xValues, int degree) {
+  static BigDecimal[][] polynomialXtxInverse(List<? extends Number> xValues, int degree, Number center = 0, Number scale = 1) {
     int n = xValues.size()
     if (n == 0 || degree < 1) {
       return EMPTY_BIG_DECIMAL_MATRIX
     }
     double[][] design = new double[n][degree + 1]
     for (int i = 0; i < n; i++) {
-      double x = xValues[i].doubleValue()
+      double x = (xValues[i].doubleValue() - center.doubleValue()) / scale.doubleValue()
       double term = 1.0d
       for (int j = 0; j <= degree; j++) {
         design[i][j] = term
         term *= x
       }
     }
-    double[][] xtx = MatrixAlgebra.multiply(MatrixAlgebra.transpose(design), design)
     double[][] inverse
     try {
-      inverse = MatrixAlgebra.inverse(xtx)
-    } catch (SingularMatrixException ignored) {
+      inverse = LeastSquaresKernel.fitMultipleLinearRegression(new double[n], design).unscaledCovariance()
+    } catch (IllegalArgumentException ignored) {
       return EMPTY_BIG_DECIMAL_MATRIX
     }
     BigDecimal[][] result = new BigDecimal[inverse.length][inverse[0].length]
@@ -77,7 +80,17 @@ class RegressionUtils {
     leverage
   }
 
-  static BigDecimal polynomialLeverage(BigDecimal[][] xtxInv, BigDecimal x, int degree) {
+  /**
+   * Calculates leverage using the same basis as the fitted polynomial.
+   * @param xtxInv unscaled covariance returned by polynomialXtxInverse
+   * @param x predictor at which to calculate leverage
+   * @param degree polynomial degree
+   * @param center basis center, default zero
+   * @param scale basis scale, default one
+   * @return leverage, or null when covariance is unavailable
+   */
+  static BigDecimal polynomialLeverage(BigDecimal[][] xtxInv, BigDecimal x, int degree, Number center = 0, Number scale = 1) {
+    x = (x - (center as BigDecimal)) / (scale as BigDecimal)
     if (xtxInv == null || xtxInv.length == 0) {
       return null
     }

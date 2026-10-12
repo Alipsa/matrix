@@ -5,7 +5,7 @@ import se.alipsa.matrix.stats.util.NumericConversion
 /**
  * Chi-squared distribution implementation backed by the regularized incomplete gamma function.
  */
-@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ChiSquaredDistribution implements ContinuousDistribution {
 
   private static final int MAX_INVERSE_ITERATIONS = 80
@@ -32,6 +32,23 @@ class ChiSquaredDistribution implements ContinuousDistribution {
   @Deprecated
   double cumulativeProbability(double x) {
     cumulativeProbabilityValue(x)
+  }
+
+  /**
+   * Computes P(X > x) directly using the complementary incomplete gamma function.
+   * @param x the evaluation point
+   * @return upper-tail probability
+   */
+  @Override
+  BigDecimal survivalProbability(Number x) {
+    BigDecimal.valueOf(survivalProbability(NumericConversion.toFiniteDouble(x, 'x')))
+  }
+
+  /** Primitive compatibility bridge for the upper-tail probability. */
+  @Override
+  @Deprecated
+  double survivalProbability(double x) {
+    x <= 0.0d ? 1.0d : SpecialFunctions.regularizedIncompleteGammaQ((degreesOfFreedom as double) / 2.0d, x / 2.0d)
   }
 
   BigDecimal inverseCumulativeProbability(Number p) {

@@ -1,5 +1,9 @@
 # matrix-ggplot Release Notes
 
+## Upcoming
+
+- `stat_ellipse` inherits the shared ggplot2-compatible ellipse geometry, robust default `t` covariance, and minimum of four observations.
+
 ## 0.6.0, 2026-09-22
 
 - Several fixes change rendered output: `I()` constants and constant point colours are now honoured, closure aesthetics may

@@ -166,7 +166,7 @@ class DfTest {
   void testResultEvaluate() {
     double[] data = new double[50]
     for (int i = 0; i < 50; i++) {
-      data[i] = 100 + i
+      data[i] = 100 + i + Math.sin(i)
     }
 
     def result = Df.test(data, 'trend')
@@ -199,7 +199,7 @@ class DfTest {
   void testDifferentTypes() {
     double[] data = new double[30]
     for (int i = 0; i < 30; i++) {
-      data[i] = 100 + i * 0.5
+      data[i] = 100 + i * 0.5 + Math.sin(i)
     }
 
     // Test all three types

@@ -3,6 +3,8 @@ package se.alipsa.matrix.stats.timeseries
 import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
 import se.alipsa.matrix.stats.util.NumericConversion
 
+import se.alipsa.matrix.stats.util.NumericTolerance
+
 /**
  * A portmanteau test is a type of statistical hypothesis test in which the null hypothesis is well specified,
  * but the alternative hypothesis is more loosely specified.
@@ -70,7 +72,7 @@ class Portmanteau {
     }
     variance /= n
 
-    if (variance < 1e-10) {
+    if (NumericTolerance.isNegligible(Math.sqrt(variance), NumericTolerance.maxMagnitude(y))) {
       throw new IllegalArgumentException('Data has no variation (constant or near-constant series)')
     }
 
@@ -92,7 +94,7 @@ class Portmanteau {
       double rho = autocorrelations[k - 1]
       qStatistic += (rho * rho) / (n - k)
     }
-    qStatistic *= n * (n + 2)
+    qStatistic *= (double) n * (n + 2)
 
     // Degrees of freedom for chi-squared test
     // If the data is from a fitted model with fitdf parameters, subtract those
@@ -106,7 +108,7 @@ class Portmanteau {
 
     // Calculate p-value using chi-squared distribution
     ChiSquaredDistribution chiSquared = new ChiSquaredDistribution(degreesOfFreedom)
-    double pValue = 1.0 - chiSquared.cumulativeProbability(qStatistic)
+    double pValue = chiSquared.survivalProbability(qStatistic)
 
     new LjungBoxResult(
       statistic: BigDecimal.valueOf(qStatistic),

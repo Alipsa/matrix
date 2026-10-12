@@ -1,7 +1,7 @@
 package se.alipsa.matrix.stats.timeseries
 
 import se.alipsa.matrix.stats.linear.MatrixAlgebra
-import se.alipsa.matrix.stats.linear.SingularMatrixException
+import se.alipsa.matrix.stats.util.LeastSquaresKernel
 import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
@@ -254,22 +254,21 @@ class Johansen {
   }
 
   private static ResidualMatrices projectResiduals(double[][] designMatrix, double[][] deltaY, double[][] laggedY) {
-    double[][] ztZ = MatrixAlgebra.multiply(MatrixAlgebra.transpose(designMatrix), designMatrix)
-    double[][] ztZInv
-    try {
-      ztZInv = MatrixAlgebra.inverse(ztZ)
-    } catch (SingularMatrixException ignored) {
-      throw new IllegalArgumentException('Singular matrix in short-run regression - cannot perform Johansen test')
-    }
+    new ResidualMatrices(r0: residualise(designMatrix, deltaY), r1: residualise(designMatrix, laggedY))
+  }
 
-    double[][] projection = MatrixAlgebra.multiply(
-        MatrixAlgebra.multiply(designMatrix, ztZInv),
-        MatrixAlgebra.transpose(designMatrix)
-    )
-    new ResidualMatrices(
-      r0: MatrixAlgebra.subtract(deltaY, MatrixAlgebra.multiply(projection, deltaY)),
-      r1: MatrixAlgebra.subtract(laggedY, MatrixAlgebra.multiply(projection, laggedY))
-    )
+  private static double[][] residualise(double[][] design, double[][] response) {
+    double[][] residuals = new double[response.length][response[0].length]
+    (0..<response[0].length).each { int column ->
+      double[] values = response.collect { double[] row -> row[column] } as double[]
+      double[] coefficients = LeastSquaresKernel.fitOls(values, design)
+      (0..<response.length).each { int row ->
+        double fitted = 0
+        (0..<coefficients.length).each { int j -> fitted += design[row][j] * coefficients[j] }
+        residuals[row][column] = response[row][column] - fitted
+      }
+    }
+    residuals
   }
 
   private static MomentMatrices computeMomentMatrices(ResidualMatrices residualMatrices, int effectiveN) {

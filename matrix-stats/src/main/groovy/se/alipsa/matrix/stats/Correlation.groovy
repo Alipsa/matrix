@@ -330,6 +330,11 @@ class Correlation {
     if (x.size() != y.size()) {
       throw new IllegalArgumentException("${testName} requires lists of equal size, got: x=${x.size()}, y=${y.size()}")
     }
+    if ([x, y].any { List<? extends Number> values ->
+      values.any { Number value -> value == null || !Double.isFinite(value.doubleValue()) }
+    }) {
+      throw new IllegalArgumentException("$testName requires finite, non-null values")
+    }
     if (x.size() < 2) {
       throw new IllegalArgumentException("${testName} requires at least 2 paired observations, got: ${x.size()}")
     }

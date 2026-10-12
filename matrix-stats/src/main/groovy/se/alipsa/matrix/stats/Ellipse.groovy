@@ -1,13 +1,15 @@
 package se.alipsa.matrix.stats
 
-import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
+import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.stats.distribution.FDistribution
 
 /**
  * Confidence ellipse calculations for bivariate normal data.
  */
-@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class Ellipse {
+
+  private static final Logger log = Logger.getLogger(Ellipse)
 
   /**
    * Data class to hold ellipse calculation results.
@@ -29,21 +31,24 @@ class Ellipse {
    * @param yValues Y coordinates
    * @param level Confidence level (default 0.95)
    * @param type Ellipse type: 't', 'norm', or 'euclid' (default 't'). The 't' type uses an
-   * F-distribution scale for finite samples, equivalent to ggplot2's {@code stat_ellipse(type = "t")}.
-   * The 'norm' type uses a chi-squared(2) scale for asymptotic normality.
+   * F-distribution scale and MASS cov.trob robust covariance (nu=5).
+   * The 'norm' type uses sample covariance and the same F radius. Euclid is a circle of radius level.
    * @param segments Number of points to generate (default 51)
    * @return EllipseData containing x,y coordinates of the ellipse
-   * @throws IllegalArgumentException if either input has fewer than 3 points or the input sizes differ
+   * @throws IllegalArgumentException if either input has fewer than 4 points or the input sizes differ
    */
-  static EllipseData calculate(List<BigDecimal> xValues, List<BigDecimal> yValues,
+  static EllipseData calculate(List<? extends Number> xValues, List<? extends Number> yValues,
                                 double level = 0.95, String type = 't', int segments = 51) {
     if (xValues.size() != yValues.size()) {
       throw new IllegalArgumentException("X and Y must have the same number of points (got ${xValues.size()} and ${yValues.size()})")
     }
-    if (xValues.size() < 3) {
-      throw new IllegalArgumentException("Ellipse calculation requires at least 3 points per axis (got ${xValues.size()})")
+    if (xValues.size() < 4) {
+      throw new IllegalArgumentException("Ellipse calculation requires at least 4 points per axis (got ${xValues.size()})")
     }
 
+    if (segments < 3 || !(type in ['norm', 't', 'euclid']) || !Double.isFinite(level) || level <= 0 || level >= 1) {
+      throw new IllegalArgumentException('Require segments >= 3, type norm/t/euclid and level in (0,1)')
+    }
     int n = xValues.size()
 
     // Calculate means
@@ -69,6 +74,19 @@ class Ellipse {
     varY /= (n - 1)
     covXY /= (n - 1)
 
+    if (type == 't') {
+      double[] robust = robustCovariance(xValues, yValues, meanX, meanY)
+      meanX = robust[0]
+      meanY = robust[1]
+      varX = robust[2]
+      varY = robust[3]
+      covXY = robust[4]
+    } else if (type == 'euclid') {
+      varX = 1
+      varY = 1
+      covXY = 0
+    }
+
     // Eigenvalues and eigenvectors for rotation
     double trace = varX + varY
     double det = varX * varY - covXY * covXY
@@ -89,12 +107,7 @@ class Ellipse {
     }
 
     // Angle of rotation
-    double theta
-    if (Math.abs(covXY) < 1e-10) {
-      theta = 0
-    } else {
-      theta = Math.atan2(lambda1 - varX, covXY)
-    }
+    double theta = 0.5d * Math.atan2(2 * covXY, varX - varY)
 
     double scale = scaleFor(type, level, n)
 
@@ -125,15 +138,69 @@ class Ellipse {
     new EllipseData(ellipseX, ellipseY)
   }
 
+  // MASS 7.3.65 cov.trob: final covariance uses X from the start of the last iteration.
+  private static double[] robustCovariance(List<? extends Number> xs, List<? extends Number> ys, double mx, double my) {
+    int n = xs.size()
+    double[] weights = new double[n]
+    Arrays.fill(weights, 1.4d)
+    double[] dx = new double[n]
+    double[] dy = new double[n]
+    double[] q = new double[n]
+    boolean converged = false
+    for (int iteration = 0; iteration < 25; iteration++) {
+      double sumWeights = weights.sum() as double
+      double vx = 0
+      double vy = 0
+      double cov = 0
+      (0..<n).each { int i ->
+        dx[i] = xs[i].doubleValue() - mx
+        dy[i] = ys[i].doubleValue() - my
+        vx += weights[i] * dx[i] * dx[i] / sumWeights
+        vy += weights[i] * dy[i] * dy[i] / sumWeights
+        cov += weights[i] * dx[i] * dy[i] / sumWeights
+      }
+      double determinant = vx * vy - cov * cov
+      if (determinant <= 0) {
+        throw new IllegalArgumentException('Robust ellipse requires nonsingular covariance')
+      }
+      double maxChange = 0
+      (0..<n).each { int i ->
+        q[i] = (vy * dx[i] * dx[i] - 2 * cov * dx[i] * dy[i] + vx * dy[i] * dy[i]) / determinant
+        double next = 7.0d / (5.0d + q[i])
+        maxChange = Math.max(maxChange, Math.abs(next - weights[i]))
+        weights[i] = next
+      }
+      sumWeights = weights.sum() as double
+      mx = (0..<n).sum { int i -> weights[i] * xs[i].doubleValue() } as double
+      my = (0..<n).sum { int i -> weights[i] * ys[i].doubleValue() } as double
+      mx /= sumWeights
+      my /= sumWeights
+      if (maxChange < 0.01d) {
+        converged = true
+        break
+      }
+    }
+    double weightMean = (weights.sum() as double) / n
+    double weightedQ = ((0..<n).sum { int i -> weights[i] * q[i] } as double) / (2 * n)
+    if (!converged || Math.abs(weightMean - 1) > 0.01d || Math.abs(weightedQ - 1) > 0.01d) {
+      log.warn('Probable convergence failure')
+    }
+    double vx = 0
+    double vy = 0
+    double cov = 0
+    (0..<n).each { int i ->
+      vx += weights[i] * dx[i] * dx[i] / n
+      vy += weights[i] * dy[i] * dy[i] / n
+      cov += weights[i] * dx[i] * dy[i] / n
+    }
+    [mx, my, vx, vy, cov] as double[]
+  }
+
   private static double scaleFor(String type, Number level, int n) {
-    if (type == 't') {
-      FDistribution fDist = new FDistribution(2, n - 1)
-      return Math.sqrt(2.0d * (fDist.inverseCumulativeProbability(level) as double))
+    if (type == 'euclid') {
+      return level.doubleValue()
     }
-    if (type == 'norm') {
-      ChiSquaredDistribution chiSq = new ChiSquaredDistribution(2)
-      return Math.sqrt(chiSq.inverseCumulativeProbability(level) as double)
-    }
-    1.0d
+    FDistribution fDist = new FDistribution(2, n - 1)
+    Math.sqrt(2.0d * (fDist.inverseCumulativeProbability(level) as double))
   }
 }

@@ -22,7 +22,6 @@ class KolmogorovSmirnovTest {
   // The one-sample implementation intentionally uses the asymptotic Kolmogorov distribution,
   // so it does not match Apache's exact/reference p-value as tightly as the statistic itself.
   private static final double ONE_SAMPLE_P_TOLERANCE = 0.025d
-  private static final double TWO_SAMPLE_P_TOLERANCE = 0.01d
 
   @Test
   void testAgainstDistributionMatchesApacheReference() {
@@ -49,7 +48,8 @@ class KolmogorovSmirnovTest {
     double[] second = sample2 as double[]
 
     assertEquals(apacheTest.kolmogorovSmirnovStatistic(first, second), result.dStatistic as double, D_TOLERANCE)
-    assertEquals(apacheTest.kolmogorovSmirnovTest(first, second), result.pValue as double, TWO_SAMPLE_P_TOLERANCE)
+    // R 4.6.1: ks.test(sample1, sample2, exact=TRUE), inclusive upper tail.
+    assertEquals(1.0d, result.pValue as double, D_TOLERANCE)
   }
 
   @Test
@@ -63,7 +63,8 @@ class KolmogorovSmirnovTest {
     double[] second = sample2 as double[]
 
     assertEquals(apacheTest.kolmogorovSmirnovStatistic(first, second), result.dStatistic as double, D_TOLERANCE)
-    assertEquals(apacheTest.kolmogorovSmirnovTest(first, second), result.pValue as double, TWO_SAMPLE_P_TOLERANCE)
+    // R 4.6.1: ks.test(c(1,3,4,7,9),c(2,5,6,8,10),exact=TRUE)
+    assertEquals(0.873015873015873d, result.pValue as double, D_TOLERANCE)
   }
 
   @Test

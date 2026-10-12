@@ -30,7 +30,7 @@ class WelchTest {
 
     // Verify same results as Student.tTest with equalVariance=false
     assertEquals(-49.98618626, result.getT(8), 't value')
-    assertEquals(58.60939455, result.getDf(8), 'Degrees of freedom')
+    assertEquals(58.60939453, result.getDf(8), 'Degrees of freedom')
     assertEquals(0.17366400, result.getSd1(8), 'sd1')
     assertEquals(0.55189470, result.getSd2(8), 'sd2')
     assertEquals(9.269628E-50, result.p, 0.0000001)

@@ -152,7 +152,7 @@ final class MatrixAlgebra {
       }
 
       double pivot = augmented[k][k]
-      if (Math.abs(pivot) <= SINGULARITY_THRESHOLD) {
+      if (Math.abs(pivot) <= SINGULARITY_THRESHOLD * matrixNorm(matrix)) {
         log.warn("Singular pivot at column $k while inverting ${n}x${n} matrix")
         throw new SingularMatrixException("Singular matrix at column ${k} - cannot invert matrix")
       }
@@ -207,7 +207,7 @@ final class MatrixAlgebra {
         }
 
         if (i == j) {
-          if (sum <= SINGULARITY_THRESHOLD) {
+          if (sum <= SINGULARITY_THRESHOLD * matrixNorm(matrix)) {
             log.warn("Non-positive diagonal at row $i during Cholesky decomposition")
             throw new SingularMatrixException('Matrix is not positive definite')
           }
@@ -257,7 +257,7 @@ final class MatrixAlgebra {
         }
       }
 
-      if (maxOffDiagonal <= JACOBI_CONVERGENCE_THRESHOLD) {
+      if (maxOffDiagonal <= JACOBI_CONVERGENCE_THRESHOLD * matrixNorm(matrix)) {
         return diagonal(a)
       }
 
@@ -306,11 +306,17 @@ final class MatrixAlgebra {
     [matrix.length, columns] as int[]
   }
 
+  private static double matrixNorm(double[][] matrix) {
+    double maximum = 0
+    matrix.each { double[] row -> row.each { double value -> maximum = Math.max(maximum, Math.abs(value)) } }
+    maximum
+  }
+
   private static void validateSymmetric(double[][] matrix) {
     for (int i = 0; i < matrix.length; i++) {
       for (int j = i + 1; j < matrix.length; j++) {
         double difference = Math.abs(matrix[i][j] - matrix[j][i])
-        double scale = Math.max(1.0d, Math.max(Math.abs(matrix[i][j]), Math.abs(matrix[j][i])))
+        double scale = matrixNorm(matrix)
         if (difference > SYMMETRY_THRESHOLD * scale) {
           throw new IllegalArgumentException('Matrix must be symmetric')
         }

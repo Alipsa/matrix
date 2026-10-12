@@ -23,9 +23,9 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * meaning of the original input column labels. Grid-shaped results are exposed as
  * {@code Grid<BigDecimal>}.
  */
+@SuppressWarnings('DuplicateNumberLiteral')
 final class Linalg {
 
-  private static final double SINGULARITY_TOLERANCE = 1e-12
   private static final double IMAGINARY_TOLERANCE = 1e-10
   private static final String MATRIX_LABEL = 'matrix'
   private static final String MATRIX_TYPE_LABEL = 'Matrix'
@@ -273,7 +273,7 @@ final class Linalg {
   }
 
   private static void requireNonSingular(SimpleMatrix matrix, String label) {
-    if (Math.abs(matrix.determinant()) <= SINGULARITY_TOLERANCE) {
+    if (1 / matrix.conditionP2() <= matrix.numRows() * Math.ulp(1.0d)) {
       throw new LinalgSingularMatrixException("${label} is singular and cannot be inverted or solved")
     }
   }

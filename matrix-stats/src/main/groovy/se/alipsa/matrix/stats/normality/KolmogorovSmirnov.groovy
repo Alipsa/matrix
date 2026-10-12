@@ -1,7 +1,10 @@
 package se.alipsa.matrix.stats.normality
 
+import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.stats.distribution.ContinuousDistribution
 import se.alipsa.matrix.stats.distribution.NormalDistribution
+import se.alipsa.matrix.stats.distribution.SpecialFunctions
+import se.alipsa.matrix.stats.linear.MatrixAlgebra
 import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
@@ -103,8 +106,9 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * Lilliefors test instead, which provides a corrected version of the K-S test specifically for normality
  * testing with estimated parameters.</p>
  */
-@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class KolmogorovSmirnov {
+  private static final Logger log = Logger.getLogger(KolmogorovSmirnov)
   private static final double ASYMPTOTIC_CORRECTION_BASE = 0.12d
   private static final double ASYMPTOTIC_CORRECTION_SCALE = 0.11d
   private static final int EXACT_TWO_SAMPLE_MAX_PRODUCT = 10_000
@@ -112,6 +116,9 @@ class KolmogorovSmirnov {
   /**
    * Performs a one-sample Kolmogorov-Smirnov test to check if the data follows a normal distribution.
    * The test uses the sample mean and standard deviation to construct the reference normal distribution.
+   *
+   * Estimating the mean and sample standard deviation makes these KS p-values conservative.
+   * Use {@link Lilliefors#testNormality} for a calibrated fitted-normal test.
    *
    * @param data The sample data
    * @return KSResult containing the D statistic and p-value
@@ -128,7 +135,7 @@ class KolmogorovSmirnov {
     for (double v : values) {
       variance += (v - mean) * (v - mean)
     }
-    double stdDev = Math.sqrt(variance / values.length)
+    double stdDev = Math.sqrt(variance / (values.length - 1))
 
     // Create normal distribution with sample mean and std dev
     NormalDistribution normalDist = new NormalDistribution(mean, stdDev)
@@ -140,13 +147,15 @@ class KolmogorovSmirnov {
    * Performs a one-sample Kolmogorov-Smirnov test to check if the data follows a standard normal distribution (μ=0, σ=1).
    *
    * @param data The sample data
+   * @param exact null (default) selects exact for untied samples below 100; true forces exact
+   * @param alternative two.sided (default), less, or greater
    * @return KSResult containing the D statistic and p-value
    * @throws IllegalArgumentException if data is null or has fewer than 2 observations
    */
-  static KSResult testStandardNormality(List<? extends Number> data) {
+  static KSResult testStandardNormality(List<? extends Number> data, Boolean exact = null, String alternative = 'two.sided') {
     validateData(data)
     NormalDistribution standardNormal = new NormalDistribution(0, 1)
-    testAgainstDistribution(data, standardNormal, 'Standard Normality')
+    testAgainstDistribution(data, standardNormal, 'Standard Normality', exact, alternative)
   }
 
   /**
@@ -154,16 +163,28 @@ class KolmogorovSmirnov {
    *
    * @param data The sample data
    * @param distribution The reference distribution to test against
+   * @param exact null (default) selects exact for n below 100 without ties; true forces exact
+   * @param alternative two.sided (default), greater or less
    * @param testName Optional name for the test (for display purposes)
    * @return KSResult containing the D statistic and p-value
    * @throws IllegalArgumentException if data is null or has fewer than 2 observations
    */
-  static KSResult testAgainstDistribution(List<? extends Number> data, ContinuousDistribution distribution, String testName = 'K-S Test') {
+  static KSResult testAgainstDistribution(List<? extends Number> data, ContinuousDistribution distribution, String testName = 'K-S Test', Boolean exact = null, String alternative = 'two.sided') {
     validateData(data)
 
     double[] values = (data*.doubleValue() as List<Double>).sort() as double[]
-    double dStatistic = calculateOneSampleStatistic(values, distribution)
-    double pValue = calculateOneSamplePValue(dStatistic, values.length)
+    if (!(alternative in ['two.sided', 'greater', 'less'])) {
+      throw new IllegalArgumentException('alternative must be two.sided, greater or less')
+    }
+    boolean ties = (1..<values.length).any { int i -> values[i] == values[i - 1] }
+    if (ties) {
+      log.warn('Ties in one-sample Kolmogorov-Smirnov test')
+    }
+    boolean useExact = exact == null ? values.length < 100 && !ties : exact
+    double dStatistic = calculateOneSampleStatistic(values, distribution, alternative)
+    double pValue = useExact ? (alternative == 'two.sided' ? exactTwoSided(dStatistic, values.length) :
+        exactOneSided(dStatistic, values.length)) : (alternative == 'two.sided' ?
+        kolmogorovProbability(Math.sqrt(values.length) * dStatistic) : Math.exp(-2 * values.length * dStatistic * dStatistic))
 
     new KSResult(
       dStatistic: BigDecimal.valueOf(dStatistic),
@@ -202,7 +223,7 @@ class KolmogorovSmirnov {
     )
   }
 
-  private static double calculateOneSampleStatistic(double[] sortedValues, ContinuousDistribution distribution) {
+  private static double calculateOneSampleStatistic(double[] sortedValues, ContinuousDistribution distribution, String alternative) {
     int n = sortedValues.length
     double dPlus = 0.0d
     double dMinus = 0.0d
@@ -215,19 +236,80 @@ class KolmogorovSmirnov {
       dMinus = Math.max(dMinus, theoretical - empiricalLower)
     }
 
-    Math.max(dPlus, dMinus)
+    alternative == 'greater' ? dPlus : alternative == 'less' ? dMinus : Math.max(dPlus, dMinus)
   }
 
-  private static double calculateOneSamplePValue(double dStatistic, int sampleSize) {
-    if (dStatistic <= 0.0d) {
-      return 1.0d
+  // Marsaglia, Tsang and Wang (2003), as in R pkolmogorov_two_exact.
+  private static double exactTwoSided(double d, int n) {
+    if (d >= 1) {
+      return 0
     }
+    if (d <= 0.5d / n) {
+      return 1
+    }
+    int k = (int) Math.floor(n * d) + 1
+    int size = 2 * k - 1
+    double h = k - n * d
+    double[][] matrix = new double[size][size]
+    for (int i = 0; i < size; i++) {
+      for (int j = 0; j < size; j++) {
+        if (i - j + 1 >= 0) {
+          matrix[i][j] = 1
+        }
+      }
+    }
+    for (int i = 0; i < size; i++) {
+      matrix[i][0] -= Math.pow(h, i + 1)
+      matrix[size - 1][i] -= Math.pow(h, size - i)
+    }
+    if (2 * h - 1 > 0) {
+      matrix[size - 1][0] += Math.pow(2 * h - 1, size)
+    }
+    for (int i = 0; i < size; i++) {
+      for (int j = 0; j < size; j++) {
+        for (int divisor = 2; divisor <= i - j + 1; divisor++) {
+          matrix[i][j] /= divisor
+        }
+      }
+    }
+    double[][] power = new double[size][size]
+    (0..<size).each { int i -> power[i][i] = 1 }
+    int exponent = n
+    while (exponent > 0) {
+      if (exponent % 2 != 0) {
+        power = MatrixAlgebra.multiply(power, matrix)
+      }
+      exponent = exponent.intdiv(2)
+      if (exponent > 0) {
+        matrix = MatrixAlgebra.multiply(matrix, matrix)
+      }
+    }
+    double probability = power[k - 1][k - 1]
+    (1..n).each { int i -> probability *= i / (double) n }
+    Math.max(0.0d, Math.min(1.0d, 1 - probability))
+  }
 
-    // Use Stephens' asymptotic correction for the one-sample test. This is intentionally approximate,
-    // so callers and tests should not expect exact agreement with finite-sample reference tables.
-    double sqrtN = Math.sqrt(sampleSize)
-    double lambda = (sqrtN + ASYMPTOTIC_CORRECTION_BASE + ASYMPTOTIC_CORRECTION_SCALE / sqrtN) * dStatistic
-    kolmogorovProbability(lambda)
+  // Birnbaum-Tingey exact one-sided survival probability, as in R.
+  private static double exactOneSided(double d, int n) {
+    if (d <= 0) {
+      return 1
+    }
+    if (d >= 1) {
+      return 0
+    }
+    double probability = 0
+    int maximum = (int) Math.floor(n * (1 - d))
+    (0..maximum).each { int j ->
+      double a = j / (double) n + d
+      double b = 1 - d - j / (double) n
+      if (b > 0 || n == j) {
+        double logChoose = SpecialFunctions.logGamma(n + 1.0d) - SpecialFunctions.logGamma(j + 1.0d) -
+            SpecialFunctions.logGamma(n - j + 1.0d)
+        probability += Math.exp(Math.log(d) + logChoose + (j - 1) * Math.log(a) +
+            (n == j ? 0 : (n - j) * Math.log(b)))
+      }
+    }
+    Math.min(1.0d, probability)
   }
 
   private static double calculateTwoSampleStatistic(double[] sample1, double[] sample2) {
@@ -274,7 +356,7 @@ class KolmogorovSmirnov {
       return calculateExactTwoSamplePValue(differenceCount, sampleSize1, sampleSize2)
     }
 
-    double effectiveSize = Math.sqrt((sampleSize1 * sampleSize2) / (double) (sampleSize1 + sampleSize2))
+    double effectiveSize = Math.sqrt(((double) sampleSize1 * sampleSize2) / (double) (sampleSize1 + sampleSize2))
     double lambda = (effectiveSize + ASYMPTOTIC_CORRECTION_BASE + ASYMPTOTIC_CORRECTION_SCALE / effectiveSize) * dStatistic
     kolmogorovProbability(lambda)
   }
@@ -282,9 +364,9 @@ class KolmogorovSmirnov {
   private static double calculateExactTwoSamplePValue(long thresholdCount, int sampleSize1, int sampleSize2) {
     BigInteger validPathCount = countValidPaths(sampleSize1, sampleSize2, thresholdCount)
     BigInteger totalPathCount = binomial(sampleSize1 + sampleSize2, sampleSize1)
-    BigDecimal cdf = new BigDecimal(validPathCount)
+    BigDecimal upperTail = new BigDecimal(totalPathCount - validPathCount)
       .divide(new BigDecimal(totalPathCount), java.math.MathContext.DECIMAL128)
-    double pValue = 1.0d - cdf.doubleValue()
+    double pValue = upperTail as double
     Math.max(0.0d, Math.min(1.0d, pValue))
   }
 
@@ -299,7 +381,7 @@ class KolmogorovSmirnov {
         }
 
         long differenceCount = Math.abs((i as long) * sampleSize2 - (j as long) * sampleSize1)
-        if (differenceCount > thresholdCount) {
+        if (differenceCount >= thresholdCount) {
           pathCounts[i][j] = BigInteger.ZERO
           continue
         }
@@ -324,6 +406,21 @@ class KolmogorovSmirnov {
   }
 
   private static double kolmogorovProbability(double lambda) {
+    if (lambda <= 0.0d) {
+      return 1.0d
+    }
+    if (lambda < 1.18d) {
+      double thetaSum = 0.0d
+      for (int j = 1; j <= 100; j++) {
+        double odd = 2.0d * j - 1
+        double term = Math.exp(-odd * odd * Math.PI * Math.PI / (8 * lambda * lambda))
+        thetaSum += term
+        if (term < 1e-16d) {
+          break
+        }
+      }
+      return Math.max(0.0d, 1 - Math.sqrt(2 * Math.PI) / lambda * thetaSum)
+    }
     double sum = 0.0d
 
     for (int j = 1; j <= 100; j++) {

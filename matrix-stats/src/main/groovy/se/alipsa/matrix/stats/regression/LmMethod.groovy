@@ -2,6 +2,7 @@ package se.alipsa.matrix.stats.regression
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.formula.ModelFrameResult
+import se.alipsa.matrix.stats.util.LeastSquaresKernel
 
 /**
  * Ordinary least squares linear model adapter. Delegates to {@link MultipleLinearRegression}
@@ -32,10 +33,10 @@ class LmMethod implements FitMethod {
     double[][] predictors = FitUtils.buildDesignArray(designMatrix, n, addIntercept)
     double[] response = FitUtils.toDoubleArray(frame.response)
 
-    MultipleLinearRegression mlr = new MultipleLinearRegression(response, predictors)
+    LeastSquaresKernel.OlsComputation mlr = LeastSquaresKernel.fitRankRevealing(response, predictors)
 
-    double[] coefficients = mlr.coefficients
-    double[] standardErrors = mlr.standardErrors
+    double[] coefficients = mlr.coefficients()
+    double[] standardErrors = mlr.standardErrors()
     double[] fittedValues = FitUtils.computeFitted(predictors, coefficients)
     double[] residuals = FitUtils.computeResiduals(response, fittedValues)
     double rSquared = FitUtils.computeRSquared(response, residuals)

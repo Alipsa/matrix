@@ -1,5 +1,7 @@
 # Matrix Stats
 
+For 2.6.0 defaults, numeric return types, exact tests, and reproducible clustering, see [the migration examples](../tutorial/matrix-stats-2.6.md).
+
 Focused recipes for the `matrix-stats` module.
 
 ## Setup Notes

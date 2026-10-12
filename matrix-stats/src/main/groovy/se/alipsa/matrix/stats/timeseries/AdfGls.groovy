@@ -3,7 +3,9 @@ package se.alipsa.matrix.stats.timeseries
 import groovy.transform.PackageScope
 
 import se.alipsa.matrix.core.util.Logger
+import se.alipsa.matrix.stats.util.LeastSquaresKernel
 import se.alipsa.matrix.stats.util.NumericConversion
+import se.alipsa.matrix.stats.util.NumericTolerance
 
 /**
  * The ADF-GLS test (or DF-GLS test) is a test for a unit root in a time series.
@@ -99,6 +101,9 @@ class AdfGls {
 
     // GLS-detrend the data
     double[] detrended = glsDetrend(data, alpha, type)
+    if (NumericTolerance.isNegligible(NumericTolerance.maxMagnitude(detrended), NumericTolerance.maxMagnitude(data))) {
+      throw new IllegalArgumentException('GLS detrended data are essentially constant')
+    }
 
     // Run ADF-type regression on detrended data
     // Δỹ_t = γỹ_{t-1} + δ₁Δỹ_{t-1} + ... + δₚΔỹ_{t-p} + ε_t
@@ -133,42 +138,9 @@ class AdfGls {
       }
     }
 
-    // Perform OLS regression
-    double[] beta = TimeSeriesUtils.solveLinearSystem(X, response)
-    double gamma = beta[0]
-
-    // Calculate residuals and standard error
-    double[] residuals = new double[nObs]
-    for (int i = 0; i < nObs; i++) {
-      double fitted = 0.0
-      for (int j = 0; j < p + 1; j++) {
-        fitted += X[i][j] * beta[j]
-      }
-      residuals[i] = response[i] - fitted
-    }
-
-    double rss = 0.0
-    for (double r : residuals) {
-      rss += r * r
-    }
-
-    int df = nObs - (p + 1)
-    double sigma2 = rss / df
-
-    // Calculate (X'X)^(-1) for standard errors
-    double[][] XtX = new double[p + 1][p + 1]
-    for (int i = 0; i < p + 1; i++) {
-      for (int j = 0; j < p + 1; j++) {
-        double sum = 0.0
-        for (int k = 0; k < nObs; k++) {
-          sum += X[k][i] * X[k][j]
-        }
-        XtX[i][j] = sum
-      }
-    }
-
-    double[][] XtXinv = TimeSeriesUtils.invertMatrix(XtX)
-    double gammaSE = Math.sqrt(sigma2 * XtXinv[0][0])
+    LeastSquaresKernel.OlsComputation fit = LeastSquaresKernel.fitMultipleLinearRegression(response, X)
+    double gamma = fit.coefficients()[0]
+    double gammaSE = fit.standardErrors()[0]
 
     // Calculate t-statistic (ADF-GLS statistic)
     double tStatistic = gamma / gammaSE
@@ -264,13 +236,28 @@ class AdfGls {
     double bestMAIC = Double.POSITIVE_INFINITY
     int bestLag = 0
 
+    maxLags = Math.min(maxLags, (n - 12).intdiv(2))
+    double[] detrended = glsDetrend(data, 1 + (type == 'drift' ? -7.0d : -13.5d) / n, type)
+    int count = n - maxLags - 1
     for (int p = 0; p <= maxLags; p++) {
       try {
-        AdfGlsResult result = test(data, p, type)
-
-        // Calculate MAIC
-        double sigma2 = result.standardError * result.standardError
-        double maic = Math.log(sigma2) + 2.0 * (p + 1) / (n - p - 1)
+        double[][] design = new double[count][p + 1]
+        double[] response = new double[count]
+        double laggedSquares = 0
+        for (int i = 0; i < count; i++) {
+          int t = maxLags + i
+          response[i] = detrended[t + 1] - detrended[t]
+          design[i][0] = detrended[t]
+          laggedSquares += detrended[t] * detrended[t]
+          for (int j = 1; j <= p; j++) {
+            design[i][j] = detrended[t - j + 1] - detrended[t - j]
+          }
+        }
+        LeastSquaresKernel.OlsComputation fit = LeastSquaresKernel.fitMultipleLinearRegression(response, design)
+        double sigma2 = fit.residualSumOfSquares() / count
+        double gamma = fit.coefficients()[0]
+        double tau = gamma * gamma * laggedSquares / sigma2
+        double maic = Math.log(sigma2) + 2.0d * (tau + p) / count
 
         if (maic < bestMAIC) {
           bestMAIC = maic
@@ -305,32 +292,15 @@ class AdfGls {
    * Based on Elliott, Rothenberg, and Stock (1996) and updated tables.
    */
   private static double getCriticalValue(String type, int n, double significance) {
-    // Critical values are less negative than standard ADF
-    // Using approximate values from ERS (1996) Table 1
-
-    double[] params
-
+    int index = significance == 0.01d ? 0 : significance == 0.05d ? 1 : 2
     if (type == 'drift') {
-      if (significance == 0.01) {
-        params = [-2.64, -1.95, -0.80, 0.00] as double[]
-      } else if (significance == 0.05) {
-        params = [-1.95, -1.53, -0.60, 0.00] as double[]
-      } else {
-        params = [-1.62, -1.33, -0.49, 0.00] as double[]  // 10%
-      }
-    } else {  // trend
-      if (significance == 0.01) {
-        params = [-3.58, -2.58, -1.04, -0.10] as double[]
-      } else if (significance == 0.05) {
-        params = [-3.03, -2.22, -0.87, -0.08] as double[]
-      } else {
-        params = [-2.74, -2.03, -0.78, -0.07] as double[]  // 10%
-      }
+      return ([-2.5658d - 1.96d / n - 10.04d / (n * (double) n),
+               -1.9393d - 0.398d / n, -1.6156d - 0.181d / n] as double[])[index]
     }
-
-    // Asymptotic approximation: CV(T) = β₀ + β₁/T + β₂/T² + β₃/T³
-    double T = n as double
-    params[0] + params[1] / T + params[2] / (T * T) + params[3] / (T * T * T)
+    // urca 1.3.4 ur.ers uses these ERS Table 1 rows without interpolation.
+    List<List<BigDecimal>> rows = [[-3.77, -3.19, -2.89], [-3.58, -3.03, -2.74],
+                                  [-3.46, -2.93, -2.64], [-3.48, -2.89, -2.57]]
+    rows[n < 50 ? 0 : n < 100 ? 1 : n <= 200 ? 2 : 3][index].doubleValue()
   }
 
   /**

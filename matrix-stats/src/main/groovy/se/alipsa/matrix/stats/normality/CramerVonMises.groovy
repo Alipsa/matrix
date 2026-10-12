@@ -3,6 +3,8 @@ package se.alipsa.matrix.stats.normality
 import se.alipsa.matrix.stats.distribution.NormalDistribution
 import se.alipsa.matrix.stats.util.NumericConversion
 
+import se.alipsa.matrix.stats.util.NumericTolerance
+
 /**
  * Cramér-von Mises test for normality.
  *
@@ -56,7 +58,7 @@ class CramerVonMises {
     variance /= (n - 1)  // Use sample variance
     double stdDev = Math.sqrt(variance)
 
-    if (stdDev < 1e-10) {
+    if (NumericTolerance.isNegligible(stdDev, NumericTolerance.maxMagnitude(values))) {
       throw new IllegalArgumentException('Data has no variation (constant or near-constant values)')
     }
 
@@ -109,34 +111,20 @@ class CramerVonMises {
    * Uses the approximation from Stephens (1974).
    */
   private static double calculatePValue(double wSquared) {
-    // For W²* (modified statistic with estimated parameters)
-    // Approximation from Stephens (1974): "EDF Statistics for Goodness of Fit and Some Comparisons"
-
-    if (wSquared < 0.0275) {
-      return 1.0
-    } else if (wSquared < 0.051) {
-      // Linear interpolation in the lower range
-      return 1.0 - (wSquared - 0.0275) / (0.051 - 0.0275) * 0.75
+    double w = wSquared
+    if (w < 0.0275d) {
+      return 1 - Math.exp(-13.953d + 775.5d * w - 12542.61d * w * w)
     }
-    if (wSquared < 0.093) {
-      return 0.25 - (wSquared - 0.051) / (0.093 - 0.051) * 0.15
+    if (w < 0.051d) {
+      return 1 - Math.exp(-5.903d + 179.546d * w - 1515.29d * w * w)
     }
-    if (wSquared < 0.158) {
-      return 0.10 - (wSquared - 0.093) / (0.158 - 0.093) * 0.05
+    if (w < 0.092d) {
+      return Math.exp(0.886d - 31.62d * w + 10.897d * w * w)
     }
-    if (wSquared < 0.241) {
-      return 0.05 - (wSquared - 0.158) / (0.241 - 0.158) * 0.025
+    if (w < 1.1d) {
+      return Math.exp(1.111d - 34.242d * w + 12.832d * w * w)
     }
-    if (wSquared < 0.347) {
-      return 0.025 - (wSquared - 0.241) / (0.347 - 0.241) * 0.015
-    }
-    if (wSquared < 0.461) {
-      return 0.01 - (wSquared - 0.347) / (0.461 - 0.347) * 0.005
-    }
-    // For very large values, use asymptotic approximation
-    // P ≈ exp(-W²*/2) for large W²*
-    double p = Math.exp(-wSquared / 2.0)
-    return Math.max(0.001, p)
+    7.37e-10d
   }
 
   /**
@@ -145,22 +133,19 @@ class CramerVonMises {
    * Values from Stephens (1974).
    */
   private static double getCriticalValue(double alpha) {
-    if (alpha >= 0.25) {
-      return 0.051
+    if (alpha >= 0.15d) {
+      return 0.091d
     }
-    if (alpha >= 0.10) {
-      return 0.093
+    if (alpha >= 0.10d) {
+      return 0.104d
     }
-    if (alpha >= 0.05) {
-      return 0.158
+    if (alpha >= 0.05d) {
+      return 0.126d
     }
-    if (alpha >= 0.025) {
-      return 0.241
+    if (alpha >= 0.025d) {
+      return 0.148d
     }
-    if (alpha >= 0.01) {
-      return 0.347
-    }
-    return 0.461  // alpha = 0.005
+    0.178d
   }
 
   private static void validateInput(List<? extends Number> data) {
@@ -215,7 +200,7 @@ class CramerVonMises {
      * @return A string describing whether the data appears normally distributed
      */
     String interpret() {
-      if (statistic > criticalValue) {
+      if (pValue < alpha) {
         return "Reject H0: Data does not appear to be normally distributed (p = ${String.format('%.4f', pValue)})"
       }
       return "Fail to reject H0: Data appears to be consistent with a normal distribution (p = ${String.format('%.4f', pValue)})"
@@ -227,7 +212,7 @@ class CramerVonMises {
      * @return A detailed description of the test result
      */
     String evaluate() {
-      String conclusion = statistic > criticalValue ?
+      String conclusion = pValue < alpha ?
         'not normally distributed' :
         'consistent with a normal distribution'
 
@@ -248,7 +233,7 @@ class CramerVonMises {
   Mean: ${String.format('%.4f', mean)}
   Std Dev: ${String.format('%.4f', stdDev)}
   W²* statistic: ${String.format('%.4f', statistic)}
-  Critical value (${String.format('%.0f', alpha * 100)}%%): ${String.format('%.3f', criticalValue)}
+  Critical value (${String.format('%.0f', alpha * 100)}%): ${String.format('%.3f', criticalValue)}
   p-value: ${String.format('%.4f', pValue)}
 
   ${interpret()}"""

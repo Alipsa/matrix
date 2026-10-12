@@ -92,26 +92,11 @@ class Barnard {
     // Calculate observed Wald score statistic
     double observedT = calculateWaldScore(a, b, c, d)
 
-    // Find the nuisance parameter π that maximizes the p-value
-    // We search over a grid of π values from 0 to 1
-    int gridSize = Math.min(100, n + 1)
-    double maxPValue = 0.0
-    double optimalPi = 0.5
-
-    for (int i = 0; i <= gridSize; i++) {
-      double pi = i / (double) gridSize
-
-      // Calculate p-value for this π
-      double pValue = calculatePValueForPi(n1, n2, observedT, pi)
-
-      if (pValue > maxPValue) {
-        maxPValue = pValue
-        optimalPi = pi
-      }
+    double[] optimum = UnconditionalExact.maximise(n1, n2) { int x1, int x2, double[] factorial ->
+      Math.abs(calculateWaldScore(x1, n1 - x1, x2, n2 - x2)) >= Math.abs(observedT) - 1e-10
     }
-
-    // Clamp p-value to [0, 1] to handle numerical precision issues
-    maxPValue = Math.max(0.0, Math.min(1.0, maxPValue))
+    double maxPValue = optimum[0]
+    double optimalPi = optimum[1]
 
     new BarnardResult(
       statistic: BigDecimal.valueOf(observedT),
@@ -146,114 +131,11 @@ class Barnard {
     }
 
     double variance = pooledP * (1 - pooledP) * (1.0 / n1 + 1.0 / n2)
-    if (variance < 1e-10) {
+    if (variance <= 0) {
       return (Math.abs(p1 - p2) > 1e-10) ? (Double.POSITIVE_INFINITY as double) : (0.0 as double)
     }
 
     (p1 - p2) / Math.sqrt(variance)
-  }
-
-  /**
-   * Calculate p-value for a given nuisance parameter π.
-   * This involves enumerating all possible tables with the same margins
-   * and calculating their probabilities under the binomial model.
-   */
-  private static double calculatePValueForPi(int n1, int n2, double observedT, double pi) {
-    double pValue = 0.0
-
-    // Enumerate all possible values of x1 (count in cell a)
-    for (int x1 = 0; x1 <= n1; x1++) {
-      int y1 = n1 - x1  // Count in cell b
-
-      for (int x2 = 0; x2 <= n2; x2++) {
-        int y2 = n2 - x2  // Count in cell d
-
-        // Calculate Wald score for this table
-        double t = calculateWaldScoreWithPi(x1, y1, x2, y2, pi)
-
-        // If this table is as or more extreme, include its probability
-        if (Math.abs(t) >= Math.abs(observedT) - 1e-10) {
-          double prob = binomialProbability(n1, x1, pi) * binomialProbability(n2, x2, pi)
-          pValue += prob
-        }
-      }
-    }
-
-    pValue
-  }
-
-  /**
-   * Calculate Wald score with a specific π value.
-   */
-  private static double calculateWaldScoreWithPi(int x1, int y1, int x2, int y2, double pi) {
-    int n1 = x1 + y1
-    int n2 = x2 + y2
-
-    if (n1 == 0 || n2 == 0) {
-      return 0.0
-    }
-
-    double p1 = x1 / (double) n1
-    double p2 = x2 / (double) n2
-
-    // Handle edge cases
-    if (pi <= 0.0 || pi >= 1.0) {
-      return Math.abs(p1 - p2)
-    }
-
-    double variance = pi * (1 - pi) * (1.0 / n1 + 1.0 / n2)
-    if (variance < 1e-10) {
-      return Math.abs(p1 - p2) > 1e-10 ? 1000.0 : 0.0
-    }
-
-    (p1 - p2) / Math.sqrt(variance)
-  }
-
-  /**
-   * Calculate binomial probability: C(n,k) * p^k * (1-p)^(n-k)
-   */
-  private static double binomialProbability(int n, int k, double p) {
-    if (k < 0 || k > n) {
-      return 0.0
-    }
-
-    if (p <= 0.0) {
-      return k == 0 ? 1.0 : 0.0
-    }
-
-    if (p >= 1.0) {
-      return k == n ? 1.0 : 0.0
-    }
-
-    // Use log probabilities for numerical stability
-    double logProb = logBinomialCoefficient(n, k) + k * Math.log(p) + (n - k) * Math.log(1 - p)
-
-    Math.exp(logProb)
-  }
-
-  /**
-   * Calculate log of binomial coefficient: log(C(n,k))
-   */
-  private static double logBinomialCoefficient(int n, int k) {
-    if (k < 0 || k > n) {
-      return Double.NEGATIVE_INFINITY
-    }
-
-    if (k == 0 || k == n) {
-      return 0.0
-    }
-
-    // Use symmetry: C(n,k) = C(n, n-k)
-    if (k > n - k) {
-      k = n - k
-    }
-
-    double result = 0.0
-    for (int i = 1; i <= k; i++) {
-      result += Math.log(n - k + i) - Math.log(i)
-    }
-
-    result
   }
 
   private static void validateTable(int[][] table) {

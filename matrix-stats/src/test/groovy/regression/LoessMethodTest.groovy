@@ -18,6 +18,19 @@ import se.alipsa.matrix.stats.regression.LoessOptions
 class LoessMethodTest {
 
   @Test
+  void testDirectQuadraticLoessAgainstR() {
+    List<BigDecimal> y = [2.1, 3.9, 6.2, 7.8, 10.1, 12.2, 13.8, 16.1, 18.2, 19.9, 22.1, 24.0]
+    Matrix data = Matrix.builder().columnNames(['x', 'y'])
+      .rows((0..<12).collect { int i -> [i + 1, y[i]] }).types([Integer, BigDecimal]).build()
+    // R 4.6.1: predict(loess(y ~ x, span=s, degree=2, surface="direct"))[1:4].
+    [0.5d: [2.06271888d, 4.03179696d, 5.99890548d, 7.97789131d],
+     0.75d: [2.05362005d, 4.02989285d, 6.02134370d, 8.02866459d]].each { double span, List<Double> expected ->
+      def result = new LoessMethod().fit(ModelFrame.of('y ~ x', data).evaluate(), new LoessOptions(span))
+      expected.eachWithIndex { double value, int i -> assertEquals(value, result.fittedValues[i], 1e-6d) }
+    }
+  }
+
+  @Test
   void testLoessSmooth() {
     // sin curve with noise — loess should smooth it
     List<List> rows = (0..<50).collect { int i ->
@@ -173,4 +186,13 @@ class LoessMethodTest {
     assertEquals(2, options.degree)
   }
 
+
+  @Test
+  void fractionalSpanAndBoundaryTiesMatchRDirectSurface() {
+    Matrix data = Matrix.builder().columns([x: [1,1,2,2,3,3,4,4,5,5,6,6],
+      y: [2.1,1.9,4.1,3.8,6.2,5.9,8.1,7.8,10.2,9.9,12.1,11.8]]).types(Integer, BigDecimal).build()
+    // R 4.6.1 loess(y~x,span=.61,degree=2,control=loess.control(surface='direct'))$fitted.
+    def fit = new LoessMethod().fit(ModelFrame.of('y~x', data).evaluate(), new LoessOptions(0.61, 2))
+    assertArrayEquals([2d,2d,3.95d,3.95d,6.05d,6.05d,7.95d,7.95d,10.05d,10.05d,11.95d,11.95d] as double[], fit.fittedValues, 1e-9)
+  }
 }

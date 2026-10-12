@@ -2,6 +2,8 @@ package se.alipsa.matrix.stats.timeseries
 
 import se.alipsa.matrix.stats.regression.MultipleLinearRegression
 
+import se.alipsa.matrix.stats.util.NumericTolerance
+
 /**
  * The augmented Dickey–Fuller test (ADF) tests the null hypothesis that a unit root is present in a time series sample.
  * The alternative hypothesis is different depending on which version of the test is used,
@@ -73,7 +75,7 @@ class Adf {
     for (double r : response) {
       responseVar += (r - responseMean) * (r - responseMean)
     }
-    if (responseVar < 1e-10) {
+    if (NumericTolerance.isNegligible(Math.sqrt(responseVar / nObs), NumericTolerance.maxMagnitude(response))) {
       throw new IllegalArgumentException('First differences have no variation. Cannot perform ADF test.')
     }
 
@@ -106,7 +108,9 @@ class Adf {
         effectiveSize: nObs,
         gammaCoefficient: BigDecimal.valueOf(gammaCoef),
         gammaStandardError: BigDecimal.valueOf(gammaSE),
-        criticalValue: BigDecimal.valueOf(criticalValue)
+        criticalValue: BigDecimal.valueOf(criticalValue),
+        criticalValue1pct: BigDecimal.valueOf(MacKinnonCriticalValues.value(type, nObs, 0.01d)),
+        criticalValue10pct: BigDecimal.valueOf(MacKinnonCriticalValues.value(type, nObs, 0.10d))
       )
     } catch (Exception e) {
       throw new IllegalStateException(
@@ -186,34 +190,7 @@ class Adf {
    * These are rough approximations based on MacKinnon (1996).
    */
   private static double getCriticalValue(String type, int n) {
-    // Approximate 5% critical values (more accurate for larger samples)
-    if (type == 'none') {
-      return -1.95 // No intercept, no trend
-    }
-    if (type == 'drift') {
-      // Use size-adjusted critical value
-      if (n < 25) {
-        return -3.00
-      }
-      if (n < 50) {
-        return -2.93
-      }
-      if (n < 100) {
-        return -2.89
-      }
-      return -2.86
-    }
-    // trend
-    if (n < 25) {
-      return -3.60
-    }
-    if (n < 50) {
-      return -3.50
-    }
-    if (n < 100) {
-      return -3.45
-    }
-    return -3.41
+    MacKinnonCriticalValues.value(type, n, 0.05d)
   }
 
   private static void validateInput(List<? extends Number> data, int lags, String type) {
@@ -271,6 +248,12 @@ class Adf {
     /** The approximate 5% critical value */
     BigDecimal criticalValue
 
+    /** One percent MacKinnon critical value. */
+    BigDecimal criticalValue1pct
+
+    /** Ten percent MacKinnon critical value. */
+    BigDecimal criticalValue10pct
+
     /**
      * Interprets the ADF test result.
      *
@@ -304,7 +287,7 @@ class Adf {
   Lags: ${lag}
   Sample size: ${sampleSize} (effective: ${effectiveSize})
   ADF statistic: ${String.format('%.4f', statistic)}
-  Critical value (5%%): ${String.format('%.2f', criticalValue)}
+  Critical value (5%): ${String.format('%.2f', criticalValue)}
   γ coefficient: ${String.format('%.6f', gammaCoefficient)}
   Standard error: ${String.format('%.6f', gammaStandardError)}
 

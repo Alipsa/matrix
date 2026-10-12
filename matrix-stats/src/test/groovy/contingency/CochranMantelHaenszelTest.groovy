@@ -12,6 +12,17 @@ import se.alipsa.matrix.stats.contingency.CochranMantelHaenszel
 class CochranMantelHaenszelTest {
 
   @Test
+  void testLargeStrataAgainstR() {
+    // R 4.6.1: mantelhaen.test(array(c(300,250,280,310,320,260,290,300),c(2,2,2))).
+    List<int[][]> strata = [[[300, 280], [250, 310]] as int[][], [[320, 290], [260, 300]] as int[][]]
+    def corrected = CochranMantelHaenszel.test(strata)
+    def uncorrected = CochranMantelHaenszel.test(strata, false)
+    assertEquals(9.635735d, corrected.statistic as double, 1e-6d)
+    assertEquals(0.00190828d, corrected.pValue as double, 1e-8d)
+    assertEquals(9.895921d, uncorrected.statistic as double, 1e-6d)
+  }
+
+  @Test
   void testSingleStratum() {
     // Single stratum (equivalent to Fisher's exact or chi-squared test)
     int[][] stratum1 = [[12, 8], [6, 14]]

@@ -8,6 +8,8 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * <p>Local methods (e.g. loess) have no global coefficients and return empty arrays
  * for {@code coefficients} and {@code standardErrors}. Consumers should check
  * {@code coefficients.length} before accessing coefficient values.
+ * Aliased linear-model coefficients and standard errors are NaN in primitive arrays
+ * and null in their list accessors; {@link #getAliased()} identifies these columns.
  */
 final class FitResult {
 
@@ -47,19 +49,24 @@ final class FitResult {
   /**
    * Returns the fitted coefficients as immutable {@code BigDecimal} values.
    *
-   * @return the coefficient values, or an empty immutable list for local methods without global coefficients
+   * @return coefficient values (null for aliases), or an empty immutable list for local methods
    */
   List<BigDecimal> getCoefficientList() {
-    NumericConversion.toBigDecimalList(coefficients, 'coefficients')
+    Collections.unmodifiableList(coefficients.collect { double value -> Double.isNaN(value) ? null : BigDecimal.valueOf(value) })
   }
 
   /**
    * Returns the coefficient standard errors as immutable {@code BigDecimal} values.
    *
-   * @return the standard-error values, or an empty immutable list when standard errors are not available
+   * @return standard errors (null for aliases), or an empty immutable list when unavailable
    */
   List<BigDecimal> getStandardErrorList() {
-    NumericConversion.toBigDecimalList(standardErrors, 'standardErrors')
+    Collections.unmodifiableList(standardErrors.collect { double value -> Double.isNaN(value) ? null : BigDecimal.valueOf(value) })
+  }
+
+  /** Returns true for each aliased coefficient, in predictor order. */
+  List<Boolean> getAliased() {
+    Collections.unmodifiableList(coefficients.collect { double value -> Double.isNaN(value) })
   }
 
   /**

@@ -16,6 +16,24 @@ import se.alipsa.matrix.stats.regression.FitResult
 class LmMethodTest {
 
   @Test
+  void testAliasedCoefficientsFollowInputOrder() {
+    List<BigDecimal> y = [3.1, 4.9, 7.2, 8.8, 11.1, 13.0]
+    List<Integer> z = [1, 0, 1, 0, 1, 1]
+    Matrix data = Matrix.builder().columnNames(['y', 'x', 'x2', 'z'])
+      .rows((0..<6).collect { int i -> [y[i], i + 1, 2 * (i + 1), z[i]] } as List<List>)
+      .types([BigDecimal, Integer, Integer, Integer]).build()
+    FitResult result = FitRegistry.instance().get('lm').fit(ModelFrame.of('y ~ x + x2 + z', data).evaluate())
+    // R 4.6.1: coef(lm(y ~ x + x2 + z)); x2=2*x.
+    assertEquals([false, false, true, false], result.aliased)
+    assertNull(result.coefficientList[2])
+    assertNull(result.standardErrorList[2])
+    assertEquals(0.921641791d, result.coefficients[0], 1e-8d)
+    assertEquals(1.976119403d, result.coefficients[1], 1e-8d)
+    assertEquals(0.267910448d, result.coefficients[3], 1e-8d)
+    assertTrue(result.fittedValues.every { double value -> Double.isFinite(value) })
+  }
+
+  @Test
   void testLmSimpleRegression() {
     // y = 2x + 1 with some noise
     Matrix data = Matrix.builder()

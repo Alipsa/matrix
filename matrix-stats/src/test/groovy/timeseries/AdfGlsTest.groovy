@@ -12,6 +12,15 @@ import se.alipsa.matrix.stats.timeseries.AdfGls
 class AdfGlsTest {
 
   @Test
+  void testRandomWalkReferenceStatistics() {
+    List<String> lines = getClass().getResourceAsStream('/r-reference/rw200.csv').withCloseable { it.readLines() }
+    double[] data = lines.drop(1).collect { Double.parseDouble(it) } as double[]
+    // urca 1.3.4: set.seed(42); y=cumsum(rnorm(200)); ur.ers(y,type="DF-GLS",lag.max=4).
+    assertEquals(-2.071211d, AdfGls.test(data, 4, 'trend').statistic as double, 1e-6d)
+    assertEquals(-1.265740d, AdfGls.test(data, 4, 'drift').statistic as double, 1e-6d)
+  }
+
+  @Test
   void testRandomWalk() {
     // Random walk (non-stationary)
     double[] data = [
@@ -152,7 +161,7 @@ class AdfGlsTest {
       AdfGls.test(data, null as Integer, 'trend')
     }
 
-    assertTrue(exception.message.contains('Unable to select ADF-GLS lag'))
+    assertTrue(exception.message.contains('GLS detrended data are essentially constant'))
   }
 
   @Test

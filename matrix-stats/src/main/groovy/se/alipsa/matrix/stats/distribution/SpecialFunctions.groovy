@@ -22,7 +22,7 @@ class SpecialFunctions {
   private static final double GAMMA_TINY = 1e-300
   private static final int MAX_ITERATIONS = 200
   private static final MathContext BETA_MC = new MathContext(50, RoundingMode.HALF_EVEN)
-  private static final BigDecimal BETA_EPSILON = new BigDecimal('1e-30')
+  private static final BigDecimal BETA_EPSILON = new BigDecimal('1e-15')
   private static final BigDecimal BETA_TINY = new BigDecimal('1e-40')
   private static final String A_LABEL = 'a'
   private static final String X_LABEL = 'x'
@@ -135,6 +135,7 @@ class SpecialFunctions {
    */
   @Deprecated
   private static double betaContinuedFraction(double x, double a, double b) {
+    int iterationLimit = MAX_ITERATIONS + (int) Math.ceil(10 * Math.sqrt(Math.max(a, b)))
     double qab = a + b
     double qap = a + 1.0d
     double qam = a - 1.0d
@@ -146,7 +147,7 @@ class SpecialFunctions {
     d = 1.0d / d
     double h = d
 
-    for (int m = 1; m <= MAX_ITERATIONS; m++) {
+    for (int m = 1; m <= iterationLimit; m++) {
       int m2 = 2 * m
       double aa = m * (b - m) * x / ((qam + m2) * (a + m2))
       d = 1.0d + aa * d
@@ -177,10 +178,11 @@ class SpecialFunctions {
         return h
       }
     }
-    throw new IllegalStateException("Beta continued fraction failed to converge after $MAX_ITERATIONS iterations")
+    throw new IllegalStateException("Beta continued fraction failed to converge after $iterationLimit iterations")
   }
 
   private static BigDecimal betaContinuedFraction(BigDecimal x, BigDecimal a, BigDecimal b) {
+    int iterationLimit = MAX_ITERATIONS + (int) Math.ceil(10 * Math.sqrt(Math.max(a as double, b as double)))
     BigDecimal qab = a + b
     BigDecimal qap = a + ONE
     BigDecimal qam = a - ONE
@@ -192,7 +194,7 @@ class SpecialFunctions {
     d = div(ONE, d)
     BigDecimal h = d
 
-    for (int m = 1; m <= MAX_ITERATIONS; m++) {
+    for (int m = 1; m <= iterationLimit; m++) {
       int m2 = 2 * m
       BigDecimal aa = div(m * (b - m) * x, (qam + m2) * (a + m2))
       d = ONE + aa * d
@@ -223,7 +225,7 @@ class SpecialFunctions {
         return h
       }
     }
-    throw new IllegalStateException("Beta continued fraction failed to converge after $MAX_ITERATIONS iterations")
+    throw new IllegalStateException("Beta continued fraction failed to converge after $iterationLimit iterations")
   }
 
   private static BigDecimal div(BigDecimal numerator, BigDecimal denominator) {
@@ -394,12 +396,13 @@ class SpecialFunctions {
   }
 
   private static double gammaSeries(double a, double x) {
+    int iterationLimit = MAX_ITERATIONS + (int) Math.ceil(10 * Math.sqrt(a))
     double gln = logGamma(a)
     double sum = 1.0d / a
     double delta = sum
     double ap = a
 
-    for (int n = 1; n <= MAX_ITERATIONS; n++) {
+    for (int n = 1; n <= iterationLimit; n++) {
       ap += 1.0d
       delta *= x / ap
       sum += delta
@@ -409,17 +412,18 @@ class SpecialFunctions {
       }
     }
 
-    throw new IllegalStateException("Gamma series failed to converge after $MAX_ITERATIONS iterations")
+    throw new IllegalStateException("Gamma series failed to converge after $iterationLimit iterations")
   }
 
   private static double gammaContinuedFraction(double a, double x) {
+    int iterationLimit = MAX_ITERATIONS + (int) Math.ceil(10 * Math.sqrt(a))
     double gln = logGamma(a)
     double b = x + 1.0d - a
     double c = 1.0d / GAMMA_TINY
     double d = 1.0d / b
     double h = d
 
-    for (int i = 1; i <= MAX_ITERATIONS; i++) {
+    for (int i = 1; i <= iterationLimit; i++) {
       double an = -i * (i - a)
       b += 2.0d
       d = an * d + b
@@ -439,6 +443,6 @@ class SpecialFunctions {
       }
     }
 
-    throw new IllegalStateException("Gamma continued fraction failed to converge after $MAX_ITERATIONS iterations")
+    throw new IllegalStateException("Gamma continued fraction failed to converge after $iterationLimit iterations")
   }
 }

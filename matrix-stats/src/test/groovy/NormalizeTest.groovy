@@ -62,7 +62,7 @@ class NormalizeTest {
       assertTrue(val instanceof BigDecimal, "value is not BigDecimal but ${val.getClass().simpleName}")
       assertEquals(it, val as BigDecimal, 6, "index $idx")
     }
-    assert [2.079f, 1.946f, 2.197f, 1.792f, 2.079f] == Normalize.logNorm([8, 7, 9, 6, 8], 3)
+    assert [2.079G, 1.946G, 2.197G, 1.792G, 2.079G] == Normalize.logNorm([8, 7, 9, 6, 8], 3)
   }
 
   @Test
@@ -173,9 +173,9 @@ class NormalizeTest {
   void testMinMaxNormBigIntegerPreservesFractionalResults() {
     List result = Normalize.minMaxNorm([0G, 1G, 2G, 3G, 4G])
 
-    assertIterableEquals([0.0f, 0.25f, 0.5f, 0.75f, 1.0f], result)
+    [0.0G, 0.25G, 0.5G, 0.75G, 1.0G].eachWithIndex { BigDecimal expected, int i -> assertEquals(expected, result[i]) }
     result.each { value ->
-      assertTrue(value instanceof Float, "value is not Float but ${value.getClass().simpleName}")
+      assertTrue(value instanceof BigDecimal, "value is not BigDecimal but ${value.getClass().simpleName}")
     }
   }
 
@@ -232,9 +232,9 @@ class NormalizeTest {
   void testStdScaleNormBigIntegerPreservesFractionalResults() {
     List result = Normalize.stdScaleNorm([0G, 1G, 2G, 3G, 4G], 6)
 
-    assertIterableEquals([-1.264911f, -0.632456f, 0.0f, 0.632456f, 1.264911f], result)
+    [-1.264911G, -0.632456G, 0.0G, 0.632456G, 1.264911G].eachWithIndex { BigDecimal expected, int i -> assertEquals(expected, result[i]) }
     result.each { value ->
-      assertTrue(value instanceof Float, "value is not Float but ${value.getClass().simpleName}")
+      assertTrue(value instanceof BigDecimal, "value is not BigDecimal but ${value.getClass().simpleName}")
     }
   }
 
@@ -355,9 +355,9 @@ class NormalizeTest {
   void testMeanNormBigIntegerPreservesFractionalResults() {
     List result = Normalize.meanNorm([0G, 1G, 2G, 3G, 4G])
 
-    assertIterableEquals([-0.5f, -0.25f, 0.0f, 0.25f, 0.5f], result)
+    [-0.5G, -0.25G, 0.0G, 0.25G, 0.5G].eachWithIndex { BigDecimal expected, int i -> assertEquals(expected, result[i]) }
     result.each { value ->
-      assertTrue(value instanceof Float, "value is not Float but ${value.getClass().simpleName}")
+      assertTrue(value instanceof BigDecimal, "value is not BigDecimal but ${value.getClass().simpleName}")
     }
   }
 
@@ -414,9 +414,9 @@ class NormalizeTest {
 
     Matrix normalized = Normalize.minMaxNorm(source, 2)
 
-    assertIterableEquals([0.0f, 0.5f, 1.0f], normalized['count'])
-    assertEquals(Float, normalized.type('count'))
-    assertIterableEquals(source['category'], normalized['category'])
+    [0.0G, 0.5G, 1.0G].eachWithIndex { BigDecimal expected, int i -> assertEquals(expected, normalized['count'][i]) }
+    assertEquals(BigDecimal, normalized.type('count'))
+    assertEquals(source['category'], normalized['category'])
     assertEquals(String, normalized.type('category'))
   }
 
@@ -435,13 +435,13 @@ class NormalizeTest {
 
     Matrix normalized = Normalize.stdScaleNorm(source, 6)
 
-    assertIterableEquals(source['group'], normalized['group'])
-    assertIterableEquals(source['note'], normalized['note'])
+    assertEquals(source['group'], normalized['group'])
+    assertEquals(source['note'], normalized['note'])
     assertEquals(String, normalized.type('group'))
     assertEquals(String, normalized.type('note'))
-    assertEquals(Float, normalized.type('score'))
+    assertEquals(BigDecimal, normalized.type('score'))
     assertEquals(BigDecimal, normalized.type('amount'))
-    assertTrue(normalized['score'].every { it instanceof Float })
+    assertTrue(normalized['score'].every { it instanceof BigDecimal })
     assertTrue(normalized['amount'].every { it instanceof BigDecimal })
   }
 

@@ -108,35 +108,28 @@ class Lilliefors {
    * For more accuracy, uses different approximations based on sample size and D value.
    */
   private static double calculatePValue(double d, int n) {
-    // For small samples (n < 100), use the Dallal-Wilkinson approximation
-    if (n < 100) {
-      // Dallal-Wilkinson approximation
-      double sqrtN = Math.sqrt(n)
-      double z = d * sqrtN
-
-      // Approximation based on simulation studies
-      if (z < 0.2) {
-        return 1.0
-      }
-      if (z > 1.0) {
-        // For large D values, use exponential approximation
-        return Math.exp(-7.01256 * z * z + 4.8 * z)
-      }
-      // Linear interpolation for moderate D values
-      return Math.max(0.0, 1.0 - Math.exp(-7.01256 * z * z + 4.8 * z))
+    // Dallal-Wilkinson and Stephens approximations, as in nortest 1.0.4.
+    double nd = n <= 100 ? n : 100
+    double kd = n <= 100 ? d : d * Math.pow(n / 100.0d, 0.49d)
+    double p = Math.exp(-7.01256d * kd * kd * (nd + 2.78019d) + 2.99587d * kd * Math.sqrt(nd + 2.78019d) -
+        0.122119d + 0.974598d / Math.sqrt(nd) + 1.67997d / nd)
+    if (p <= 0.1d) {
+      return p
     }
-    // For larger samples, use a different approximation
-    // Based on the asymptotic distribution
-    double sqrtN = Math.sqrt(n)
-    double zScore = d * (sqrtN - 0.01 + 0.85 / sqrtN)
-
-    if (zScore < 0.3) {
-      return 1.0
+    double kk = (Math.sqrt(n) - 0.01d + 0.85d / Math.sqrt(n)) * d
+    if (kk <= 0.302d) {
+      return 1.0d
     }
-    if (zScore > 1.0) {
-      return Math.exp(-2.0 * zScore * zScore)
+    if (kk <= 0.5d) {
+      return 2.76773d - 19.828315d * kk + 80.709644d * kk * kk - 138.55152d * kk * kk * kk + 81.218052d * Math.pow(kk, 4)
     }
-    return Math.max(0.0, 1.0 - Math.exp(-2.0 * zScore * zScore))
+    if (kk <= 0.9d) {
+      return -4.901232d + 40.662806d * kk - 97.490286d * kk * kk + 94.029866d * kk * kk * kk - 32.355711d * Math.pow(kk, 4)
+    }
+    if (kk <= 1.31d) {
+      return 6.198765d - 19.558097d * kk + 23.186922d * kk * kk - 12.234627d * kk * kk * kk + 2.423045d * Math.pow(kk, 4)
+    }
+    0.0d
   }
 
   private static void validateInput(List<? extends Number> data) {

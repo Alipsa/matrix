@@ -76,6 +76,21 @@ final class CategoricalEncoder {
   }
 
   /**
+   * Encodes every level of a categorical column as an indicator.
+   * @param columnName the categorical column
+   * @return one indicator column per sorted level
+   */
+  Map<String, List<BigDecimal>> encodeIndicators(String columnName) {
+    Map<String, List<BigDecimal>> result = [:]
+    levels(columnName).each { String level ->
+      result["${columnName}_${level}".toString()] = (0..<data.rowCount()).collect { int row ->
+        String.valueOf(data[row, columnName]) == level ? 1.0 : 0.0
+      }
+    }
+    result
+  }
+
+  /**
    * Returns the sorted unique levels of a categorical column.
    *
    * @param columnName the column name

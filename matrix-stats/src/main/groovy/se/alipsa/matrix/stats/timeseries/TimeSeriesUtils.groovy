@@ -4,6 +4,7 @@ import groovy.transform.PackageScope
 
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.stats.util.LeastSquaresKernel
+import se.alipsa.matrix.stats.util.NumericTolerance
 
 /**
  * Shared linear algebra helpers for the time-series test implementations in this package.
@@ -17,8 +18,6 @@ import se.alipsa.matrix.stats.util.LeastSquaresKernel
 final class TimeSeriesUtils {
 
   /** Threshold below which a pivot is treated as numerically singular. */
-  private static final double SINGULARITY_THRESHOLD = 1e-14
-  private static final int AUGMENTED_MATRIX_FACTOR = 2
   private static final String NON_EMPTY_MATRIX_MESSAGE = 'Matrix must contain at least one row and one column'
   private static final String RECTANGULAR_MATRIX_MESSAGE = 'Matrix rows must all have the same length'
 
@@ -33,10 +32,8 @@ final class TimeSeriesUtils {
   }
 
   /**
-   * Solve a linear system {@code Ax = b} using Gaussian elimination with partial pivoting.
-   * {@link AdfGls} passes its GLS-detrending design matrix directly as a rectangular
-   * overdetermined system, so this method reduces the pivoted column subset directly rather than
-   * forming the normal equations; this is not a general least-squares solver.
+   * Solve a square or overdetermined system using Householder QR least squares.
+   * Independent columns retain their order, with column-relative rank detection.
    *
    * @param A the coefficient matrix
    * @param b the right-hand-side vector
@@ -64,58 +61,9 @@ final class TimeSeriesUtils {
       throw new IllegalArgumentException("Underdetermined system: ${rowCount} rows for ${columnCount} columns")
     }
 
-    double[][] augmented = new double[rowCount][columnCount + 1]
-    for (int i = 0; i < rowCount; i++) {
-      for (int j = 0; j < columnCount; j++) {
-        augmented[i][j] = A[i][j]
-      }
-      augmented[i][columnCount] = b[i]
-    }
-
-    for (int k = 0; k < columnCount; k++) {
-      int maxRow = k
-      double maxVal = Math.abs(augmented[k][k])
-      for (int i = k + 1; i < rowCount; i++) {
-        double value = Math.abs(augmented[i][k])
-        if (value > maxVal) {
-          maxVal = value
-          maxRow = i
-        }
-      }
-
-      if (maxRow != k) {
-        swapRows(augmented, k, maxRow)
-      }
-      if (Math.abs(augmented[k][k]) > SINGULARITY_THRESHOLD) {
-        for (int i = k + 1; i < rowCount; i++) {
-          double factor = augmented[i][k] / augmented[k][k]
-          for (int j = k; j < columnCount + 1; j++) {
-            augmented[i][j] -= factor * augmented[k][j]
-          }
-        }
-      } else if (rowCount == columnCount) {
-        log.warn("Singular pivot at column $k while solving ${rowCount}x${columnCount} system")
-        throw new IllegalArgumentException("Singular matrix at column ${k} - cannot solve linear system")
-      } else {
-        log.warn("Near-singular pivot at column $k while reducing ${rowCount}x${columnCount} overdetermined system; back-substitution will validate the diagonal before division")
-      }
-    }
-
-    double[] x = new double[columnCount]
-    for (int i = columnCount - 1; i >= 0; i--) {
-      double sum = augmented[i][columnCount]
-      for (int j = i + 1; j < columnCount; j++) {
-        sum -= augmented[i][j] * x[j]
-      }
-      double diagonal = augmented[i][i]
-      if (Math.abs(diagonal) <= SINGULARITY_THRESHOLD) {
-        log.warn("Singular diagonal at column $i during back-substitution for ${rowCount}x${columnCount} system")
-        throw new IllegalArgumentException("Singular matrix at column ${i} - cannot solve linear system")
-      }
-      x[i] = sum / diagonal
-    }
-    validateFiniteVector(x, 'linear system solution')
-    x
+    double[] solution = LeastSquaresKernel.fitOls(b, A)
+    validateFiniteVector(solution, 'linear system solution')
+    solution
   }
 
   /**
@@ -140,42 +88,11 @@ final class TimeSeriesUtils {
     }
 
     double[][] result = new double[n][n]
-    double[][] augmented = new double[n][AUGMENTED_MATRIX_FACTOR * n]
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < n; j++) {
-        augmented[i][j] = A[i][j]
-        augmented[i][j + n] = (i == j) ? 1.0 : 0.0
-      }
-    }
-
-    for (int k = 0; k < n; k++) {
-      int maxRow = findPivotRow(augmented, k, n)
-      if (maxRow != k) {
-        swapRows(augmented, k, maxRow)
-      }
-      double pivot = augmented[k][k]
-      if (Math.abs(pivot) <= SINGULARITY_THRESHOLD) {
-        log.warn("Singular pivot at column $k while inverting ${n}x${n} matrix")
-        throw new IllegalArgumentException("Singular matrix at column ${k} - cannot invert matrix")
-      }
-      for (int j = 0; j < AUGMENTED_MATRIX_FACTOR * n; j++) {
-        augmented[k][j] /= pivot
-      }
-
-      for (int i = 0; i < n; i++) {
-        if (i != k) {
-          double factor = augmented[i][k]
-          for (int j = 0; j < AUGMENTED_MATRIX_FACTOR * n; j++) {
-            augmented[i][j] -= factor * augmented[k][j]
-          }
-        }
-      }
-    }
-
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < n; j++) {
-        result[i][j] = augmented[i][j + n]
-      }
+    (0..<n).each { int column ->
+      double[] unit = new double[n]
+      unit[column] = 1
+      double[] solution = LeastSquaresKernel.fitOls(unit, A)
+      (0..<n).each { int row -> result[row][column] = solution[row] }
     }
     validateFiniteMatrix(result, 'matrix inverse')
     result
@@ -207,7 +124,7 @@ final class TimeSeriesUtils {
   }
 
   /**
-   * Determines whether a series has a range of at least {@code 1e-10}.
+   * Determines whether a series has variation relative to its magnitude.
    *
    * @param values the values to inspect
    * @return true when the series has sufficient variation
@@ -224,7 +141,7 @@ final class TimeSeriesUtils {
         maximum = value
       }
     }
-    Math.abs(maximum - minimum) >= 1e-10
+    !NumericTolerance.isNegligible(maximum - minimum, Math.max(Math.abs(maximum), Math.abs(minimum)))
   }
 
   /**
@@ -241,19 +158,6 @@ final class TimeSeriesUtils {
       }
     }
     true
-  }
-
-  private static int findPivotRow(double[][] matrix, int pivotColumn, int rowCount) {
-    int maxRow = pivotColumn
-    double maxVal = Math.abs(matrix[pivotColumn][pivotColumn])
-    for (int i = pivotColumn + 1; i < rowCount; i++) {
-      double value = Math.abs(matrix[i][pivotColumn])
-      if (value > maxVal) {
-        maxVal = value
-        maxRow = i
-      }
-    }
-    maxRow
   }
 
   private static void validateFiniteVector(double[] values, String label) {
@@ -276,9 +180,4 @@ final class TimeSeriesUtils {
     }
   }
 
-  private static void swapRows(double[][] matrix, int firstRow, int secondRow) {
-    double[] temp = matrix[firstRow]
-    matrix[firstRow] = matrix[secondRow]
-    matrix[secondRow] = temp
-  }
 }

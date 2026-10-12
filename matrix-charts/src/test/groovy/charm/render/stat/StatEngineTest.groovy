@@ -197,7 +197,7 @@ class StatEngineTest {
   void testDispatchEllipse() {
     LayerSpec layer = makeLayer(CharmStatType.ELLIPSE, [segments: 20, level: 0.95])
     List<LayerData> data = (1..20).collect {
-      new LayerData(x: it as BigDecimal, y: (it * 2) as BigDecimal, group: 'g1', rowIndex: it)
+      new LayerData(x: it as BigDecimal, y: (it * 2 + (it % 3)) as BigDecimal, group: 'g1', rowIndex: it)
     }
     List<LayerData> result = StatEngine.apply(layer, data)
     assertFalse(result.isEmpty())
@@ -205,17 +205,25 @@ class StatEngineTest {
   }
 
   @Test
-  void testDispatchEllipseUsesBiasCorrectedSpread() {
-    LayerSpec layer = makeLayer(CharmStatType.ELLIPSE, [segments: 8, level: 0.95])
+  void testDispatchEllipseUsesGgplotRadiusAndTilt() {
+    LayerSpec layer = makeLayer(CharmStatType.ELLIPSE, [segments: 100, level: 0.95, type: 'norm'])
     List<LayerData> data = [
-        new LayerData(x: 0, y: 0, group: 'g1', rowIndex: 0),
-        new LayerData(x: 2, y: 0, group: 'g1', rowIndex: 1)
+        new LayerData(x: -1, y: -10, group: 'g1'), new LayerData(x: 1, y: -10, group: 'g1'),
+        new LayerData(x: -1, y: 10, group: 'g1'), new LayerData(x: 1, y: 10, group: 'g1')
     ]
     List<LayerData> result = StatEngine.apply(layer, data)
-
-    assertEquals(9, result.size())
-    BigDecimal maxX = result.collect { it.x as BigDecimal }.max()
-    assertTrue(maxX > 3.5, 'Expected sample sd based ellipse extent')
+    // ggplot2 4.0.3 norm ellipse: sqrt(2*qf(.95,2,3))*sqrt(c(4/3,400/3)).
+    assertEquals(101, result.size())
+    assertEquals(5.047004259d, result.collect { it.x as double }.max(), 1e-6)
+    assertEquals(50.47004259d, result.collect { it.y as double }.max(), 1e-5)
+    List<LayerData> correlated = data.collect { new LayerData(x: it.x, y: (it.y as BigDecimal) + 10 * (it.x as BigDecimal), group: 'g1') }
+    result = StatEngine.apply(layer, correlated)
+    LayerData maxX = result.max { it.x as BigDecimal }
+    LayerData maxY = result.max { it.y as BigDecimal }
+    assertTrue((maxX.y as BigDecimal).abs() > 1)
+    assertTrue((maxY.x as BigDecimal).abs() > 1)
+    assertTrue(StatEngine.apply(layer, data[0..2]).isEmpty())
+    assertTrue(StatEngine.apply(makeLayer(CharmStatType.ELLIPSE, [type: 'unknown']), data).isEmpty())
   }
 
   @Test

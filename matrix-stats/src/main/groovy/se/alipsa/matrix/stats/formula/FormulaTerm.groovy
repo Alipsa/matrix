@@ -20,7 +20,7 @@ final class FormulaTerm {
     for (FormulaExpression factor : factors) {
       orderedFactors[factor.asFormulaString()] = factor
     }
-    List<String> keys = orderedFactors.keySet().toList().sort()
+    List<String> keys = orderedFactors.keySet().toList()
     this.factors = List.copyOf(keys.collect { String key -> orderedFactors[key] })
   }
 
@@ -75,11 +75,11 @@ final class FormulaTerm {
     if (!(other instanceof FormulaTerm)) {
       return false
     }
-    asFormulaString() == (other as FormulaTerm).asFormulaString()
+    factors*.asFormulaString().toSet() == (other as FormulaTerm).factors*.asFormulaString().toSet()
   }
 
   @Override
   int hashCode() {
-    asFormulaString().hashCode()
+    factors*.asFormulaString().toSet().hashCode()
   }
 }

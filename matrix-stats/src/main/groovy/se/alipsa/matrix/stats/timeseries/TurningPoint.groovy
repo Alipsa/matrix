@@ -119,7 +119,7 @@ class TurningPoint {
 
     // Calculate p-value (two-sided test)
     NormalDistribution normal = new NormalDistribution(0, 1)
-    double pValue = 2.0 * (1.0 - normal.cumulativeProbability(Math.abs(zStatistic)))
+    double pValue = 2.0 * normal.cumulativeProbability(-Math.abs(zStatistic))
 
     new TurningPointResult(
       statistic: BigDecimal.valueOf(zStatistic),

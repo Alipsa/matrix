@@ -3,16 +3,18 @@ package se.alipsa.matrix.stats.regression
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.stats.formula.ModelFrameResult
-import se.alipsa.matrix.stats.linear.MatrixAlgebra
+import se.alipsa.matrix.stats.util.LeastSquaresKernel
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * Local regression (LOESS/LOWESS) fit method. Fits a weighted polynomial
  * at each observation using a neighborhood defined by a span parameter.
+ * Computes the direct surface; R defaults to an interpolated approximation.
  *
  * <p>Supported parameters:
  * <ul>
  *   <li>{@code span} (double, default 0.75): fraction of data in each local neighborhood</li>
- *   <li>{@code degree} (int, default 1): local polynomial degree (1 = linear, 2 = quadratic)</li>
+ *   <li>{@code degree} (int, default 2): local polynomial degree (1 = linear, 2 = quadratic)</li>
  * </ul>
  *
  * <p>Uses the first predictor column as the smoothing variable. Accepts optional
@@ -68,7 +70,11 @@ class LoessMethod implements FitMethod {
     double[] ySorted = reorder(response, order)
     double[] wSorted = reorder(weights, order)
 
-    int bandwidth = Math.max((int) Math.ceil(span * n), degree + 1)
+    // R loessf.f lowesd chooses floor(n*span); ehg127 lines 256-286 selects the
+    // q nearest points and rho=distance(q)*max(1,span). For span<=1 there is no
+    // bandwidth enlargement. Boundary ties have zero tricube weight.
+    // https://github.com/wch/r-source/blob/trunk/src/library/stats/src/loessf.f
+    int bandwidth = Math.max((int) Math.floor(span * n), degree + 1)
 
     double[] fittedSorted = new double[n]
     for (int i = 0; i < n; i++) {
@@ -128,14 +134,12 @@ class LoessMethod implements FitMethod {
       yLocal[i] = y[idx]
     }
 
-    // Weighted least squares: (X'WX)^-1 X'Wy
+    // R lowesf/ehg127 uses sqrt(weights) on both design and response.
+    // Previously only the design was scaled, changing the effective tricube kernel.
     double[][] xw = applyWeights(xMat, wLocal)
-    double[][] xtwx = MatrixAlgebra.multiply(MatrixAlgebra.transpose(xw), xMat)
-    double[] xtwy = FitUtils.multiplyVec(MatrixAlgebra.transpose(xw), yLocal)
-
+    double[] yw = (0..<localN).collect { int i -> yLocal[i] * Math.sqrt(wLocal[i]) } as double[]
     try {
-      double[][] xtwxInv = MatrixAlgebra.inverse(xtwx)
-      double[] beta = FitUtils.multiplyVec(xtwxInv, xtwy)
+      double[] beta = LeastSquaresKernel.fitOls(yw, xw)
       // Evaluate at target (xVal = 0), so fitted = beta[0]
       beta[0]
     } catch (Exception e) {
@@ -212,7 +216,7 @@ class LoessMethod implements FitMethod {
     double[] result = new double[n]
     for (int i = 0; i < n; i++) {
       Object val = designMatrix[i, 0]
-      result[i] = val != null ? (val as Number).doubleValue() : 0.0d
+      result[i] = NumericConversion.toFiniteDouble(val as Number, 'predictor')
     }
     result
   }

@@ -50,8 +50,28 @@ final class DesignMatrixBuilder {
     List<List<BigDecimal>> predictorColumns = []
     List<Terms.TermInfo> termInfos = []
 
-    for (FormulaTerm term : formula.predictorTerms) {
-      List<ColumnInfo> columns = encodeTerm(term)
+    List<FormulaTerm> orderedTerms = formula.predictorTerms.toList().sort { FormulaTerm a, FormulaTerm b ->
+      a.factors.size() <=> b.factors.size()
+    }
+    Set<Set<String>> earlier = new LinkedHashSet<>()
+    earlier.add(new LinkedHashSet<String>())
+    String fullFactor = null
+    if (!formula.includeIntercept) {
+      fullFactor = orderedTerms.collectMany { FormulaTerm term -> term.factors }.find { FormulaExpression factor ->
+        factor instanceof FormulaExpression.Variable && encoder.isCategorical((factor as FormulaExpression.Variable).name)
+      }?.asFormulaString()
+    }
+    for (FormulaTerm term : orderedTerms) {
+      Map<String, Boolean> coding = [:]
+      Set<String> factors = term.factors*.asFormulaString() as Set<String>
+      term.factors.each { FormulaExpression factor ->
+        String key = factor.asFormulaString()
+        Set<String> margin = new LinkedHashSet<>(factors)
+        margin.remove(key)
+        coding[key] = key == fullFactor && term == orderedTerms.find { it.factors*.asFormulaString().contains(fullFactor) } || !earlier.contains(margin)
+      }
+      List<ColumnInfo> columns = encodeTerm(term, coding)
+      earlier.add(factors)
       if (columns.isEmpty()) {
         termInfos << new Terms.TermInfo(
           term,
@@ -91,15 +111,15 @@ final class DesignMatrixBuilder {
     new DesignMatrix(designMatrix, predictorNames, terms)
   }
 
-  private List<ColumnInfo> encodeTerm(FormulaTerm term) {
+  private List<ColumnInfo> encodeTerm(FormulaTerm term, Map<String, Boolean> coding) {
     if (term.isInteraction()) {
-      encodeInteraction(term)
+      encodeInteraction(term, coding)
     } else {
-      encodeFactor(term.factors[0])
+      encodeFactor(term.factors[0], coding[term.factors[0].asFormulaString()])
     }
   }
 
-  private List<ColumnInfo> encodeFactor(FormulaExpression factor) {
+  private List<ColumnInfo> encodeFactor(FormulaExpression factor, boolean indicators) {
     // Special handling for poly(x, n) and s(x) / s(x, df)
     if (factor instanceof FormulaExpression.FunctionCall) {
       FormulaExpression.FunctionCall call = factor as FormulaExpression.FunctionCall
@@ -118,7 +138,7 @@ final class DesignMatrixBuilder {
       String varName = (factor as FormulaExpression.Variable).name
       if (encoder.isCategorical(varName)) {
         ContrastType contrast = contrastConfig.getOrDefault(varName, defaultContrast)
-        Map<String, List<BigDecimal>> encoded = encoder.encode(varName, contrast)
+        Map<String, List<BigDecimal>> encoded = indicators ? encoder.encodeIndicators(varName) : encoder.encode(varName, contrast)
         List<String> levels = encoder.levels(varName)
         if (encoded.isEmpty()) {
           return []
@@ -206,10 +226,10 @@ final class DesignMatrixBuilder {
     result
   }
 
-  private List<ColumnInfo> encodeInteraction(FormulaTerm term) {
+  private List<ColumnInfo> encodeInteraction(FormulaTerm term, Map<String, Boolean> coding) {
     List<List<ColumnInfo>> factorColumns = []
     for (FormulaExpression factor : term.factors) {
-      List<ColumnInfo> cols = encodeFactor(factor)
+      List<ColumnInfo> cols = encodeFactor(factor, coding[factor.asFormulaString()])
       if (cols.isEmpty()) {
         return []
       }
@@ -254,11 +274,9 @@ final class DesignMatrixBuilder {
     List<List<Integer>> result = [[]]
     for (int size : sizes) {
       List<List<Integer>> newResult = []
-      for (List<Integer> existing : result) {
-        for (int i = 0; i < size; i++) {
-          List<Integer> combo = [*existing]
-          combo << i
-          newResult << combo
+      for (int i = 0; i < size; i++) {
+        for (List<Integer> existing : result) {
+          newResult << [*existing, i]
         }
       }
       result = newResult

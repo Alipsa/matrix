@@ -9,6 +9,7 @@ import java.math.RoundingMode
  * Student's t-test is a statistical hypothesis test used to compare the means of two populations.
  * This class implements the orthodox Student's t-test (also known as the independent samples t-test)
  * which assumes equal variances between the two populations.
+ * Null observations are omitted; paired tests omit incomplete pairs.
  *
  * <p>For the two-sample t-test with equal variance assumption, the pooled variance formula is used:</p>
  *
@@ -61,6 +62,11 @@ class Student {
     if (n1 != n2) {
       throw new IllegalArgumentException('The two lists of values are of different size')
     }
+    List<Integer> complete = (0..<n1).findAll { int i -> first[i] != null && second[i] != null }
+    first = complete.collect { int i -> first[i] }
+    second = complete.collect { int i -> second[i] }
+    n1 = first.size()
+    n2 = second.size()
     if (n1 < 2) {
       throw new IllegalArgumentException("Paired t-test requires at least 2 pairs of observations, got: $n1")
     }
@@ -72,17 +78,15 @@ class Student {
     BigDecimal sd2 = var2.sqrt()
     def df = n1 - 1
 
-    BigDecimal cov = 0
-    for (int j = 0; j < n1; j++) {
-      cov += (first[j] as BigDecimal - mean1) * (second[j] as BigDecimal - mean2)
+    List<BigDecimal> differences = (0..<n1).collect { int i -> (first[i] as BigDecimal) - (second[i] as BigDecimal) }
+    BigDecimal sd = (Stat.variance(differences, true) / n1).sqrt()
+    if (sd == 0) {
+      throw new IllegalArgumentException('data are essentially constant')
     }
-    cov /= df
-    // sample standard deviation of the differences
-    BigDecimal sd = ((var1 + var2 - 2 * cov) / n1).sqrt()
     BigDecimal t = (mean1 - mean2) / sd
 
     // Use native TDistribution for p-value calculation
-    def p = TDistribution.pValue(t as double, df as double)
+    def p = TDistribution.pValue(t, df)
     int firstCount = n1
     int secondCount = n2
     BigDecimal firstMean = mean1.stripTrailingZeros()
@@ -135,6 +139,8 @@ class Student {
     if (first == null || second == null) {
       throw new IllegalArgumentException('Input lists cannot be null')
     }
+    first = first.findAll { it != null }
+    second = second.findAll { it != null }
     if (first.isEmpty() || second.isEmpty()) {
       throw new IllegalArgumentException('Input lists cannot be empty')
     }
@@ -173,9 +179,12 @@ class Student {
 
     // Student's t-test with pooled variance
     BigDecimal pooledVar = ((n1 - 1) * var1 + (n2 - 1) * var2) / (n1 + n2 - 2)
+    if (pooledVar == 0) {
+      throw new IllegalArgumentException('data are essentially constant')
+    }
     BigDecimal t = (mean1 - mean2) / (pooledVar * (1.0/n1 + 1.0/n2)).sqrt()
     BigDecimal degreesFreedom = n1 + n2 - 2
-    def p = TDistribution.pValue(t as double, degreesFreedom as double)
+    def p = TDistribution.pValue(t, degreesFreedom)
     int firstCount = n1
     int secondCount = n2
     BigDecimal firstMean = mean1
@@ -220,6 +229,7 @@ class Student {
     if (values == null) {
       throw new IllegalArgumentException('Input list cannot be null')
     }
+    values = values.findAll { it != null }
     if (values.isEmpty()) {
       throw new IllegalArgumentException('Input list cannot be empty')
     }
@@ -236,9 +246,12 @@ class Student {
     BigDecimal sd = variance.sqrt()
     BigDecimal dividend = mean - (comparison as BigDecimal)
     BigDecimal divisor = sd / (n as BigDecimal).sqrt()
+    if (divisor == 0) {
+      throw new IllegalArgumentException('data are essentially constant')
+    }
     BigDecimal t = dividend / divisor
     int degreesFreedom = n - 1
-    def p = TDistribution.pValue(t as double, degreesFreedom as double)
+    def p = TDistribution.pValue(t, degreesFreedom)
     BigDecimal sampleMean = mean
     BigDecimal sampleVariance = variance
     BigDecimal sampleSd = sd

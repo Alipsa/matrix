@@ -29,7 +29,7 @@ class FormulaTest {
     assertEquals('log(x) + sqrt(y) + exp(z) + poly(w, 2) + I(a + b)', parsed.predictors.asFormulaString())
 
     def normalized = parsed.normalize()
-    assertEquals('`gross margin` ~ 1 + I(a + b) + exp(z) + log(x) + poly(w, 2) + sqrt(y)', normalized.asFormulaString())
+    assertEquals('`gross margin` ~ 1 + log(x) + sqrt(y) + exp(z) + poly(w, 2) + I(a + b)', normalized.asFormulaString())
   }
 
   @Test
@@ -126,7 +126,7 @@ class FormulaTest {
     ParsedFormula updated = Formula.update('y ~ x + z', '. ~ . - z + w')
 
     assertEquals('y ~ x + z - z + w', updated.toString())
-    assertEquals('y ~ 1 + w + x', updated.normalize().asFormulaString())
+    assertEquals('y ~ 1 + x + w', updated.normalize().asFormulaString())
   }
 
   @Test
@@ -134,7 +134,7 @@ class FormulaTest {
     ParsedFormula updated = Formula.update('y ~ x + z', '~ . - z + w')
 
     assertEquals('y ~ x + z - z + w', updated.toString())
-    assertEquals('y ~ 1 + w + x', updated.normalize().asFormulaString())
+    assertEquals('y ~ 1 + x + w', updated.normalize().asFormulaString())
   }
 
   @Test

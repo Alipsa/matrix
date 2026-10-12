@@ -35,17 +35,17 @@ class KernelDensityTest {
     assertEquals(0.2419707245, Kernel.GAUSSIAN.evaluate(1) as double, 1e-6, 'Gaussian at u=1')
 
     // Epanechnikov at u=0 should be 0.75
-    assertEquals(0.75, Kernel.EPANECHNIKOV.evaluate(0) as double, TOLERANCE, 'Epanechnikov at u=0')
-    assertEquals(0.0, Kernel.EPANECHNIKOV.evaluate(1.5) as double, TOLERANCE, 'Epanechnikov at u=1.5')
+    assertEquals(0.75 / Math.sqrt(5d), Kernel.EPANECHNIKOV.evaluate(0) as double, TOLERANCE, 'Epanechnikov at u=0')
+    assertEquals(0.0, Kernel.EPANECHNIKOV.evaluate(3.0) as double, TOLERANCE, 'Epanechnikov at u=1.5')
 
     // Uniform at u=0 should be 0.5
-    assertEquals(0.5, Kernel.UNIFORM.evaluate(0) as double, TOLERANCE, 'Uniform at u=0')
-    assertEquals(0.0, Kernel.UNIFORM.evaluate(1.5) as double, TOLERANCE, 'Uniform at u=1.5')
+    assertEquals(0.5 / Math.sqrt(3d), Kernel.UNIFORM.evaluate(0) as double, TOLERANCE, 'Uniform at u=0')
+    assertEquals(0.0, Kernel.UNIFORM.evaluate(3.0) as double, TOLERANCE, 'Uniform at u=1.5')
 
     // Triangular at u=0 should be 1.0
-    assertEquals(1.0, Kernel.TRIANGULAR.evaluate(0) as double, TOLERANCE, 'Triangular at u=0')
-    assertEquals(0.5, Kernel.TRIANGULAR.evaluate(0.5) as double, TOLERANCE, 'Triangular at u=0.5')
-    assertEquals(0.0, Kernel.TRIANGULAR.evaluate(1.5) as double, TOLERANCE, 'Triangular at u=1.5')
+    assertEquals(1 / Math.sqrt(6d), Kernel.TRIANGULAR.evaluate(0) as double, TOLERANCE, 'Triangular at u=0')
+    assertEquals((1 - 0.5 / Math.sqrt(6d)) / Math.sqrt(6d), Kernel.TRIANGULAR.evaluate(0.5) as double, TOLERANCE, 'Triangular at u=0.5')
+    assertEquals(0.0, Kernel.TRIANGULAR.evaluate(3.0) as double, TOLERANCE, 'Triangular at u=1.5')
   }
 
   @Test
@@ -92,7 +92,7 @@ class KernelDensityTest {
     BigDecimal bw = BandwidthSelector.scott(TEST_DATA)
 
     // Scott's rule gives larger bandwidth than Silverman for small n
-    assertTrue(bw > 1.0 && bw < 2.0, "Scott bandwidth should be ~1.5 for n=6, got: ${bw}")
+    assertTrue(bw > 0.48 && bw < 0.49, "Scott KDE bandwidth should be ~0.484 for n=6, got: ${bw}")
   }
 
   @Test

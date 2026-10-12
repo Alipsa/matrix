@@ -384,7 +384,7 @@ final class ModelFrame {
 
     List<FormulaTerm> sorted = expandedTerms.toList().sort { FormulaTerm a, FormulaTerm b ->
       int factorOrder = a.factors.size() <=> b.factors.size()
-      factorOrder != 0 ? factorOrder : a.asFormulaString() <=> b.asFormulaString()
+      factorOrder
     } as List<FormulaTerm>
 
     new NormalizedFormula(normalized.response, normalized.includeIntercept, sorted)
@@ -626,7 +626,7 @@ final class ModelFrame {
       }
       boolean found = false
       for (int i = 0; i < working.rowCount(); i++) {
-        if (working[i, col] == null) {
+        if (isMissing(working[i, col])) {
           rowsWithNulls << i
           if (!found) {
             columnsWithNulls << col
@@ -731,7 +731,7 @@ final class ModelFrame {
 
   private static void validateNonNegative(List<Number> values) {
     for (Number v : values) {
-      if (v != null && (v as BigDecimal) < 0) {
+      if (!isMissing(v) && (v as BigDecimal) < 0) {
         throw new IllegalArgumentException('Weights must be non-negative')
       }
     }
@@ -762,18 +762,23 @@ final class ModelFrame {
     filtered
   }
 
+  private static boolean isMissing(Object value) {
+    value == null || value instanceof Double && Double.isNaN(value as double) ||
+      value instanceof Float && Float.isNaN(value as float)
+  }
+
   private static Set<Integer> findNullIndices(List<Number> weights, List<Number> offset) {
     Set<Integer> nullRows = [] as Set<Integer>
     if (weights != null) {
       for (int i = 0; i < weights.size(); i++) {
-        if (weights[i] == null) {
+        if (isMissing(weights[i])) {
           nullRows << i
         }
       }
     }
     if (offset != null) {
       for (int i = 0; i < offset.size(); i++) {
-        if (offset[i] == null) {
+        if (isMissing(offset[i])) {
           nullRows << i
         }
       }

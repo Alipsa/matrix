@@ -12,6 +12,15 @@ import se.alipsa.matrix.stats.timeseries.Portmanteau
 class PortmanteauTest {
 
   @Test
+  void testLargeCountDoesNotOverflow() {
+    List<Double> data = (1..50000).collect { int t ->
+      Math.sin(0.1d * t) + 0.5d * Math.cos(0.37d * t) + ((7919L * t) % 101) / 100.0d
+    }
+    // R 4.6.1: Box.test(z,lag=10,type="Ljung-Box"); z is the expression above.
+    assertEquals(165799.735917152d, Portmanteau.ljungBox(data, 10).statistic as double, 0.00016d)
+  }
+
+  @Test
   void testWhiteNoise() {
     // White noise should show no significant autocorrelation
     List<Double> data = []

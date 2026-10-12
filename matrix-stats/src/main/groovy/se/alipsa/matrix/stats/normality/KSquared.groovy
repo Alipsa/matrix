@@ -4,6 +4,8 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
 import se.alipsa.matrix.stats.util.NumericConversion
 
+import se.alipsa.matrix.stats.util.NumericTolerance
+
 /**
  * D'Agostino's K² test (K-squared test) is a powerful omnibus test for normality that combines
  * normalized measures of sample skewness and kurtosis into a single test statistic. Named after
@@ -139,7 +141,7 @@ class KSquared {
 
     double sd = Math.sqrt(m2)
 
-    if (sd < 1e-10) {
+    if (NumericTolerance.isNegligible(sd, NumericTolerance.maxMagnitude(numericData))) {
       throw new IllegalArgumentException('Data has zero variance')
     }
 
@@ -147,10 +149,11 @@ class KSquared {
     double b1 = m3 / (sd * sd * sd)
     double b2 = m4 / (m2 * m2)
 
+    double nd = n
     // Transform skewness to Z-score using D'Agostino's method
-    double y = b1 * Math.sqrt((n + 1) * (n + 3) / (6.0 * (n - 2)))
-    double beta2 = 3.0 * (n * n + 27 * n - 70) * (n + 1) * (n + 3) /
-                   ((n - 2) * (n + 5) * (n + 7) * (n + 9))
+    double y = b1 * Math.sqrt((nd + 1) * (nd + 3) / (6.0 * (nd - 2)))
+    double beta2 = 3.0 * (nd * nd + 27 * nd - 70) * (nd + 1) * (nd + 3) /
+                   ((nd - 2) * (nd + 5) * (nd + 7) * (nd + 9))
     double w2 = -1.0 + Math.sqrt(2 * (beta2 - 1))
     double delta = 1.0 / Math.sqrt(Math.log(Math.sqrt(w2)))
     double alpha = Math.sqrt(2.0 / (w2 - 1))
@@ -158,22 +161,25 @@ class KSquared {
     double zSkewness = delta * Math.log(y / alpha + Math.sqrt((y / alpha) * (y / alpha) + 1))
 
     // Transform kurtosis to Z-score using D'Agostino's method
-    double eb2 = 3.0 * (n - 1) / (n + 1)
-    double varb2 = 24.0 * n * (n - 2) * (n - 3) / ((n + 1) * (n + 1) * (n + 3) * (n + 5))
+    double eb2 = 3.0 * (nd - 1) / (nd + 1)
+    double varb2 = 24.0 * nd * (nd - 2) * (nd - 3) / ((nd + 1) * (nd + 1) * (nd + 3) * (nd + 5))
     double x = (b2 - eb2) / Math.sqrt(varb2)
-    double sqrtbeta1 = 6.0 * (n * n - 5 * n + 2) / ((n + 7) * (n + 9)) *
-                       Math.sqrt(6.0 * (n + 3) * (n + 5) / (n * (n - 2) * (n - 3)))
+    double sqrtbeta1 = 6.0 * (nd * nd - 5 * nd + 2) / ((nd + 7) * (nd + 9)) *
+                       Math.sqrt(6.0 * (nd + 3) * (nd + 5) / (nd * (nd - 2) * (nd - 3)))
     double A = 6.0 + 8.0 / sqrtbeta1 * (2.0 / sqrtbeta1 + Math.sqrt(1 + 4.0 / (sqrtbeta1 * sqrtbeta1)))
 
-    double zKurtosis = Math.sqrt(9 * A / 2.0) *
-                       ((1 - 2.0 / (9 * A)) - Math.pow(Math.abs(1 - 2.0 / A + x * Math.sqrt(2.0 / (A - 4))), 1.0 / 3))
+    double den = 1 + x * Math.sqrt(2.0d / (A - 4))
+    if (den == 0.0d) {
+      throw new IllegalArgumentException('Kurtosis transformation denominator is zero')
+    }
+    double zKurtosis = ((1 - 2.0d / (9 * A)) - Math.cbrt((1 - 2.0d / A) / den)) / Math.sqrt(2.0d / (9 * A))
 
     // Calculate K² statistic
     double kSquared = zSkewness * zSkewness + zKurtosis * zKurtosis
 
     // Calculate p-value using chi-squared distribution with 2 df
     ChiSquaredDistribution chiSq = new ChiSquaredDistribution(2)
-    double pValue = 1.0 - chiSq.cumulativeProbability(kSquared)
+    double pValue = chiSq.survivalProbability(kSquared)
 
     new KSquaredResult(
       statistic: BigDecimal.valueOf(kSquared),
