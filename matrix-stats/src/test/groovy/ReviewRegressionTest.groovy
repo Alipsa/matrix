@@ -2,7 +2,6 @@ import static org.junit.jupiter.api.Assertions.*
 
 import groovy.transform.CompileStatic
 
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -98,11 +97,10 @@ class ReviewRegressionTest {
   }
 
   @Test
-  @Tag('slow')
   void matrixValidationDoesNotRescanAtEveryEntry() {
     double[][] identity = new double[200][200]
     (0..<200).each { int i -> identity[i][i] = 1 }
-    assertTimeout(Duration.ofSeconds(10), {
+    assertTimeout(Duration.ofSeconds(2), {
       long start = System.nanoTime()
       assertEquals(1d, MatrixAlgebra.cholesky(identity)[199][199], 0d)
       assertEquals(200, MatrixAlgebra.symmetricEigenvalues(identity).length)

@@ -2,7 +2,6 @@ package se.alipsa.matrix.stats.contingency
 
 import static org.junit.jupiter.api.Assertions.*
 
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
 class ExactPerformanceTest {
@@ -19,7 +18,6 @@ class ExactPerformanceTest {
   }
 
   @Test
-  @Tag('slow')
   void moderateTablesFinishWithinBudget() {
     long start = System.nanoTime()
     Barnard.test([[130, 120], [100, 150]] as int[][])
