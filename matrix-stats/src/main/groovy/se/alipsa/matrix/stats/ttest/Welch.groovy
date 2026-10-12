@@ -3,7 +3,7 @@ package se.alipsa.matrix.stats.ttest
 import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.stats.distribution.TDistribution
 
-import java.math.RoundingMode
+import java.math.MathContext
 
 /**
  * Welch's t-test (also called unequal variances t-test) is a two-sample location test
@@ -12,6 +12,7 @@ import java.math.RoundingMode
  * <p>Unlike Student's t-test, Welch's t-test does not assume that the two populations
  * have equal variances, making it more robust in practice. This is the default behavior
  * of R's t.test() function.</p>
+ * Null observations are omitted before computing sample sizes.
  *
  * <p>The test uses the Welch-Satterthwaite equation to compute the degrees of freedom,
  * which may result in non-integer degrees of freedom.</p>
@@ -36,6 +37,8 @@ class Welch {
     if (first == null || second == null) {
       throw new IllegalArgumentException('Input lists cannot be null')
     }
+    first = first.findAll { it != null }
+    second = second.findAll { it != null }
     if (first.isEmpty() || second.isEmpty()) {
       throw new IllegalArgumentException('Input lists cannot be empty')
     }
@@ -52,6 +55,10 @@ class Welch {
     int n1 = first.size()
     int n2 = second.size()
 
+    if (var1 == 0 && var2 == 0) {
+      throw new IllegalArgumentException('data are essentially constant')
+    }
+
     // Welch's t-statistic
     BigDecimal t = (mean1 - mean2) / ((var1 / n1) + (var2 / n2)).sqrt()
 
@@ -59,11 +66,11 @@ class Welch {
     BigDecimal dividend = ((var1/n1) + (var2/n2)) ** 2
     BigDecimal n1Sq = (n1 as BigDecimal) ** 2
     BigDecimal n2Sq = (n2 as BigDecimal) ** 2
-    BigDecimal divisor1 = ((var1 ** 2) as BigDecimal).divide(n1Sq * (n1-1), SCALE, RoundingMode.HALF_UP)
-    BigDecimal divisor2 = ((var2 ** 2) as BigDecimal).divide(n2Sq * (n2 -1), SCALE, RoundingMode.HALF_UP)
+    BigDecimal divisor1 = ((var1 ** 2) as BigDecimal).divide(n1Sq * (n1-1), MathContext.DECIMAL128)
+    BigDecimal divisor2 = ((var2 ** 2) as BigDecimal).divide(n2Sq * (n2 -1), MathContext.DECIMAL128)
 
-    BigDecimal degreesFreedom = dividend.divide(divisor1 + divisor2, SCALE, RoundingMode.HALF_UP)
-    def p = TDistribution.pValue(t as double, degreesFreedom as double)
+    BigDecimal degreesFreedom = dividend.divide(divisor1 + divisor2, MathContext.DECIMAL128)
+    def p = TDistribution.pValue(t, degreesFreedom)
     BigDecimal firstMean = mean1
     BigDecimal secondMean = mean2
     BigDecimal firstVariance = var1

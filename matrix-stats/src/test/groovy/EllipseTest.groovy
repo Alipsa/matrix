@@ -3,7 +3,6 @@ import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.stats.Ellipse
-import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
 import se.alipsa.matrix.stats.distribution.FDistribution
 
 /**
@@ -16,15 +15,15 @@ class EllipseTest {
 
   @Test
   void testInsufficientPoints() {
-    assertEquals('Ellipse calculation requires at least 3 points per axis (got 0)', assertThrows(IllegalArgumentException) {
+    assertEquals('Ellipse calculation requires at least 4 points per axis (got 0)', assertThrows(IllegalArgumentException) {
       Ellipse.calculate([], [], 0.95, 't', 51)
     }.message)
 
-    assertEquals('Ellipse calculation requires at least 3 points per axis (got 1)', assertThrows(IllegalArgumentException) {
+    assertEquals('Ellipse calculation requires at least 4 points per axis (got 1)', assertThrows(IllegalArgumentException) {
       Ellipse.calculate([1.0G], [1.0G], 0.95, 't', 51)
     }.message)
 
-    assertEquals('Ellipse calculation requires at least 3 points per axis (got 2)', assertThrows(IllegalArgumentException) {
+    assertEquals('Ellipse calculation requires at least 4 points per axis (got 2)', assertThrows(IllegalArgumentException) {
       Ellipse.calculate([1.0G, 2.0G], [1.0G, 2.0G], 0.95, 't', 51)
     }.message)
   }
@@ -40,9 +39,9 @@ class EllipseTest {
 
   @Test
   void testMinimumPoints() {
-    // Test with exactly 3 points - minimum required
-    def xVals = [1.0G, 2.0G, 3.0G]
-    def yVals = [1.0G, 2.0G, 1.5G]
+    // ggplot2 requires four observations.
+    def xVals = [1.0G, 2.0G, 3.0G, 4.0G]
+    def yVals = [1.0G, 2.0G, 1.5G, 2.5G]
 
     def result = Ellipse.calculate(xVals, yVals, 0.95, 't', 51)
 
@@ -127,36 +126,10 @@ class EllipseTest {
   }
 
   @Test
-  void testTTypeUsesFiniteSampleFDistributionScale() {
-    def xVals = [1G, 2G, 3G, 4G, 5G]
-    def yVals = [2G, 4G, 3G, 5G, 6G]
-    Number level = 0.95
-
-    def resultT = Ellipse.calculate(xVals, yVals, level, 't', 101)
-    def resultNorm = Ellipse.calculate(xVals, yVals, level, 'norm', 101)
-
-    double radiusT = calculateMaxRadiusFromMean(resultT.x, resultT.y, xVals, yVals)
-    double radiusNorm = calculateMaxRadiusFromMean(resultNorm.x, resultNorm.y, xVals, yVals)
-    double expectedRatio = Math.sqrt(
-        2.0d * (new FDistribution(2, xVals.size() - 1).inverseCumulativeProbability(level) as double)
-    ) / Math.sqrt(new ChiSquaredDistribution(2).inverseCumulativeProbability(level) as double)
-
-    assertTrue(radiusT > radiusNorm, 'Finite-sample t ellipse should be wider than norm ellipse')
-    assertEquals(expectedRatio, radiusT / radiusNorm, 1e-9d)
-  }
-
-  @Test
-  void testTTypeConvergesToNormTypeForLargeSamples() {
-    def xVals = (1..1000).collect { int i -> i as BigDecimal }
-    def yVals = xVals.collect { BigDecimal x -> (x * 0.75G + ((x as int) % 7)) as BigDecimal }
-
-    def resultT = Ellipse.calculate(xVals, yVals, 0.95, 't', 101)
-    def resultNorm = Ellipse.calculate(xVals, yVals, 0.95, 'norm', 101)
-
-    double radiusT = calculateMaxRadiusFromMean(resultT.x, resultT.y, xVals, yVals)
-    double radiusNorm = calculateMaxRadiusFromMean(resultNorm.x, resultNorm.y, xVals, yVals)
-
-    assertEquals(1.0d, radiusT / radiusNorm, 0.01d)
+  void testNormTypeUsesFiniteSampleFDistributionScale() {
+    def result = Ellipse.calculate([-1G, 1G, -1G, 1G], [-10G, -10G, 10G, 10G], 0.95, 'norm', 101)
+    double expected = Math.sqrt(2d * (new FDistribution(2, 3).inverseCumulativeProbability(0.95) as double))
+    assertEquals(expected * Math.sqrt(400d / 3), result.y.max() as double, 1e-9)
   }
 
   @Test
@@ -178,14 +151,9 @@ class EllipseTest {
     def xVals = [1G, 2G, 3G, 4G, 5G]
     def yVals = [1G, 2G, 3G, 4G, 5G]
 
-    def result = Ellipse.calculate(xVals, yVals, 0.95, 't', 51)
-
-    // Should still generate an ellipse (though it will be very elongated)
-    assertEquals(51, result.x.size())
-    assertEquals(51, result.y.size())
-
-    // All values should be finite (not NaN or Infinity)
-    assertAllFinite(result.x, result.y)
+    assertThrows(IllegalArgumentException) {
+      Ellipse.calculate(xVals, yVals, 0.95, 't', 51)
+    }
   }
 
   @Test
@@ -194,18 +162,8 @@ class EllipseTest {
     def xVals = [5G, 5G, 5G, 5G]
     def yVals = [10G, 10G, 10G, 10G]
 
-    def result = Ellipse.calculate(xVals, yVals, 0.95, 't', 51)
-
-    // Should generate an ellipse (though it will collapse to a point)
-    assertEquals(51, result.x.size())
-    assertEquals(51, result.y.size())
-
-    // All points should be at or very near the mean
-    result.x.each { x ->
-      assertTrue(Math.abs((x - 5G) as double) < 1e-6, 'X values should be near mean')
-    }
-    result.y.each { y ->
-      assertTrue(Math.abs((y - 10G) as double) < 1e-6, 'Y values should be near mean')
+    assertThrows(IllegalArgumentException) {
+      Ellipse.calculate(xVals, yVals, 0.95, 't', 51)
     }
   }
 
@@ -214,7 +172,7 @@ class EllipseTest {
     def xVals = [1G, 2G, 3G, 4G, 5G]
     def yVals = [2G, 3G, 4G, 5G, 6G]
 
-    def result = Ellipse.calculate(xVals, yVals, 0.95, 't', 51)
+    def result = Ellipse.calculate(xVals, yVals, 0.95, 'norm', 51)
 
     // Calculate mean of input data
     BigDecimal meanX = xVals.sum() / xVals.size()
@@ -253,7 +211,7 @@ class EllipseTest {
     def xVals = [-5G, -3G, -1G, 1G, 3G]
     def yVals = [-10G, -5G, 0G, 5G, 10G]
 
-    def result = Ellipse.calculate(xVals, yVals, 0.95, 't', 51)
+    def result = Ellipse.calculate(xVals, yVals, 0.95, 'norm', 51)
 
     assertEquals(51, result.x.size())
     assertEquals(51, result.y.size())
@@ -266,7 +224,7 @@ class EllipseTest {
     def xVals = [0.01G, 0.02G, 0.03G, 0.04G]
     def yVals = [1000G, 2000G, 1500G, 2500G]
 
-    def result = Ellipse.calculate(xVals, yVals, 0.95, 't', 51)
+    def result = Ellipse.calculate(xVals, yVals, 0.95, 'norm', 51)
 
     assertEquals(51, result.x.size())
     assertEquals(51, result.y.size())
@@ -297,23 +255,6 @@ class EllipseTest {
     for (int i = 0; i < xVals.size(); i++) {
       double dx = (xVals[i] as double) - centerX
       double dy = (yVals[i] as double) - centerY
-      double dist = Math.sqrt(dx * dx + dy * dy)
-      if (dist > maxDist) {
-        maxDist = dist
-      }
-    }
-    maxDist
-  }
-
-  private double calculateMaxRadiusFromMean(List<BigDecimal> ellipseX, List<BigDecimal> ellipseY,
-                                            List<BigDecimal> dataX, List<BigDecimal> dataY) {
-    double centerX = (dataX.sum() / dataX.size()) as double
-    double centerY = (dataY.sum() / dataY.size()) as double
-
-    double maxDist = 0
-    for (int i = 0; i < ellipseX.size(); i++) {
-      double dx = (ellipseX[i] as double) - centerX
-      double dy = (ellipseY[i] as double) - centerY
       double dist = Math.sqrt(dx * dx + dy * dy)
       if (dist > maxDist) {
         maxDist = dist

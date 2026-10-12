@@ -139,14 +139,14 @@ class CochranMantelHaenszel {
 
       int n = a + b + c + d  // Total for this stratum
 
-      if (n == 0) {
-        throw new IllegalArgumentException('Stratum has zero total count')
+      if (n < 2) {
+        throw new IllegalArgumentException('Sample size in each stratum must be greater than one')
       }
 
-      int r1 = a + b  // Row 1 total
-      int r2 = c + d  // Row 2 total
-      int c1 = a + c  // Column 1 total
-      int c2 = b + d  // Column 2 total
+      double r1 = a + b  // Row 1 total
+      double r2 = c + d  // Row 2 total
+      double c1 = a + c  // Column 1 total
+      double c2 = b + d  // Column 2 total
 
       // Expected value of a under independence
       double expectedA = (r1 * c1) / (double) n
@@ -159,8 +159,8 @@ class CochranMantelHaenszel {
       sumVariance += varianceA
 
       // For common odds ratio estimation (Mantel-Haenszel estimator)
-      sumOddsRatioNumerator += (a * d) / (double) n
-      sumOddsRatioDenominator += (b * c) / (double) n
+      sumOddsRatioNumerator += ((double) a * d) / (double) n
+      sumOddsRatioDenominator += ((double) b * c) / (double) n
     }
 
     // Apply continuity correction if requested
@@ -169,7 +169,7 @@ class CochranMantelHaenszel {
       numerator = Math.max(0.0, numerator - 0.5)
     }
 
-    if (sumVariance < 1e-10) {
+    if (sumVariance <= 0) {
       throw new IllegalArgumentException('Total variance is too small - data may have no variation')
     }
 
@@ -178,11 +178,11 @@ class CochranMantelHaenszel {
 
     // Calculate p-value using chi-squared distribution with 1 df
     ChiSquaredDistribution chiSq = new ChiSquaredDistribution(1)
-    double pValue = 1.0 - chiSq.cumulativeProbability(cmhStatistic)
+    double pValue = chiSq.survivalProbability(cmhStatistic)
 
     // Calculate common odds ratio (Mantel-Haenszel estimator)
     double commonOddsRatio = Double.NaN
-    if (sumOddsRatioDenominator > 1e-10) {
+    if (sumOddsRatioDenominator > 0) {
       commonOddsRatio = sumOddsRatioNumerator / sumOddsRatioDenominator
     }
 

@@ -78,7 +78,9 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * BigDecimal weight = Kernel.GAUSSIAN.evaluate(0.5)  // Weight at 0.5 bandwidths from center
  * </pre>
  *
- * <h3>Mathematical Definitions</h3>
+ * <p>All kernels have unit variance, matching R density(). Compact half-widths are
+ * sqrt(5), sqrt(3), and sqrt(6) for Epanechnikov, uniform, and triangular.</p>
+ * <h3>Mathematical Definitions (before unit-variance rescaling)</h3>
  * <ul>
  *   <li><strong>Gaussian:</strong> K(u) = (1/√2π) exp(-u²/2), support: (-∞, ∞)</li>
  *   <li><strong>Epanechnikov:</strong> K(u) = (3/4)(1 - u²) if |u| ≤ 1, else 0</li>
@@ -101,6 +103,7 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * @see KernelDensity
  * @see BandwidthSelector
  */
+@SuppressWarnings('DuplicateNumberLiteral')
 enum Kernel {
 
   /**
@@ -126,10 +129,11 @@ enum Kernel {
 
     @Override
     double evaluateValue(double u) {
+      u /= Math.sqrt(5.0d)
       if (Math.abs(u) > 1) {
         return 0.0
       }
-      0.75 * (1.0 - u * u)
+      0.75 * (1.0 - u * u) / Math.sqrt(5.0d)
     }
 
   },
@@ -142,10 +146,10 @@ enum Kernel {
 
     @Override
     double evaluateValue(double u) {
-      if (Math.abs(u) > 1) {
+      if (Math.abs(u) > Math.sqrt(3.0d)) {
         return 0.0
       }
-      0.5
+      0.5 / Math.sqrt(3.0d)
     }
 
   },
@@ -158,11 +162,11 @@ enum Kernel {
 
     @Override
     double evaluateValue(double u) {
-      double absU = Math.abs(u)
+      double absU = Math.abs(u) / Math.sqrt(6.0d)
       if (absU > 1) {
         return 0.0
       }
-      1.0 - absU
+      (1.0 - absU) / Math.sqrt(6.0d)
     }
 
   }

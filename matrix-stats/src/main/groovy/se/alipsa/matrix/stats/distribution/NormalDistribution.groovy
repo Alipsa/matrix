@@ -102,7 +102,7 @@ class NormalDistribution implements ContinuousDistribution {
     if (z >= 0.0d) {
       return 0.5d * (1.0d + gamma)
     }
-    0.5d * (1.0d - gamma)
+    0.5d * SpecialFunctions.regularizedIncompleteGammaQ(0.5d, z * z)
   }
 
   private double inverseCumulativeProbabilityValue(double p) {

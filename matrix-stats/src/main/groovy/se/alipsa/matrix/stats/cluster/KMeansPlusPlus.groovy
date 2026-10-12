@@ -151,10 +151,11 @@ import se.alipsa.matrix.stats.util.NumericConversion
  *   <tr><td>k</td><td>int</td><td>required</td><td>Number of clusters (must be ≤ number of distinct points)</td></tr>
  *   <tr><td>points</td><td>double[][]</td><td>required</td><td>Input data (m × n array: m points, n dimensions)</td></tr>
  *   <tr><td>iterations</td><td>int</td><td>50</td><td>Number of independent runs (keeps best wcss)</td></tr>
+ *   <tr><td>maxIterationsPerRun</td><td>int</td><td>300</td><td>Update steps per independent run</td></tr>
  *   <tr><td>pp</td><td>boolean</td><td>true</td><td>Use KMeans++ initialization (vs. random)</td></tr>
  *   <tr><td>epsilon</td><td>double</td><td>0.001</td><td>Convergence threshold for wcss improvement</td></tr>
  *   <tr><td>useEpsilon</td><td>boolean</td><td>true</td><td>Enable epsilon-based stopping (vs. exact convergence)</td></tr>
- *   <tr><td>l1Norm</td><td>boolean</td><td>true</td><td>Use L1 (Manhattan) vs. L2 (Euclidean) distance</td></tr>
+ *   <tr><td>l1Norm</td><td>boolean</td><td>false</td><td>Use L1 (Manhattan) vs. L2 (Euclidean) distance</td></tr>
  * </table>
  *
  * <h3>Output Methods</h3>
@@ -196,7 +197,7 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * @see GroupEstimator
  * @see ClusteredPoint
  */
-@SuppressWarnings('DuplicateStringLiteral')
+@SuppressWarnings(['DuplicateStringLiteral', 'DuplicateNumberLiteral'])
 class KMeansPlusPlus {
 
   private static final Logger log = Logger.getLogger(KMeansPlusPlus)
@@ -208,6 +209,7 @@ class KMeansPlusPlus {
   private double[][] points    // n-dimensional data points.
 
   // optional parameters
+  private int maxIterationsPerRun
   private int iterations       // number of times to repeat the clustering. Choose run with lowest wcss
   private boolean pp           // true --> KMeans++. false --> basic random sampling
   private double epsilon       // stops running when improvement in error < epsilon
@@ -252,6 +254,7 @@ class KMeansPlusPlus {
     // use information from builder
     k = builder.k
     points = DoubleArrayUtils.deepCopy(builder.points)
+    maxIterationsPerRun = builder.maxIterationsPerRun
     iterations = builder.iterations
     pp = builder.pp
     epsilon = builder.epsilon
@@ -284,7 +287,8 @@ class KMeansPlusPlus {
     private boolean pp         = true
     private double epsilon     = .001
     private boolean useEpsilon = true
-    private boolean l1Norm = true
+    private boolean l1Norm = false
+    private int maxIterationsPerRun = 300
     private Long randomSeed = null
 
 
@@ -370,6 +374,19 @@ class KMeansPlusPlus {
         throw new IllegalArgumentException('Required: non-negative number of iterations. Ex: 50')
       }
       this.iterations = iterations
+      this
+    }
+
+    /**
+     * Bounds the update steps in each independent run, default 300.
+     * @param limit positive step limit; iterations controls the number of independent runs
+     * @return this builder
+     */
+    Builder maxIterationsPerRun(int limit) {
+      if (limit < 1) {
+        throw new IllegalArgumentException('maxIterationsPerRun must be positive')
+      }
+      maxIterationsPerRun = limit
       this
     }
 
@@ -509,12 +526,17 @@ class KMeansPlusPlus {
     chooseInitialCentroids()
     wcss = Double.POSITIVE_INFINITY
     double prevWCSS
+    int steps = 0
     do {
       assignmentStep()   // assign points to the closest centroids
       updateStep()       // update centroids
       prevWCSS = wcss    // check if cost function meets stopping criteria
       calcWCSS()
-    } while (!stop(prevWCSS))
+      steps++
+    } while (!stop(prevWCSS) && steps < maxIterationsPerRun)
+    if (!stop(prevWCSS)) {
+      log.warn("Clustering did not converge within $maxIterationsPerRun steps")
+    }
   }
 
 
@@ -545,6 +567,22 @@ class KMeansPlusPlus {
    * Updates the centroids.
    */
   private void updateStep() {
+    if (l1Norm) {
+      (0..<k).each { int cluster ->
+        List<ClusteredPoint> members = assignment.findAll { it.clusterId == cluster }
+        if (members.isEmpty()) {
+          centroids[cluster] = Arrays.copyOf(points[random.nextInt(m)], n)
+        } else {
+          (0..<n).each { int dimension ->
+            List<Double> coordinates = members.collect { it.internalPoint()[dimension] }.sort()
+            int middle = coordinates.size().intdiv(2)
+            centroids[cluster][dimension] = coordinates.size() % 2 == 0 ?
+                (coordinates[middle - 1] + coordinates[middle]) / 2.0d : coordinates[middle]
+          }
+        }
+      }
+      return
+    }
     // Zero out all centroids
     for (int i = 0; i < k; i++) {
       if (centroids[i] == null) {
@@ -866,7 +904,7 @@ class KMeansPlusPlus {
    * A smaller wcss value indicates that the data points within a cluster are more tightly grouped around their centroid,
    * resulting in a more compact cluster.
    *
-   * @return wcss the Within-Cluster-Sum-of-Squares
+   * @return squared Euclidean cost by default; total L1 cost with useL1norm(true)
    */
   double getWCSS() {
     wcss

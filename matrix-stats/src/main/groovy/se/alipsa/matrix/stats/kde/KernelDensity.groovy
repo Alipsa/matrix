@@ -251,11 +251,19 @@ class KernelDensity {
     this.adjust = params['adjust'] != null ? NumericConversion.toBigDecimal(params['adjust'], 'adjust') : 1.0
     this.trim = params['trim'] != null ? (Boolean) params['trim'] : false
 
+    if (n < 2 || adjust <= 0) {
+      throw new IllegalArgumentException('n must be at least 2 and adjust must be positive')
+    }
+
     // Compute bandwidth
     if (params['bandwidth'] != null) {
       this.bandwidthValue = (NumericConversion.toBigDecimal(params['bandwidth'], 'bandwidth') * this.adjust) as double
     } else {
       this.bandwidthValue = (BandwidthSelector.silvermanValue(this.data) * this.adjust) as double
+    }
+
+    if (!Double.isFinite(bandwidthValue) || bandwidthValue <= 0) {
+      throw new IllegalArgumentException('bandwidth must be finite and positive')
     }
 
     // Determine evaluation range

@@ -2,6 +2,8 @@ package se.alipsa.matrix.stats.contingency
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.distribution.HypergeometricDistribution
+import se.alipsa.matrix.stats.distribution.SpecialFunctions
+import se.alipsa.matrix.stats.solver.BrentSolver
 import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
@@ -46,95 +48,99 @@ class Fisher {
    * Performs Fisher's exact test on a 2×2 contingency table.
    *
    * @param table A 2×2 contingency table as a List of Lists: [[a, b], [c, d]]
+   * @param confidenceLevel confidence level (default 0.95), strictly between zero and one
    * @param alternative The alternative hypothesis: "two.sided" (default), "greater", or "less"
    * @return FisherResult containing p-value, odds ratio, and confidence interval
    * @throws IllegalArgumentException if table is not 2×2 or contains negative values
    */
-  static FisherResult test(List<List<Integer>> table, String alternative = 'two.sided') {
+  static FisherResult test(List<? extends List<? extends Number>> table, String alternative = 'two.sided', Number confidenceLevel = 0.95) {
     validateTable(table)
 
-    int a = table[0][0]
-    int b = table[0][1]
-    int c = table[1][0]
-    int d = table[1][1]
+    int a = table[0][0].intValue()
+    int b = table[0][1].intValue()
+    int c = table[1][0].intValue()
+    int d = table[1][1].intValue()
 
-    calculateFisherTest(a, b, c, d, alternative)
+    calculateFisherTest(a, b, c, d, alternative, confidenceLevel.doubleValue())
   }
 
   /**
    * Performs Fisher's exact test on a 2×2 contingency table.
    *
    * @param table A 2×2 contingency table as a List of Lists: [[a, b], [c, d]]
+   * @param confidenceLevel confidence level (default 0.95), strictly between zero and one
    * @param alternative The alternative hypothesis
    * @return FisherResult containing p-value, odds ratio, and confidence interval
    * @throws IllegalArgumentException if table is not 2×2 or contains negative values
    */
-  static FisherResult test(List<List<Integer>> table, Alternative alternative) {
+  static FisherResult test(List<? extends List<? extends Number>> table, Alternative alternative, Number confidenceLevel = 0.95) {
     if (alternative == null) {
       throw new IllegalArgumentException(ALTERNATIVE_NULL_MESSAGE)
     }
-    test(table, alternative.label)
+    test(table, alternative.label, confidenceLevel)
   }
 
   /**
    * Performs Fisher's exact test on a Matrix (2×2 contingency table).
    *
    * @param table A 2×2 Matrix
+   * @param confidenceLevel confidence level (default 0.95), strictly between zero and one
    * @param alternative The alternative hypothesis: "two.sided" (default), "greater", or "less"
    * @return FisherResult containing p-value, odds ratio, and confidence interval
    * @throws IllegalArgumentException if table is not 2×2 or contains negative values
    */
-  static FisherResult test(Matrix table, String alternative = 'two.sided') {
+  static FisherResult test(Matrix table, String alternative = 'two.sided', Number confidenceLevel = 0.95) {
     if (table.rowCount() != 2 || table.columnCount() != 2) {
       throw new IllegalArgumentException("Fisher's exact test requires a 2×2 table (got ${table.rowCount()}×${table.columnCount()})")
     }
 
-    int a = table.get(0, 0) as int
-    int b = table.get(0, 1) as int
-    int c = table.get(1, 0) as int
-    int d = table.get(1, 1) as int
-
-    calculateFisherTest(a, b, c, d, alternative)
+    test([[table.get(0, 0) as Number, table.get(0, 1) as Number],
+          [table.get(1, 0) as Number, table.get(1, 1) as Number]], alternative, confidenceLevel)
   }
 
   /**
    * Performs Fisher's exact test on a Matrix (2×2 contingency table).
    *
    * @param table A 2×2 Matrix
+   * @param confidenceLevel confidence level (default 0.95), strictly between zero and one
    * @param alternative The alternative hypothesis
    * @return FisherResult containing p-value, odds ratio, and confidence interval
    * @throws IllegalArgumentException if table is not 2×2 or contains negative values
    */
-  static FisherResult test(Matrix table, Alternative alternative) {
+  static FisherResult test(Matrix table, Alternative alternative, Number confidenceLevel = 0.95) {
     if (alternative == null) {
       throw new IllegalArgumentException(ALTERNATIVE_NULL_MESSAGE)
     }
-    test(table, alternative.label)
+    test(table, alternative.label, confidenceLevel)
   }
 
-  private static void validateTable(List<List<Integer>> table) {
+  private static void validateTable(List<? extends List<? extends Number>> table) {
     if (table == null || table.size() != 2) {
       throw new IllegalArgumentException("Fisher's exact test requires a 2×2 table (got ${table?.size() ?: 0} rows)")
     }
     if (table[0].size() != 2 || table[1].size() != 2) {
       throw new IllegalArgumentException("Fisher's exact test requires a 2×2 table (got ${table[0]?.size()}×${table[1]?.size()} columns)")
     }
-    for (List<Integer> row : table) {
-      for (Integer val : row) {
-        if (val == null || val < 0) {
+    for (List<Number> row : table) {
+      for (Number val : row) {
+        if (val == null || val < 0 || !Double.isFinite(val.doubleValue()) ||
+            val.doubleValue() != val.intValue()) {
           throw new IllegalArgumentException('Table values must be non-negative integers')
         }
       }
     }
   }
 
-  private static FisherResult calculateFisherTest(int a, int b, int c, int d, String alternative) {
+  private static FisherResult calculateFisherTest(int a, int b, int c, int d, String alternative, double confidenceLevel) {
+    if (!Double.isFinite(confidenceLevel) || confidenceLevel <= 0 || confidenceLevel >= 1) {
+      throw new IllegalArgumentException('confidenceLevel must be between 0 and 1')
+    }
     int n = a + b + c + d
     int rowSum1 = a + b
     int colSum1 = a + c
 
     // Calculate odds ratio
-    double oddsRatio = calculateOddsRatio(a, b, c, d)
+    double sampleOddsRatio = calculateOddsRatio(a, b, c, d)
 
     // Calculate p-value using hypergeometric distribution
     // The hypergeometric distribution models the probability of 'a' successes
@@ -151,12 +157,26 @@ class Fisher {
     }
 
     // Calculate confidence interval for odds ratio (95% by default)
-    double[] confInt = calculateConfidenceInterval(a, b, c, d, 0.95)
+    int lo = Math.max(0, rowSum1 - (n - colSum1))
+    int hi = Math.min(rowSum1, colSum1)
+    double[] logWeights = (lo..hi).collect { int k ->
+      logChoose(colSum1, k) + logChoose(n - colSum1, rowSum1 - k)
+    } as double[]
+    double oddsRatio = a == lo ? 0.0d : a == hi ? Double.POSITIVE_INFINITY :
+        solveOdds { double u -> noncentralMoment(logWeights, lo, a, u, 0) - a }
+    double alpha = (1 - confidenceLevel) / (normalizedAlternative == 'two.sided' ? 2 : 1)
+    double lower = a == lo || normalizedAlternative == 'less' ? 0.0d :
+        solveOdds { double u -> noncentralMoment(logWeights, lo, a, u, 1) - alpha }
+    double upper = a == hi || normalizedAlternative == 'greater' ? Double.POSITIVE_INFINITY :
+        solveOdds { double u -> noncentralMoment(logWeights, lo, a, u, -1) - alpha }
+    double[] confInt = [lower, upper] as double[]
 
     new FisherResult(
       pValue: BigDecimal.valueOf(pValue),
-      oddsRatio: BigDecimal.valueOf(oddsRatio),
-      confidenceInterval: NumericConversion.toBigDecimalList(confInt, 'confidenceInterval'),
+      oddsRatio: finiteDecimal(oddsRatio),
+      sampleOddsRatio: BigDecimal.valueOf(sampleOddsRatio),
+      confidenceLevel: confidenceLevel,
+      confidenceInterval: confInt.collect { double value -> finiteDecimal(value) },
       alternative: alternative
     )
   }
@@ -182,7 +202,7 @@ class Fisher {
     // Sum probabilities for all tables with probability <= observed probability
     for (int k = dist.getSupportLowerBound(); k <= dist.getSupportUpperBound(); k++) {
       double prob = dist.probability(k)
-      if (prob <= observedProb + 1e-10) {  // Small epsilon for floating point comparison
+      if (prob <= observedProb * (1 + 1e-7)) {  // Small epsilon for floating point comparison
         pValue += prob
       }
     }
@@ -190,49 +210,37 @@ class Fisher {
     Math.min(pValue, 1.0)  // Ensure p-value doesn't exceed 1 due to rounding
   }
 
-  private static double[] calculateConfidenceInterval(int a, int b, int c, int d, double confidenceLevel) {
-    // Calculate confidence interval for odds ratio using the hypergeometric distribution
-    // This is an approximation - exact calculation is complex
-
-    if (a == 0 || b == 0 || c == 0 || d == 0) {
-      // Use log odds ratio method for zero cells
-      double alpha = 1.0 - confidenceLevel
-      double logOddsRatio = Math.log(calculateOddsRatio(a, b, c, d))
-      double se = Math.sqrt(1.0/(a+0.5) + 1.0/(b+0.5) + 1.0/(c+0.5) + 1.0/(d+0.5))
-      double z = getZScore(alpha / 2.0)
-
-      double lower = Math.exp(logOddsRatio - z * se)
-      double upper = Math.exp(logOddsRatio + z * se)
-      return [lower, upper] as double[]
-    }
-
-    // Normal approximation for non-zero cells
-    double logOddsRatio = Math.log(productRatio(a, d, b, c))
-    double se = Math.sqrt(1.0/a + 1.0/b + 1.0/c + 1.0/d)
-    double alpha = 1.0 - confidenceLevel
-    double z = getZScore(alpha / 2.0)
-
-    double lower = Math.exp(logOddsRatio - z * se)
-    double upper = Math.exp(logOddsRatio + z * se)
-
-    [lower, upper] as double[]
+  private static Number finiteDecimal(double value) {
+    Double.isFinite(value) ? BigDecimal.valueOf(value) : value
   }
 
-  private static double getZScore(double alpha) {
-    // Approximate z-score for common confidence levels
-    // For 95% CI: alpha/2 = 0.025, z ≈ 1.96
-    if (Math.abs(alpha - 0.025) < 0.001) {
-      return 1.96
-    }
-    if (Math.abs(alpha - 0.05) < 0.001) {
-      return 1.645
-    }
-    if (Math.abs(alpha - 0.005) < 0.001) {
-      return 2.576
-    }
+  private static double logChoose(int n, int k) {
+    SpecialFunctions.logGamma(n + 1.0d) - SpecialFunctions.logGamma(k + 1.0d) - SpecialFunctions.logGamma(n - k + 1.0d)
+  }
 
-    // Default approximation
-    1.96
+  private static double solveOdds(Closure<Double> equation) {
+    Math.exp(BrentSolver.solve({ double u -> equation.call(u) }, -700.0d, 700.0d, 1e-12, 1e-12, 200).root)
+  }
+
+  // Normalise in log space to avoid overflow at the endpoints of the root bracket.
+  private static double noncentralMoment(double[] weights, int lo, int observed, double logOdds, int tail) {
+    double maximum = Double.NEGATIVE_INFINITY
+    for (int i = 0; i < weights.length; i++) {
+      maximum = Math.max(maximum, weights[i] + (lo + i) * logOdds)
+    }
+    double total = 0
+    double selected = 0
+    for (int i = 0; i < weights.length; i++) {
+      int k = lo + i
+      double probability = Math.exp(weights[i] + k * logOdds - maximum)
+      total += probability
+      if (tail == 0) {
+        selected += k * probability
+      } else if (tail > 0 ? k >= observed : k <= observed) {
+        selected += probability
+      }
+    }
+    selected / total
   }
 
   /**
@@ -243,10 +251,16 @@ class Fisher {
     BigDecimal pValue
 
     /** The estimated odds ratio */
-    BigDecimal oddsRatio
+    Number oddsRatio
 
-    /** 95% confidence interval for the odds ratio [lower, upper] */
-    List<BigDecimal> confidenceInterval
+    /** Exact confidence interval for the odds ratio [lower, upper]. */
+    List<Number> confidenceInterval
+
+    /** Sample cross-product odds ratio, with a half-cell correction for zero denominators. */
+    BigDecimal sampleOddsRatio
+
+    /** Confidence level, default 0.95. Infinite endpoints are Double.POSITIVE_INFINITY. */
+    Number confidenceLevel
 
     /** The alternative hypothesis used */
     String alternative
@@ -263,10 +277,11 @@ class Fisher {
 
     @Override
     String toString() {
+      BigDecimal percent = ((confidenceLevel ?: 0.95G) as BigDecimal) * 100G
       """Fisher's Exact Test Result:
   p-value: ${pValue}
   odds ratio: ${oddsRatio}
-  ${confidenceInterval ? sprintf('95%% CI: [%.4f, %.4f]', confidenceInterval[0], confidenceInterval[1]) : '95% CI: N/A'}
+  ${confidenceInterval ? sprintf('%s%% CI: [%.4f, %.4f]', percent.stripTrailingZeros().toPlainString(), confidenceInterval[0].doubleValue(), confidenceInterval[1].doubleValue()) : 'CI: N/A'}
   alternative: ${alternative}"""
     }
   }

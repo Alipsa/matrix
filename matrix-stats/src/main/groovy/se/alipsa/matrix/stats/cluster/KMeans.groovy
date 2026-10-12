@@ -130,23 +130,50 @@ class KMeans {
     points
   }
 
-  Matrix fit(List<String> columnNames, int k, int iterations, String columnName = 'Group', boolean mutate = true) {
+  /**
+   * Fits Euclidean K-means with seeded restarts when randomSeed is supplied.
+   * @param columnNames numeric feature columns
+   * @param k number of clusters
+   * @param iterations number of independent restarts
+   * @param columnName output assignment column, default Group
+   * @param mutate whether to append to the input matrix, default true
+   * @param randomSeed reproducible random seed, default null (unseeded)
+   * @return matrix with cluster assignments
+   */
+  Matrix fit(List<String> columnNames, int k, int iterations, String columnName = 'Group', boolean mutate = true, Long randomSeed = null) {
     double[][] points = extractPoints(columnNames)
-    clustering = new KMeansPlusPlus.Builder(k, points)
+    KMeansPlusPlus.Builder builder = new KMeansPlusPlus.Builder(k, points)
         .iterations(iterations)
         .pp(true)
         .useEpsilon(true)
-        .build()
+    if (randomSeed != null) {
+      builder.randomSeed(randomSeed)
+    }
+    clustering = builder.build()
     addClusterColumn(clustering, columnName, mutate)
   }
 
-  Matrix fit(List<String> columnNames, int iterations = 30, GroupEstimator.CalculationMethod method = GroupEstimator.CalculationMethod.ELBOW, String columnName = 'Group', boolean mutate = true) {
+  /**
+   * Fits Euclidean K-means with seeded restarts when randomSeed is supplied.
+   * @param method cluster-count estimation method, default ELBOW
+   * @param columnNames numeric feature columns
+   * @param iterations number of independent restarts, default 30
+   * @param method cluster-count estimation method, default ELBOW
+   * @param columnName output assignment column, default Group
+   * @param mutate whether to append to the input matrix, default true
+   * @param randomSeed reproducible random seed, default null (unseeded)
+   * @return matrix with cluster assignments
+   */
+  Matrix fit(List<String> columnNames, int iterations = 30, GroupEstimator.CalculationMethod method = GroupEstimator.CalculationMethod.ELBOW, String columnName = 'Group', boolean mutate = true, Long randomSeed = null) {
     double[][] points = extractPoints(columnNames)
-    clustering = new KMeansPlusPlus.Builder(points, method)
+    KMeansPlusPlus.Builder builder = new KMeansPlusPlus.Builder(points, method)
         .iterations(iterations)
         .pp(true)
         .useEpsilon(true)
-        .build()
+    if (randomSeed != null) {
+      builder.randomSeed(randomSeed)
+    }
+    clustering = builder.build()
     addClusterColumn(clustering, columnName, mutate)
   }
 

@@ -8,16 +8,12 @@ package se.alipsa.matrix.stats.util;
  * the hot floating-point linear algebra loops in Java so those Groovy APIs can remain
  * idiomatic without paying repeated dynamic-loop overhead in solver-heavy call paths.</p>
  *
- * <p><strong>Numerical limitations:</strong> Matrix inversion and linear system solving use
- * Gauss-Jordan elimination with partial pivoting and a singularity threshold of {@code 1e-14}.
- * This is suitable for the current low-dimensional use cases (unit root tests, simple OLS)
- * but may produce inaccurate results for near-singular or ill-conditioned matrices. If this
- * class is extended to higher-dimensional problems, consider switching to a QR- or SVD-based
- * decomposition.</p>
+ * <p>Regression uses Householder QR with order-preserving column selection and a
+ * column-relative rank tolerance, following the limited pivoting used by R's lm.</p>
  */
 public final class LeastSquaresKernel {
 
-  private static final double SINGULARITY_THRESHOLD = 1e-14d;
+  private static final double RANK_TOLERANCE = 1e-7d;
 
   private LeastSquaresKernel() {
   }
@@ -33,19 +29,9 @@ public final class LeastSquaresKernel {
   public static OlsComputation fitMultipleLinearRegression(double[] response, double[][] predictors) {
     validateMultipleRegressionInputs(response, predictors);
 
-    int observationCount = response.length;
-    int predictorCount = predictors[0].length;
-
-    double[][] transpose = transpose(predictors);
-    double[][] xtx = multiply(transpose, predictors);
-    double[][] xtxInverse = invertSquareMatrix(xtx);
-    double[] xty = multiply(transpose, response);
-    double[] coefficients = multiply(xtxInverse, xty);
-    double residualSumOfSquares = calculateResidualSumOfSquaresUnchecked(response, predictors, coefficients);
-
-    double errorVariance = residualSumOfSquares / (observationCount - predictorCount);
-    double[] standardErrors = calculateStandardErrors(xtxInverse, errorVariance);
-    return new OlsComputation(coefficients, standardErrors, residualSumOfSquares, errorVariance);
+    OlsComputation result = fitRankRevealing(response, predictors);
+    requireFullRank(result, predictors[0].length);
+    return result;
   }
 
   /**
@@ -59,10 +45,7 @@ public final class LeastSquaresKernel {
   public static double[] fitOls(double[] response, double[][] predictors) {
     validateOlsInputs(response, predictors);
 
-    double[][] transpose = transpose(predictors);
-    double[][] xtx = multiply(transpose, predictors);
-    double[] xty = multiply(transpose, response);
-    return solveSquareSystem(xtx, xty);
+    return factorize(predictors).solve(response);
   }
 
   /**
@@ -91,7 +74,10 @@ public final class LeastSquaresKernel {
       double[] coefficients,
       double[] standardErrors,
       double residualSumOfSquares,
-      double errorVariance
+      double errorVariance,
+      int rank,
+      boolean[] aliased,
+      double[][] unscaledCovariance
   ) {
   }
 
@@ -169,135 +155,192 @@ public final class LeastSquaresKernel {
     }
   }
 
-  private static double[][] transpose(double[][] matrix) {
-    int rowCount = matrix.length;
-    int columnCount = matrix[0].length;
-    double[][] result = new double[columnCount][rowCount];
-    for (int row = 0; row < rowCount; row++) {
-      for (int column = 0; column < columnCount; column++) {
-        result[column][row] = matrix[row][column];
+  /**
+   * Fits a possibly rank-deficient design, retaining independent columns in input order.
+   * Aliased coefficients and standard errors are NaN; residual metrics use only retained columns.
+   *
+   * @param response finite response values
+   * @param predictors finite rectangular design matrix
+   * @return coefficients, uncertainty, residual metrics, rank and alias information
+   */
+  public static OlsComputation fitRankRevealing(double[] response, double[][] predictors) {
+    validateOlsInputs(response, predictors);
+    QrFactorization factorization = factorize(predictors);
+    int n = response.length;
+    int p = predictors[0].length;
+    int rank = factorization.rank;
+    double[][] qr = factorization.qr;
+    int[] retained = factorization.retained;
+    boolean[] aliased = factorization.aliased;
+    double[] qty = factorization.transform(response);
+    double[] coefficients = factorization.solveTransformed(qty);
+    double[] standardErrors = new double[p];
+    java.util.Arrays.fill(standardErrors, Double.NaN);
+    double[][] inverseR = new double[rank][rank];
+    for (int i = rank - 1; i >= 0; i--) {
+      for (int column = i; column < rank; column++) {
+        double rhs = i == column ? 1.0d : 0.0d;
+        for (int j = i + 1; j < rank; j++) {
+          rhs -= qr[i][retained[j]] * inverseR[j][column];
+        }
+        inverseR[i][column] = rhs / qr[i][retained[i]];
       }
     }
-    return result;
+    double rss = calculateResidualSumOfSquaresUnchecked(response, predictors, coefficients);
+    double variance = n > rank ? rss / (n - rank) : Double.NaN;
+    for (int i = 0; i < rank; i++) {
+      double diagonal = 0.0d;
+      for (int j = i; j < rank; j++) {
+        diagonal += inverseR[i][j] * inverseR[i][j];
+      }
+      standardErrors[retained[i]] = Math.sqrt(variance * diagonal);
+    }
+    double[][] covariance = new double[p][p];
+    for (int i = 0; i < rank; i++) {
+      for (int j = 0; j < rank; j++) {
+        for (int k = Math.max(i, j); k < rank; k++) {
+          covariance[retained[i]][retained[j]] += inverseR[i][k] * inverseR[j][k];
+        }
+      }
+    }
+    return new OlsComputation(coefficients, standardErrors, rss, variance, rank, aliased, covariance);
   }
 
-  private static double[][] multiply(double[][] left, double[][] right) {
-    int rowCount = left.length;
-    int innerCount = left[0].length;
-    int columnCount = right[0].length;
-    double[][] result = new double[rowCount][columnCount];
+  /**
+   * Factor a design once for repeated least-squares solves.
+   * @param predictors finite rectangular design matrix
+   * @return reusable QR factorization with column-relative rank selection
+   */
+  public static QrFactorization factorize(double[][] predictors) {
+    if (predictors == null) {
+      throw new IllegalArgumentException("Design matrix cannot be null");
+    }
+    validateOlsInputs(new double[predictors.length], predictors);
+    return new QrFactorization(predictors);
+  }
 
-    for (int row = 0; row < rowCount; row++) {
-      for (int inner = 0; inner < innerCount; inner++) {
-        double value = left[row][inner];
-        if (value == 0.0d) {
+  /** Reusable immutable Householder QR decomposition for multiple response vectors. */
+  public static final class QrFactorization {
+    private final double[][] qr;
+    private final double[][] reflectors;
+    private final double[] reflectorNorms;
+    private final int[] retained;
+    private final boolean[] aliased;
+    private final int rank;
+
+    private QrFactorization(double[][] predictors) {
+      int n = predictors.length;
+      int p = predictors[0].length;
+      qr = new double[n][p];
+      reflectors = new double[Math.min(n, p)][];
+      reflectorNorms = new double[Math.min(n, p)];
+      double[] originalNorm = new double[p];
+      for (int i = 0; i < n; i++) {
+        for (int j = 0; j < p; j++) {
+          double value = predictors[i][j];
+          if (!Double.isFinite(value)) {
+            throw new IllegalArgumentException("Predictor values must be finite");
+          }
+          qr[i][j] = value;
+          originalNorm[j] = Math.hypot(originalNorm[j], value);
+        }
+      }
+      retained = new int[Math.min(n, p)];
+      aliased = new boolean[p];
+      java.util.Arrays.fill(aliased, true);
+      int rank = 0;
+      for (int j = 0; j < p && rank < n; j++) {
+        double norm = 0.0d;
+        for (int i = rank; i < n; i++) {
+          norm = Math.hypot(norm, qr[i][j]);
+        }
+        if (originalNorm[j] == 0.0d || norm / originalNorm[j] < RANK_TOLERANCE) {
           continue;
         }
-        for (int column = 0; column < columnCount; column++) {
-          result[row][column] += value * right[inner][column];
+        double alpha = -Math.copySign(norm, qr[rank][j]);
+        double[] v = new double[n - rank];
+        for (int i = rank; i < n; i++) {
+          v[i - rank] = qr[i][j] / norm;
+        }
+        v[0] -= alpha / norm;
+        double vv = 0.0d;
+        for (double value : v) {
+          vv += value * value;
+        }
+        for (int column = j + 1; column < p; column++) {
+          double dot = 0.0d;
+          for (int i = rank; i < n; i++) {
+            dot += v[i - rank] * qr[i][column];
+          }
+          double factor = 2.0d * dot / vv;
+          for (int i = rank; i < n; i++) {
+            qr[i][column] -= factor * v[i - rank];
+          }
+        }
+        reflectors[rank] = v;
+        reflectorNorms[rank] = vv;
+        qr[rank][j] = alpha;
+        retained[rank++] = j;
+        aliased[j] = false;
+      }
+      this.rank = rank;
+    }
+
+    private double[] transform(double[] response) {
+      if (response == null || response.length != qr.length) {
+        throw new IllegalArgumentException("Response length must match design rows");
+      }
+      double[] qty = response.clone();
+      for (double value : qty) {
+        if (!Double.isFinite(value)) {
+          throw new IllegalArgumentException("Response values must be finite");
         }
       }
+      for (int k = 0; k < rank; k++) {
+        double[] v = reflectors[k];
+        double dot = 0;
+        for (int i = k; i < qty.length; i++) {
+          dot += v[i - k] * qty[i];
+        }
+        double scale = 2 * dot / reflectorNorms[k];
+        for (int i = k; i < qty.length; i++) {
+          qty[i] -= scale * v[i - k];
+        }
+      }
+      return qty;
     }
-    return result;
+
+    /**
+     * Solve a full-rank least-squares system using the stored decomposition.
+     * @param response finite response vector
+     * @return coefficient vector
+     */
+    public double[] solve(double[] response) {
+      int p = qr[0].length;
+      if (rank < p) {
+        throw new IllegalArgumentException("Singular matrix: design rank " + rank + " is less than " + p);
+      }
+      return solveTransformed(transform(response));
+    }
+
+    private double[] solveTransformed(double[] qty) {
+      double[] coefficients = new double[qr[0].length];
+      java.util.Arrays.fill(coefficients, Double.NaN);
+      for (int i = rank - 1; i >= 0; i--) {
+        double value = qty[i];
+        for (int j = i + 1; j < rank; j++) {
+          value -= qr[i][retained[j]] * coefficients[retained[j]];
+        }
+        coefficients[retained[i]] = value / qr[i][retained[i]];
+      }
+      return coefficients;
+    }
   }
 
-  private static double[] multiply(double[][] matrix, double[] vector) {
-    double[] result = new double[matrix.length];
-    for (int row = 0; row < matrix.length; row++) {
-      double sum = 0.0d;
-      for (int column = 0; column < vector.length; column++) {
-        sum += matrix[row][column] * vector[column];
-      }
-      result[row] = sum;
+  private static void requireFullRank(OlsComputation result, int columns) {
+    if (result.rank() < columns) {
+      throw new IllegalArgumentException("Singular matrix: design rank " + result.rank() + " is less than " + columns);
     }
-    return result;
-  }
-
-  private static double[][] invertSquareMatrix(double[][] matrix) {
-    int dimension = matrix.length;
-    double[][] augmented = new double[dimension][2 * dimension];
-    for (int row = 0; row < dimension; row++) {
-      for (int column = 0; column < dimension; column++) {
-        augmented[row][column] = matrix[row][column];
-        augmented[row][column + dimension] = row == column ? 1.0d : 0.0d;
-      }
-    }
-
-    for (int pivotColumn = 0; pivotColumn < dimension; pivotColumn++) {
-      int pivotRow = findPivotRow(augmented, pivotColumn, dimension);
-      if (pivotRow != pivotColumn) {
-        swapRows(augmented, pivotColumn, pivotRow);
-      }
-
-      double pivot = augmented[pivotColumn][pivotColumn];
-      if (Math.abs(pivot) <= SINGULARITY_THRESHOLD) {
-        throw new IllegalArgumentException("Singular matrix at column " + pivotColumn + " - cannot invert matrix");
-      }
-
-      for (int column = 0; column < 2 * dimension; column++) {
-        augmented[pivotColumn][column] /= pivot;
-      }
-      for (int row = 0; row < dimension; row++) {
-        if (row == pivotColumn) {
-          continue;
-        }
-        double factor = augmented[row][pivotColumn];
-        if (factor == 0.0d) {
-          continue;
-        }
-        for (int column = 0; column < 2 * dimension; column++) {
-          augmented[row][column] -= factor * augmented[pivotColumn][column];
-        }
-      }
-    }
-
-    double[][] inverse = new double[dimension][dimension];
-    for (int row = 0; row < dimension; row++) {
-      System.arraycopy(augmented[row], dimension, inverse[row], 0, dimension);
-    }
-    return inverse;
-  }
-
-  private static double[] solveSquareSystem(double[][] matrix, double[] vector) {
-    int dimension = vector.length;
-    double[][] augmented = new double[dimension][dimension + 1];
-    for (int row = 0; row < dimension; row++) {
-      System.arraycopy(matrix[row], 0, augmented[row], 0, dimension);
-      augmented[row][dimension] = vector[row];
-    }
-
-    for (int pivotColumn = 0; pivotColumn < dimension; pivotColumn++) {
-      int pivotRow = findPivotRow(augmented, pivotColumn, dimension);
-      if (pivotRow != pivotColumn) {
-        swapRows(augmented, pivotColumn, pivotRow);
-      }
-
-      double pivot = augmented[pivotColumn][pivotColumn];
-      if (Math.abs(pivot) <= SINGULARITY_THRESHOLD) {
-        throw new IllegalArgumentException("Singular matrix at column " + pivotColumn + " - cannot solve linear system");
-      }
-
-      for (int row = pivotColumn + 1; row < dimension; row++) {
-        double factor = augmented[row][pivotColumn] / pivot;
-        for (int column = pivotColumn; column <= dimension; column++) {
-          augmented[row][column] -= factor * augmented[pivotColumn][column];
-        }
-      }
-    }
-
-    double[] solution = new double[dimension];
-    for (int row = dimension - 1; row >= 0; row--) {
-      double sum = augmented[row][dimension];
-      for (int column = row + 1; column < dimension; column++) {
-        sum -= augmented[row][column] * solution[column];
-      }
-      double diagonal = augmented[row][row];
-      if (Math.abs(diagonal) <= SINGULARITY_THRESHOLD) {
-        throw new IllegalArgumentException("Singular matrix at column " + row + " - cannot solve linear system");
-      }
-      solution[row] = sum / diagonal;
-    }
-    return solution;
   }
 
   private static double calculateResidualSumOfSquaresUnchecked(double[] response, double[][] predictors, double[] coefficients) {
@@ -305,7 +348,9 @@ public final class LeastSquaresKernel {
     for (int row = 0; row < response.length; row++) {
       double fitted = 0.0d;
       for (int column = 0; column < coefficients.length; column++) {
-        fitted += predictors[row][column] * coefficients[column];
+        if (!Double.isNaN(coefficients[column])) {
+          fitted += predictors[row][column] * coefficients[column];
+        }
       }
       double residual = response[row] - fitted;
       rss += residual * residual;
@@ -313,31 +358,4 @@ public final class LeastSquaresKernel {
     return rss;
   }
 
-  private static double[] calculateStandardErrors(double[][] xtxInverse, double variance) {
-    double[] standardErrors = new double[xtxInverse.length];
-    for (int index = 0; index < xtxInverse.length; index++) {
-      double diagonal = Math.max(0.0d, xtxInverse[index][index]);
-      standardErrors[index] = Math.sqrt(variance * diagonal);
-    }
-    return standardErrors;
-  }
-
-  private static int findPivotRow(double[][] matrix, int pivotColumn, int rowCount) {
-    int maxRow = pivotColumn;
-    double maxValue = Math.abs(matrix[pivotColumn][pivotColumn]);
-    for (int row = pivotColumn + 1; row < rowCount; row++) {
-      double value = Math.abs(matrix[row][pivotColumn]);
-      if (value > maxValue) {
-        maxValue = value;
-        maxRow = row;
-      }
-    }
-    return maxRow;
-  }
-
-  private static void swapRows(double[][] matrix, int firstRow, int secondRow) {
-    double[] temp = matrix[firstRow];
-    matrix[firstRow] = matrix[secondRow];
-    matrix[secondRow] = temp;
-  }
 }

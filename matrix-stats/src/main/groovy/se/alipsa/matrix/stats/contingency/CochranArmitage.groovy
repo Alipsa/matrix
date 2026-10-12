@@ -5,6 +5,9 @@ import se.alipsa.matrix.stats.distribution.NormalDistribution
 import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
+ * Uses hypergeometric variance for fixed margins; R's prop.trend.test uses
+ * binomial variance, so squared z differs by the factor (N - 1) / N.
+ *
  * The Cochran-Armitage test for trend is a statistical test used to detect linear trends in
  * proportions across ordered categories. It extends the chi-squared test by incorporating the
  * ordinal nature of exposure or dose levels, making it more powerful for detecting dose-response
@@ -143,16 +146,18 @@ class CochranArmitage {
     }
     double expectedWeightedSum = casesTotal * totalScoreWeightedByN / grandTotal
 
-    // Calculate variance components
-    double sumScoresSquaredWeightedByN = 0.0
+    // Center scores before squaring to avoid cancellation for large score offsets.
+    double meanScore = totalScoreWeightedByN / grandTotal
+    double scoreVariation = 0.0
     for (int i = 0; i < k; i++) {
-      sumScoresSquaredWeightedByN += categoryScores[i] * categoryScores[i] * totals[i]
+      double centeredScore = categoryScores[i] - meanScore
+      scoreVariation += centeredScore * centeredScore * totals[i]
     }
 
-    double varianceNumerator = casesTotal * controlsTotal *
-      (grandTotal * sumScoresSquaredWeightedByN - totalScoreWeightedByN * totalScoreWeightedByN)
+    // Calculate variance components
+    double varianceNumerator = (double) casesTotal * controlsTotal * grandTotal * scoreVariation
 
-    double varianceDenominator = grandTotal * grandTotal * (grandTotal - 1)
+    double varianceDenominator = (double) grandTotal * grandTotal * (grandTotal - 1)
 
     if (varianceDenominator == 0) {
       throw new IllegalArgumentException('Cannot compute variance with sample size = 1')
@@ -160,7 +165,7 @@ class CochranArmitage {
 
     double variance = varianceNumerator / varianceDenominator
 
-    if (variance < 1e-10) {
+    if (variance <= 0) {
       throw new IllegalArgumentException('Variance is too small - data may have no variation in scores')
     }
 
@@ -169,7 +174,7 @@ class CochranArmitage {
 
     // Calculate two-sided p-value
     NormalDistribution normalDist = new NormalDistribution(0.0, 1.0)
-    double pValue = 2.0 * (1.0 - normalDist.cumulativeProbability(Math.abs(zStatistic)))
+    double pValue = 2.0 * normalDist.cumulativeProbability(-Math.abs(zStatistic))
 
     new CochranArmitagResult(
       statistic: BigDecimal.valueOf(zStatistic),

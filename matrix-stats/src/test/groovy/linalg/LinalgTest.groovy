@@ -16,6 +16,20 @@ class LinalgTest {
   private static final double TOLERANCE = 1e-9
 
   @Test
+  void testSmallScaledIdentityIsInvertible() {
+    // Analytic reference: inverse(c*I)=I/c; solve(c*I,1)=1/c.
+    Grid<Number> source = new Grid<Number>((0..<5).collect { int i ->
+      (0..<5).collect { int j -> i == j ? 0.001 : 0.0 }
+    })
+    Grid<BigDecimal> inverse = Linalg.inverse(source)
+    assertEquals(1000.0d, inverse[0, 0] as double, 1e-9d)
+    Grid<Number> system = new Grid<Number>((0..<8).collect { int i ->
+      (0..<8).collect { int j -> i == j ? 0.01 : 0.0 }
+    })
+    Linalg.solve(system, [1] * 8).each { BigDecimal value -> assertEquals(100.0d, value as double, 1e-9d) }
+  }
+
+  @Test
   void testInverseForMatrixUsesSyntheticColumnNames() {
     Matrix source = Matrix.builder()
       .columnNames(['x', 'y'])

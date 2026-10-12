@@ -9,6 +9,19 @@ import se.alipsa.matrix.stats.regression.PolynomialRegression
 class PolynomialRegressionTest {
 
   @Test
+  void testLargeOffsetCubicAgainstR() {
+    List<Number> x = (2000..2030).toList()
+    List<Number> y = x.collect { Number value ->
+      double u = (value as double) - 2015
+      3 + 0.5d * u - 0.02d * u * u + 0.001d * u * u * u + Math.sin(value as double)
+    }
+    def fit = new PolynomialRegression(x, y, 3)
+    // R 4.6.1: lm(y ~ poly(x,3)); summary(fit)$r.squared; predict(fit,data.frame(x=2031)).
+    assertEquals(0.98623573d, fit.rsquared as double, 1e-7d)
+    assertEquals(9.698024d, fit.predict(2031) as double, 1e-6d)
+  }
+
+  @Test
   void testQuadraticFit() {
     // y = x^2 (perfect quadratic)
     def x = [1, 2, 3, 4, 5]
@@ -144,11 +157,11 @@ class PolynomialRegressionTest {
     def y = [1, 1, 1, 4]
 
     def poly = new PolynomialRegression(x, y, 2)
-    double[] expected = apachePolynomialFit(x, y, 2)
-
-    for (int i = 0; i < expected.length; i++) {
-      assertEquals(expected[i], poly.getCoefficient(i).doubleValue(), 1e-10)
-    }
+    // Only two distinct x values: quadratic coefficients are not identifiable.
+    // R lm(y ~ x + I(x^2)) retains the linear fit and aliases the quadratic.
+    assertEquals(1.0d, poly.predict(1) as double, 1e-10d)
+    assertEquals(4.0d, poly.predict(2) as double, 1e-10d)
+    assertEquals(0.0d, poly.getCoefficient(2) as double, 1e-10d)
   }
 
   private static double[] apachePolynomialFit(List<? extends Number> xValues, List<? extends Number> yValues, int degree) {

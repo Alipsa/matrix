@@ -74,7 +74,7 @@ class Ccm {
    * @param librarySizes Library sizes to test for convergence (e.g., [10, 20, 50, 100])
    * @return CcmResult containing cross-map skills and convergence information
    */
-  static CcmResult test(double[] x, double[] y, int E = 3, int tau = 1, List<Integer> librarySizes = null) {
+  static CcmResult test(double[] x, double[] y, int E = 3, int tau = 1, List<Integer> librarySizes = null, Long randomSeed = null) {
     if (x == null || y == null) {
       throw new IllegalArgumentException('Time series cannot be null')
     }
@@ -116,6 +116,8 @@ class Ccm {
       }
     }
 
+    Random random = randomSeed == null ? new Random() : new Random(randomSeed)
+
     // Perform cross-mapping in both directions
     // X causes Y: cross-map X from Y's manifold (xmap_y)
     // Y causes X: cross-map Y from X's manifold (ymap_x)
@@ -126,10 +128,10 @@ class Ccm {
       int L = librarySizes[i]
 
       // Cross-map X from Y's shadow manifold
-      xmapY[i] = crossMap(y, x, E, tau, L)
+      xmapY[i] = crossMap(y, x, E, tau, L, random)
 
       // Cross-map Y from X's shadow manifold
-      ymapX[i] = crossMap(x, y, E, tau, L)
+      ymapX[i] = crossMap(x, y, E, tau, L, random)
     }
 
     new CcmResult(
@@ -157,6 +159,7 @@ class Ccm {
    * @param y second time series
    * @param E embedding dimension
    * @param tau time delay
+   * @param randomSeed optional seed (default null uses a fresh random generator)
    * @param librarySizes library sizes to test for convergence
    * @return CCM result
    */
@@ -165,7 +168,8 @@ class Ccm {
       List<? extends Number> y,
       int E = 3,
       int tau = 1,
-      List<? extends Number> librarySizes = null
+      List<? extends Number> librarySizes = null,
+      Long randomSeed = null
   ) {
     List<Integer> normalizedLibrarySizes = librarySizes?.collect { Number value ->
       NumericConversion.toExactInt(value, 'library size')
@@ -175,7 +179,8 @@ class Ccm {
       NumericConversion.toDoubleArray(y, 'y'),
       E,
       tau,
-      normalizedLibrarySizes
+      normalizedLibrarySizes,
+      randomSeed
     )
   }
 
@@ -190,7 +195,7 @@ class Ccm {
    * @param L Library size (number of points to use)
    * @return Cross-map correlation (Pearson's r between actual and predicted target)
    */
-  private static double crossMap(double[] source, double[] target, int E, int tau, int L) {
+  private static double crossMap(double[] source, double[] target, int E, int tau, int L, Random random) {
     int n = source.length
     int maxDelay = (E - 1) * tau
 
@@ -205,7 +210,7 @@ class Ccm {
     }
 
     // Randomly select L points for library
-    List<Integer> libraryIndices = selectRandomIndices(numVectors, L)
+    List<Integer> libraryIndices = selectRandomIndices(numVectors, L, random)
 
     // Predict target for each library point using nearest neighbors
     List<Double> predictions = []
@@ -294,12 +299,11 @@ class Ccm {
   /**
    * Selects n random indices from range [0, max).
    */
-  private static List<Integer> selectRandomIndices(int max, int n) {
+  private static List<Integer> selectRandomIndices(int max, int n, Random rnd) {
     if (n >= max) {
       return (0..<max).toList()
     }
 
-    Random rnd = new Random()
     Set<Integer> selected = [] as Set
     while (selected.size() < n) {
       selected.add(rnd.nextInt(max))
@@ -372,10 +376,10 @@ class Ccm {
    * Result class for CCM test.
    */
   static class CcmResult {
-    /** Cross-map skill: X cross-mapped from Y (if positive and increasing, Y causes X). Null entries indicate non-finite values. */
+    /** Cross-map skill: X cross-mapped from Y (if positive and increasing, X causes Y). Null entries indicate non-finite values. */
     List<BigDecimal> xmapY
 
-    /** Cross-map skill: Y cross-mapped from X (if positive and increasing, X causes Y). Null entries indicate non-finite values. */
+    /** Cross-map skill: Y cross-mapped from X (if positive and increasing, Y causes X). Null entries indicate non-finite values. */
     List<BigDecimal> ymapX
 
     /** Library sizes used for testing */
@@ -391,18 +395,18 @@ class Ccm {
     int seriesLength
 
     /**
-     * Checks if X causes Y (based on increasing cross-map skill from X's manifold).
+     * Checks if X causes Y (based on increasing recovery of X from Y's manifold).
      *
      * @param threshold Minimum correlation for last library size
      * @return true if evidence suggests X causes Y
      */
     boolean xCausesY(Number threshold = 0.3) {
       BigDecimal thresholdValue = NumericConversion.toUnitInterval(threshold, 'threshold')
-      if (ymapX.size() < 2) {
+      if (xmapY.size() < 2) {
         return false
       }
-      BigDecimal last = ymapX[-1]
-      BigDecimal first = ymapX[0]
+      BigDecimal last = xmapY[-1]
+      BigDecimal first = xmapY[0]
       if (last == null || first == null) {
         return false
       }
@@ -410,18 +414,18 @@ class Ccm {
     }
 
     /**
-     * Checks if Y causes X (based on increasing cross-map skill from Y's manifold).
+     * Checks if Y causes X (based on increasing recovery of Y from X's manifold).
      *
      * @param threshold Minimum correlation for last library size
      * @return true if evidence suggests Y causes X
      */
     boolean yCausesX(Number threshold = 0.3) {
       BigDecimal thresholdValue = NumericConversion.toUnitInterval(threshold, 'threshold')
-      if (xmapY.size() < 2) {
+      if (ymapX.size() < 2) {
         return false
       }
-      BigDecimal last = xmapY[-1]
-      BigDecimal first = xmapY[0]
+      BigDecimal last = ymapX[-1]
+      BigDecimal first = ymapX[0]
       if (last == null || first == null) {
         return false
       }

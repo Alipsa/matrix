@@ -40,7 +40,7 @@ class Normalizer {
    * @return a new column named {@code norm_<name>}
    */
   static DoubleColumn logNorm(DoubleColumn column, int... decimals) {
-    mapDoubles(column) { double x -> Normalize.logNorm(x, decimals) }
+    mapDoubles(column) { double x -> Normalize.logNorm(x, decimals)?.doubleValue() }
   }
 
   /**
@@ -51,7 +51,7 @@ class Normalizer {
    * @return a new column named {@code norm_<name>}
    */
   static FloatColumn logNorm(FloatColumn column, int... decimals) {
-    mapFloats(column) { float x -> Normalize.logNorm(x, decimals) }
+    mapFloats(column) { float x -> Normalize.logNorm(x, decimals)?.floatValue() }
   }
 
   /**
@@ -62,7 +62,7 @@ class Normalizer {
    * @return a new column named {@code norm_<name>}
    */
   static BigDecimalColumn logNorm(BigDecimalColumn column, int... decimals) {
-    mapBigDecimals(column) { BigDecimal x -> Normalize.logNorm(x, decimals) }
+    mapBigDecimals(column) { BigDecimal x -> Normalize.logNorm(x, decimals) as BigDecimal }
   }
 
   /**
@@ -75,7 +75,7 @@ class Normalizer {
   static DoubleColumn minMaxNorm(DoubleColumn column, int... decimals) {
     double min = column.min()
     double max = column.max()
-    mapDoubles(column) { double x -> Normalize.minMaxNorm(x, min, max, MissingValueType.DOUBLE_NAN, decimals) }
+    mapDoubles(column) { double x -> Normalize.minMaxNorm(x, min, max, MissingValueType.DOUBLE_NAN, decimals)?.doubleValue() }
   }
 
   /**
@@ -88,7 +88,7 @@ class Normalizer {
   static FloatColumn minMaxNorm(FloatColumn column, int... decimals) {
     float min = column.min() as float
     float max = column.max() as float
-    mapFloats(column) { float x -> Normalize.minMaxNorm(x, min, max, MissingValueType.FLOAT_NAN, decimals) }
+    mapFloats(column) { float x -> Normalize.minMaxNorm(x, min, max, MissingValueType.FLOAT_NAN, decimals)?.floatValue() }
   }
 
   /**
@@ -121,7 +121,7 @@ class Normalizer {
     double min = column.min()
     double max = column.max()
     double mean = column.mean()
-    mapDoubles(column) { double x -> Normalize.meanNorm(x, mean, min, max, MissingValueType.DOUBLE_NAN, decimals) }
+    mapDoubles(column) { double x -> Normalize.meanNorm(x, mean, min, max, MissingValueType.DOUBLE_NAN, decimals)?.doubleValue() }
   }
 
   /**
@@ -135,7 +135,7 @@ class Normalizer {
     float min = column.min() as float
     float max = column.max() as float
     float mean = column.mean() as float
-    mapFloats(column) { float x -> Normalize.meanNorm(x, mean, min, max, MissingValueType.FLOAT_NAN, decimals) }
+    mapFloats(column) { float x -> Normalize.meanNorm(x, mean, min, max, MissingValueType.FLOAT_NAN, decimals)?.floatValue() }
   }
 
   /**
@@ -168,7 +168,7 @@ class Normalizer {
   static DoubleColumn stdScaleNorm(DoubleColumn column, int... decimals) {
     double mean = column.mean()
     double stdDev = column.standardDeviation()
-    mapDoubles(column) { double x -> Normalize.stdScaleNorm(x, mean, stdDev, decimals) }
+    mapDoubles(column) { double x -> Normalize.stdScaleNorm(x, mean, stdDev, decimals)?.doubleValue() }
   }
 
   /**
@@ -181,7 +181,7 @@ class Normalizer {
   static FloatColumn stdScaleNorm(FloatColumn column, int... decimals) {
     float mean = column.mean() as float
     float stdDev = column.standardDeviation() as float
-    mapFloats(column) { float x -> Normalize.stdScaleNorm(x, mean, stdDev, decimals) }
+    mapFloats(column) { float x -> Normalize.stdScaleNorm(x, mean, stdDev, decimals)?.floatValue() }
   }
 
   /**

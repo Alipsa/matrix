@@ -114,12 +114,11 @@ class ShapiroFranciaTest {
 
   @Test
   void testNearConstantData() {
-    // Near-constant data (very small variance)
-    List<Double> nearConstantData = (1..50).collect { 5.0 + it * 1e-12 }
-
-    assertThrows(IllegalArgumentException) {
-      ShapiroFrancia.test(nearConstantData)
-    }
+    List<Double> sample = (1..50).collect { it as double }
+    def expected = ShapiroFrancia.test(sample)
+    def tiny = ShapiroFrancia.test(sample.collect { it * 1e-12d })
+    assertEquals(expected.W as double, tiny.W as double, 1e-12d)
+    assertEquals(expected.pValue as double, tiny.pValue as double, 1e-10d)
   }
 
   @Test

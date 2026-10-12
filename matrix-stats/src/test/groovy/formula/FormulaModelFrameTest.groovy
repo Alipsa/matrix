@@ -31,6 +31,18 @@ import se.alipsa.matrix.stats.formula.dsl.TermRef
 class FormulaModelFrameTest {
 
   @Test
+  void testNaNIsMissingInDataAndAuxiliaryVectors() {
+    Matrix data = Matrix.builder().columnNames(['y', 'x'])
+      .rows([[1.0d, 1.0d], [Double.NaN, 2.0d], [3.0d, Double.NaN], [4.0d, 4.0d]])
+      .types([Double, Double]).build()
+    // R 4.6.1: model.frame(y~x, data, na.action=na.omit) omits NaN rows.
+    def result = ModelFrame.of('y ~ x', data).naAction(NaAction.OMIT).evaluate()
+    assertEquals([1, 2], result.droppedRows)
+    assertEquals(2, result.response.size())
+    assertThrows(IllegalArgumentException) { ModelFrame.of('y ~ x', data).naAction(NaAction.FAIL).evaluate() }
+  }
+
+  @Test
   void testModelFrameResultHoldsAllFields() {
     Matrix predictors = Matrix.builder()
       .columnNames(['x', 'z'])
@@ -204,7 +216,7 @@ class FormulaModelFrameTest {
     ModelFrameResult result = ModelFrame.of('y ~ x + species', data).evaluate()
 
     // Normalization sorts alphabetically: species before x
-    assertEquals(['species_versicolor', 'species_virginica', 'x'], result.predictorNames)
+    assertEquals(['x', 'species_versicolor', 'species_virginica'], result.predictorNames)
     assertEquals(4, result.data.rowCount())
 
     // Row 0: setosa -> versicolor=0, virginica=0
@@ -235,7 +247,7 @@ class FormulaModelFrameTest {
     ModelFrameResult result = ModelFrame.of('y ~ x + active', data).evaluate()
 
     // Normalization sorts alphabetically: active before x
-    assertEquals(['active_true', 'x'], result.predictorNames)
+    assertEquals(['x', 'active_true'], result.predictorNames)
     assertEquals(0.0G, result.data[0, 'active_true'])
     assertEquals(1.0G, result.data[1, 'active_true'])
   }
@@ -254,8 +266,8 @@ class FormulaModelFrameTest {
 
     ModelFrameResult result = ModelFrame.of('y ~ color:weight', data).evaluate()
 
-    // color: blue (ref), green, red -> interaction with weight
-    assertEquals(['color_green:weight', 'color_red:weight'], result.predictorNames)
+    // R model.matrix: absent weight margin requires all color indicators.
+    assertEquals(['color_blue:weight', 'color_green:weight', 'color_red:weight'], result.predictorNames)
 
     // Row 1: green -> green:weight = 1 * 20 = 20 (use == for BigDecimal scale-insensitive comparison)
     assertTrue((result.data[1, 'color_green:weight'] as BigDecimal) == 20.0)

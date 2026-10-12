@@ -106,7 +106,6 @@ class ShapiroWilk {
 
   private static final int MIN_SAMPLE_SIZE = 3
   private static final int MAX_SAMPLE_SIZE = 5000
-  private static final double W_EPSILON = 1e-15
 
   /**
    * Performs the Shapiro-Wilk test for normality.
@@ -182,54 +181,35 @@ class ShapiroWilk {
   private static double[] calculateCoefficients(int n) {
     int k = n.intdiv(2)
     double[] a = new double[k]
-
-    // Use approximation based on normal distribution quantiles
-    NormalDistribution normal = new NormalDistribution(0, 1)
-
-    // Calculate expected values of order statistics (m values)
-    double[] m = new double[n]
-    for (int i = 0; i < n; i++) {
-      double p = (i + 1 - 0.375) / (n + 0.25)
-      m[i] = normal.inverseCumulativeProbability(p)
+    if (n == 3) {
+      a[0] = Math.sqrt(0.5d)
+      return a
     }
-
-    // Calculate sum of squares of m values
-    double sumSq = 0
-    for (int i = 0; i < n; i++) {
-      sumSq += m[i] * m[i]
+    NormalDistribution normal = new NormalDistribution()
+    double sumSq = 0.0d
+    for (int i = 0; i < k; i++) {
+      a[i] = normal.inverseCumulativeProbability((i + 1 - 0.375d) / (n + 0.25d))
+      sumSq += 2 * a[i] * a[i]
     }
-
-    // Calculate coefficients
-    if (n <= 5) {
-      // For very small samples, use simple approximation
-      double c = 1.0 / Math.sqrt(sumSq)
-      for (int i = 0; i < k; i++) {
-        a[i] = c * (m[n - 1 - i] - m[i])
-      }
-    } else {
-      // For larger samples, use better approximation
-      double[] u = new double[n]
-      for (int i = 0; i < n; i++) {
-        u[i] = m[i] / Math.sqrt(sumSq)
-      }
-
-      // Apply correction for better approximation
-      double an = -2.706056 * Math.pow(n, -0.5) + 4.434685 * Math.pow(n, -1.0) - 2.071190 * Math.pow(n, -1.5) + 0.147981 * Math.pow(n, -2.0) + 0.221157 * Math.pow(n, -3.0) - 0.147981 * Math.pow(n, -4.0)
-      double an1 = -3.582633 * Math.pow(n, -0.5) + 5.682633 * Math.pow(n, -1.0) - 1.752461 * Math.pow(n, -1.5) - 0.293762 * Math.pow(n, -2.0) + 0.042981 * Math.pow(n, -3.0)
-
-      double phi = (sumSq - 2.0 * m[n - 1] * m[n - 1]) / (1.0 - 2.0 * an * an)
-
-      for (int i = 0; i < k; i++) {
-        if (i == 0) {
-          a[i] = an
-        } else if (i == 1 && k > 1) {
-          a[i] = an1
-        } else {
-          a[i] = (m[n - 1 - i] - m[i]) / Math.sqrt(phi)
-        }
-      }
+    double root = Math.sqrt(sumSq)
+    double rsn = 1.0d / Math.sqrt(n)
+    // AS R94 coefficient polynomials c1 and c2, constant term first.
+    double a1 = polynomial([0.0d, 0.221157d, -0.147981d, -2.071190d, 4.434685d, -2.706056d] as double[], rsn) - a[0] / root
+    double numerator = sumSq - 2 * a[0] * a[0]
+    double denominator = 1 - 2 * a1 * a1
+    int first = 1
+    if (n > 5) {
+      double a2 = polynomial([0.0d, 0.042981d, -0.293762d, -1.752461d, 5.682633d, -3.582633d] as double[], rsn) - a[1] / root
+      numerator -= 2 * a[1] * a[1]
+      denominator -= 2 * a2 * a2
+      a[1] = a2
+      first = 2
     }
-
+    double fac = Math.sqrt(numerator / denominator)
+    a[0] = a1
+    for (int i = first; i < k; i++) {
+      a[i] = -a[i] / fac
+    }
     a
   }
 
@@ -238,31 +218,38 @@ class ShapiroWilk {
    * This provides good accuracy for 3 ≤ n ≤ 5000.
    */
   private static double calculatePValue(double w, int n) {
-    if (w >= 1.0) {
-      return 1.0
+    if (w >= 1.0d) {
+      return 1.0d
     }
-
-    // Transform W to get better approximation
-    double logW = Math.log(Math.max(W_EPSILON, 1.0 - w))
+    if (n == 3) {
+      return Math.max(0.0d, 6.0d / Math.PI * (Math.asin(Math.sqrt(w)) - Math.asin(Math.sqrt(0.75d))))
+    }
+    double y = Math.log1p(-w)
     double mu, sigma
-
     if (n <= 11) {
-      // For small samples (n <= 11)
-      mu = -0.0006714 * Math.pow(n, 3.0) + 0.025054 * Math.pow(n, 2.0) - 0.39978 * n + 0.544
-      sigma = Math.exp(-0.0020322 * Math.pow(n, 3.0) + 0.062767 * Math.pow(n, 2.0) - 0.77857 * n + 1.3822)
+      double gamma = -2.273d + 0.459d * n
+      if (y >= gamma) {
+        return 1e-99d
+      }
+      y = -Math.log(gamma - y)
+      // AS R94 c3 and c4.
+      mu = polynomial([0.5440d, -0.39978d, 0.025054d, -0.0006714d] as double[], n)
+      sigma = Math.exp(polynomial([1.3822d, -0.77857d, 0.062767d, -0.0020322d] as double[], n))
     } else {
-      // For larger samples (n > 11)
       double logN = Math.log(n)
-      mu = 0.0038915 * Math.pow(logN, 3.0) - 0.083751 * Math.pow(logN, 2.0) - 0.31082 * logN - 1.5861
-      sigma = Math.exp(0.0030302 * Math.pow(logN, 2.0) - 0.082676 * logN - 0.4803)
+      // AS R94 c5 and c6.
+      mu = polynomial([-1.5861d, -0.31082d, -0.083751d, 0.0038915d] as double[], logN)
+      sigma = Math.exp(polynomial([-0.4803d, -0.082676d, 0.0030302d] as double[], logN))
     }
+    new NormalDistribution().cumulativeProbability(-(y - mu) / sigma)
+  }
 
-    // Normalize and calculate p-value
-    double z = (logW - mu) / sigma
-    NormalDistribution normal = new NormalDistribution(0, 1)
-    double pValue = normal.cumulativeProbability(z)
-
-    Math.max(0.0, Math.min(1.0, pValue))  // Ensure p-value is in [0, 1]
+  private static double polynomial(double[] coefficients, double x) {
+    double result = 0.0d
+    for (int i = coefficients.length - 1; i >= 0; i--) {
+      result = result * x + coefficients[i]
+    }
+    result
   }
 
   /**

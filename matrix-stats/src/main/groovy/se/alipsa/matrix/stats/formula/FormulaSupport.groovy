@@ -51,7 +51,14 @@ final class FormulaSupport {
       }
     }
 
-    new NormalizedFormula(normalizedResponse, includeIntercept, sortTerms(terms))
+    // R orders variables within every interaction by their first formula appearance.
+    List<String> appearance = terms.collectMany { FormulaTerm term -> term.factors*.asFormulaString() }.unique()
+    List<FormulaTerm> ordered = terms.collect { FormulaTerm term ->
+      new FormulaTerm(term.factors.toList().sort { FormulaExpression a, FormulaExpression b ->
+        appearance.indexOf(a.asFormulaString()) <=> appearance.indexOf(b.asFormulaString())
+      })
+    }
+    new NormalizedFormula(normalizedResponse, includeIntercept, sortTerms(ordered))
   }
 
   static int operatorPrecedence(String operator) {
@@ -440,7 +447,7 @@ final class FormulaSupport {
   private static List<FormulaTerm> sortTerms(Collection<FormulaTerm> terms) {
     terms.toList().sort { FormulaTerm a, FormulaTerm b ->
       int factorOrder = a.factors.size() <=> b.factors.size()
-      factorOrder != 0 ? factorOrder : a.asFormulaString() <=> b.asFormulaString()
+      factorOrder
     } as List<FormulaTerm>
   }
 

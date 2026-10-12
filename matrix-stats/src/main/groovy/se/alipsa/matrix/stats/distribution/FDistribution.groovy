@@ -8,7 +8,7 @@ import se.alipsa.matrix.stats.util.NumericConversion
  *
  * <p>Uses custom high-precision implementation with no external dependencies.</p>
  */
-@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class FDistribution implements ContinuousDistribution {
   private static final int MAX_INVERSE_ITERATIONS = 100
   private static final String GROUP_LABEL = 'group'
@@ -156,12 +156,29 @@ class FDistribution implements ContinuousDistribution {
    * @return p-value (probability of observing a value at least as extreme)
    */
   BigDecimal pValue(Number f) {
-    1.0 - cdf(f)
+    BigDecimal.valueOf(pValue(NumericConversion.toFiniteDouble(f, 'f')))
   }
 
   @Deprecated
   double pValue(double f) {
-    1.0d - cdfValue(f)
+    if (f < 0) {
+      throw new IllegalArgumentException("f must be non-negative, got: $f")
+    }
+    double x = dfDenominatorValue / (dfDenominatorValue + dfNumeratorValue * f)
+    SpecialFunctions.regularizedIncompleteBeta(x, dfDenominatorValue / 2.0d, dfNumeratorValue / 2.0d)
+  }
+
+  /** Upper-tail probability, evaluated without subtracting the CDF from one. */
+  @Override
+  BigDecimal survivalProbability(Number f) {
+    pValue(f)
+  }
+
+  /** Primitive compatibility bridge for the upper-tail probability. */
+  @Override
+  @Deprecated
+  double survivalProbability(double f) {
+    pValue(f)
   }
 
   /**
@@ -223,6 +240,9 @@ class FDistribution implements ContinuousDistribution {
     double grandSum = 0.0
     List<Integer> groupSizes = groups*.length
     int n = groupSizes.sum() as int  // total observations
+    if (groups.any { double[] group -> group.length == 0 } || n <= k) {
+      throw new IllegalArgumentException('ANOVA requires non-empty groups and more observations than groups')
+    }
     double[] groupMeans = new double[k]
     groups.eachWithIndex { double[] group, int i ->
       double sum = 0.0
@@ -250,6 +270,10 @@ class FDistribution implements ContinuousDistribution {
         (diff * diff) as double
       }
     } as double
+
+    if (ssw == 0) {
+      throw new IllegalArgumentException('F statistic is infinite or undefined: essentially perfect fit')
+    }
 
     // Degrees of freedom
     double dfBetween = k - 1

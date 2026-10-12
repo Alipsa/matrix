@@ -265,7 +265,7 @@ class UnitRoot {
 
       // Get critical values based on alpha
       double dfCritical = getCriticalValue(dfResult, alphaValue)
-      double adfCritical = getCriticalValue(adfResult)
+      double adfCritical = getCriticalValue(adfResult, alphaValue)
       double adfGlsCritical = getCriticalValue(adfGlsResult, alphaValue)
 
       // Count how many tests reject unit root (suggesting stationarity)
@@ -325,9 +325,8 @@ class UnitRoot {
       return adfGlsRes.criticalValue10pct
     }
 
-    private static double getCriticalValue(Adf.AdfResult adfRes) {
-      // ADF only has one critical value (5%)
-      adfRes.criticalValue
+    private static double getCriticalValue(Adf.AdfResult adfRes, double alpha) {
+      alpha <= 0.01d ? adfRes.criticalValue1pct : alpha <= 0.05d ? adfRes.criticalValue : adfRes.criticalValue10pct
     }
 
     private static double getCriticalValue(Df.DfResult dfRes, double alpha) {
@@ -350,7 +349,7 @@ class UnitRoot {
       double alphaValue = NumericConversion.toAlpha(alpha) as double
       int unitRootTests = 0
       double dfCritical = getCriticalValue(dfResult, alphaValue)
-      double adfCritical = getCriticalValue(adfResult)
+      double adfCritical = getCriticalValue(adfResult, alphaValue)
       double adfGlsCritical = getCriticalValue(adfGlsResult, alphaValue)
 
       if (dfResult.statistic < dfCritical) {
@@ -379,7 +378,7 @@ class UnitRoot {
       double alphaValue = NumericConversion.toAlpha(alpha) as double
       int unitRootTests = 0
       double dfCritical = getCriticalValue(dfResult, alphaValue)
-      double adfCritical = getCriticalValue(adfResult)
+      double adfCritical = getCriticalValue(adfResult, alphaValue)
       double adfGlsCritical = getCriticalValue(adfGlsResult, alphaValue)
 
       if (dfResult.statistic < dfCritical) {

@@ -10,7 +10,7 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * <p>Uses custom high-precision implementation with no external dependencies.</p>
  */
 @SuppressWarnings('DuplicateNumberLiteral')
-class TDistribution {
+class TDistribution implements ContinuousDistribution {
   private static final String T_LABEL = 't'
 
   private final BigDecimal degreesOfFreedom
@@ -49,7 +49,7 @@ class TDistribution {
 
   BigDecimal cdf(BigDecimal t) {
 
-    BigDecimal x = degreesOfFreedom / (degreesOfFreedom + t * t)
+    BigDecimal x = degreesOfFreedom.divide(degreesOfFreedom + t * t, java.math.MathContext.DECIMAL128)
     BigDecimal beta = SpecialFunctions.regularizedIncompleteBeta(x, degreesOfFreedom / 2.0, 0.5)
 
     if (t >= 0) {
@@ -62,6 +62,32 @@ class TDistribution {
     cdf(NumericConversion.toBigDecimal(t, T_LABEL))
   }
 
+  /** Cumulative probability for the continuous-distribution interface. */
+  @Override
+  BigDecimal cumulativeProbability(Number t) {
+    cdf(t)
+  }
+
+  /** Primitive compatibility bridge for cumulative probability. */
+  @Override
+  @Deprecated
+  double cumulativeProbability(double t) {
+    cdf(t)
+  }
+
+  /** Upper-tail probability evaluated directly through the incomplete beta function. */
+  @Override
+  BigDecimal survivalProbability(Number t) {
+    oneTailedPValueUpper(t)
+  }
+
+  /** Primitive compatibility bridge for the upper-tail probability. */
+  @Override
+  @Deprecated
+  double survivalProbability(double t) {
+    oneTailedPValueUpper(t)
+  }
+
   /**
    * Computes the two-tailed p-value for a t-statistic.
    * This is 2 * P(T > |t|) = 2 * (1 - CDF(|t|))
@@ -71,12 +97,12 @@ class TDistribution {
    */
   double twoTailedPValue(double t) {
     double absT = Math.abs(t)
-    2.0d * (1.0d - cdf(absT))
+    SpecialFunctions.regularizedIncompleteBeta(degreesOfFreedom / (degreesOfFreedom + absT * absT) as double, degreesOfFreedom / 2.0d as double, 0.5d)
   }
 
   BigDecimal twoTailedPValue(BigDecimal t) {
     BigDecimal absT = t.abs()
-    BigDecimal.TWO * (BigDecimal.ONE - cdf(absT))
+    SpecialFunctions.regularizedIncompleteBeta(degreesOfFreedom.divide(degreesOfFreedom + absT * absT, java.math.MathContext.DECIMAL128), degreesOfFreedom / 2.0, 0.5)
   }
 
   BigDecimal twoTailedPValue(Number t) {
@@ -91,7 +117,7 @@ class TDistribution {
    * @return one-tailed p-value (upper)
    */
   BigDecimal oneTailedPValueUpper(BigDecimal t) {
-    BigDecimal.ONE - cdf(t)
+    cdf(-t)
   }
 
   BigDecimal oneTailedPValueUpper(Number t) {
@@ -99,7 +125,7 @@ class TDistribution {
   }
 
   double oneTailedPValueUpper(double t) {
-    1.0d - cdf(t)
+    cdf(-t)
   }
 
   /**

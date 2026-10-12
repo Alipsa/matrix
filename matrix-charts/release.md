@@ -1,5 +1,11 @@
 # Matrix-charts Release History
 
+## Upcoming
+
+- Ellipse statistics use the shared ggplot2-compatible robust/classical covariance, finite-sample radius, and corrected orientation. Groups with fewer than four observations are skipped.
+- Polynomial smooth confidence bands use the fitted centered/scaled basis.
+- KDE curves use unit-variance kernels and the corrected Scott bandwidth.
+
 ## v0.6.0, 2026-09-22
 
 This release corrects several rendering defects that change default output: bar/col charts now

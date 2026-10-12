@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats
 
-import groovyjarjarantlr4.v4.runtime.misc.NotNull
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 
@@ -106,13 +104,18 @@ import se.alipsa.matrix.core.Row
  */
 class Randomize {
 
+  private static final String NULL_DATA_MESSAGE = 'Data cannot be null'
+
   /**
    * Creates a new Matrix with the rows randomly distributed
    *
    * @param data the Matrix to reorder randomly
    * @return a new Matrix with the rows randomly distributed
    */
-  static Matrix randomOrder(@NotNull Matrix data) {
+  static Matrix randomOrder(Matrix data) {
+    if (data == null) {
+      throw new IllegalArgumentException(NULL_DATA_MESSAGE)
+    }
     Matrix copy = data.clone()
     List<Row> rows = copy.rows()
     rows.shuffle()
@@ -132,6 +135,9 @@ class Randomize {
    * @return a new Matrix with the rows randomly distributed
    */
   static Matrix randomOrder(Matrix data, Random random) {
+    if (data == null) {
+      throw new IllegalArgumentException(NULL_DATA_MESSAGE)
+    }
     Matrix copy = data.clone()
     List<Row> rows = copy.rows()
     rows.shuffle(random)

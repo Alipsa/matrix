@@ -215,6 +215,9 @@ class GroupEstimator {
    * This method computes the point with the maximum distance from the line between first and last.
    */
   private static int findElbow(List<Integer> ks, List<Double> wcssList) {
+    if (ks.size() < 3) {
+      return ks.last()
+    }
     double x1 = ks.first() as double
     double y1 = wcssList.first()
     double x2 = ks.last() as double

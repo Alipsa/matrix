@@ -70,7 +70,10 @@ class DurbinWatson {
    * @param residuals The residuals from a regression analysis
    * @param alternative The alternative hypothesis: "two.sided", "greater" (negative autocorrelation), or "less" (positive autocorrelation)
    * @return DurbinWatsonResult containing test statistic and interpretation
+   * @deprecated No p-value is computed; alternative does not affect the statistic.
+   * Exact inference requires the regression design matrix. Use test(residuals).
    */
+  @Deprecated
   static DurbinWatsonResult test(List<? extends Number> residuals, String alternative) {
     validateAlternative(alternative)
     DurbinWatsonResult result = test(residuals)

@@ -149,12 +149,12 @@ class FormulaDesignMatrixTest {
 
     ModelFrameResult result = ModelFrame.of('y ~ poly(x, 2):group', data).evaluate()
 
-    // group_A is reference, so interaction with group_B only
-    // Factors sorted alphabetically: group before poly(x, 2)
-    assertEquals(['group_B:x_poly1', 'group_B:x_poly2'], result.predictorNames)
-    assertTrue((result.data[0, 'group_B:x_poly1'] as BigDecimal) == 0.0)
-    assertTrue((result.data[1, 'group_B:x_poly1'] as BigDecimal) == 3.0)
-    assertTrue((result.data[1, 'group_B:x_poly2'] as BigDecimal) == 9.0)
+    // R model.matrix: absent numeric margin requires full factor indicators.
+    // First appearance keeps poly(x, 2) before group.
+    assertEquals(['x_poly1:group_A', 'x_poly2:group_A', 'x_poly1:group_B', 'x_poly2:group_B'], result.predictorNames)
+    assertTrue((result.data[0, 'x_poly1:group_B'] as BigDecimal) == 0.0)
+    assertTrue((result.data[1, 'x_poly1:group_B'] as BigDecimal) == 3.0)
+    assertTrue((result.data[1, 'x_poly2:group_B'] as BigDecimal) == 9.0)
   }
 
   @Test
@@ -263,10 +263,10 @@ class FormulaDesignMatrixTest {
     ModelFrameResult result = ModelFrame.of('y ~ x:group', data).evaluate()
 
     // Factors are sorted alphabetically: group before x
-    assertEquals(['group_B:x'], result.predictorNames)
-    assertTrue((result.data[0, 'group_B:x'] as BigDecimal) == 0.0)
-    assertTrue((result.data[1, 'group_B:x'] as BigDecimal) == 20.0)
-    assertTrue((result.data[2, 'group_B:x'] as BigDecimal) == 30.0)
+    assertEquals(['x:group_A', 'x:group_B'], result.predictorNames)
+    assertTrue((result.data[0, 'x:group_B'] as BigDecimal) == 0.0)
+    assertTrue((result.data[1, 'x:group_B'] as BigDecimal) == 20.0)
+    assertTrue((result.data[2, 'x:group_B'] as BigDecimal) == 30.0)
   }
 
   @Test
@@ -286,9 +286,8 @@ class FormulaDesignMatrixTest {
 
     ModelFrameResult result = ModelFrame.of('y ~ a:b', data).evaluate()
 
-    // a: A1(ref), A2; b: B1(ref), B2
-    // Interaction columns: a_A2:b_B2 (only non-ref combination)
-    assertEquals(['a_A2:b_B2'], result.predictorNames)
+    // R model.matrix: both margins absent, so all factor combinations are represented.
+    assertEquals(['a_A1:b_B1', 'a_A2:b_B1', 'a_A1:b_B2', 'a_A2:b_B2'], result.predictorNames)
     assertTrue((result.data[0, 'a_A2:b_B2'] as BigDecimal) == 0.0)
     assertTrue((result.data[1, 'a_A2:b_B2'] as BigDecimal) == 0.0)
     assertTrue((result.data[2, 'a_A2:b_B2'] as BigDecimal) == 0.0)
@@ -327,7 +326,7 @@ class FormulaDesignMatrixTest {
     ModelFrameResult result = ModelFrame.of('y ~ I(x^2):species', data).evaluate()
 
     // Factors sorted alphabetically: I(x^2) before species
-    assertEquals(['I_x_pow_2:species_versicolor'], result.predictorNames)
+    assertEquals(['I_x_pow_2:species_setosa', 'I_x_pow_2:species_versicolor'], result.predictorNames)
     assertTrue((result.data[0, 'I_x_pow_2:species_versicolor'] as BigDecimal) == 0.0)
     assertTrue((result.data[1, 'I_x_pow_2:species_versicolor'] as BigDecimal) == 9.0)
   }
@@ -346,9 +345,9 @@ class FormulaDesignMatrixTest {
     ModelFrameResult result = ModelFrame.of('y ~ log(x):group', data).evaluate()
 
     // Factors sorted alphabetically: group before log(x)
-    assertEquals(['group_B:log_x'], result.predictorNames)
-    assertTrue((result.data[0, 'group_B:log_x'] as BigDecimal) == 0.0)
-    assertTrue((result.data[1, 'group_B:log_x'] as BigDecimal) == 9.0.log())
+    assertEquals(['log_x:group_A', 'log_x:group_B'], result.predictorNames)
+    assertTrue((result.data[0, 'log_x:group_B'] as BigDecimal) == 0.0)
+    assertTrue((result.data[1, 'log_x:group_B'] as BigDecimal) == 9.0.log())
   }
 
   @Test
@@ -365,7 +364,7 @@ class FormulaDesignMatrixTest {
     ModelFrameResult result = ModelFrame.of('y ~ I(x + 1):group', data).evaluate()
 
     // Factors sorted alphabetically: I(x + 1) before group
-    assertEquals(['I_x_plus_1:group_B'], result.predictorNames)
+    assertEquals(['I_x_plus_1:group_A', 'I_x_plus_1:group_B'], result.predictorNames)
     assertTrue((result.data[0, 'I_x_plus_1:group_B'] as BigDecimal) == 0.0)
     assertTrue((result.data[1, 'I_x_plus_1:group_B'] as BigDecimal) == 3.0)
   }
@@ -417,9 +416,9 @@ class FormulaDesignMatrixTest {
     ModelFrameResult result = ModelFrame.of('y ~ x:group', data).evaluate()
 
     Terms.TermInfo interactionTerm = result.terms.terms[0]
-    assertEquals('group:x', interactionTerm.label)
+    assertEquals('x:group', interactionTerm.label)
     assertTrue(interactionTerm.isCategorical)
-    assertEquals(['group_B:x'], interactionTerm.columns)
+    assertEquals(['x:group_A', 'x:group_B'], interactionTerm.columns)
   }
 
   @Test

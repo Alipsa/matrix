@@ -123,7 +123,7 @@ class UnitRootTest {
     def zeroResult = UnitRoot.test(data, 'drift', 0)
     def nullResult = UnitRoot.test(data, 'drift', null)
     int candidateLag = AdfGls.test(data, null, 'drift').lags
-    assertEquals(1, candidateLag)
+    assertEquals(0, candidateLag)
     int expectedLag = [candidateLag, data.length.intdiv(3), data.length - 11].min()
 
     assertEquals(expectedLag, zeroResult.adfResult.lag)
@@ -202,7 +202,7 @@ class UnitRootTest {
       UnitRoot.test((1..20) as double[], 'trend', 1)
     }
 
-    assertEquals('Singular matrix at column 2 - cannot solve linear system', exception.message)
+    assertEquals('Singular matrix: design rank 2 is less than 3', exception.message)
   }
 
   @Test
@@ -233,7 +233,7 @@ class UnitRootTest {
       data[i] = rnd.nextGaussian()  // Stationary white noise
     }
 
-    def result = UnitRoot.test(data)
+    def result = UnitRoot.test(data, 'drift', 1)
     String consensus = result.getConsensus()
 
     assertNotNull(consensus)
@@ -285,7 +285,7 @@ class UnitRootTest {
       stationary[i] = rnd.nextGaussian()
     }
 
-    def result1 = UnitRoot.test(stationary)
+    def result1 = UnitRoot.test(stationary, 'drift', 1)
 
     // Should recognize as stationary
     assertTrue(result1.isStationary(0.05))

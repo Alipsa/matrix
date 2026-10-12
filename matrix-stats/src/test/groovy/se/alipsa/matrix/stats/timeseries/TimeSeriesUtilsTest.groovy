@@ -17,10 +17,12 @@ import se.alipsa.matrix.stats.util.LeastSquaresKernel
 class TimeSeriesUtilsTest {
 
   @Test
-  void hasVariationUsesSharedRangeThreshold() {
+  void hasVariationUsesRelativeRangeThreshold() {
     assertEquals(false, TimeSeriesUtils.hasVariation([2.0d, 2.0d] as double[]))
-    assertEquals(false, TimeSeriesUtils.hasVariation([2.0d, 2.0d + 0.5e-10d] as double[]))
+    assertEquals(true, TimeSeriesUtils.hasVariation([2.0d, 2.0d + 0.5e-10d] as double[]))
     assertEquals(true, TimeSeriesUtils.hasVariation([2.0d, 2.0d + 2e-10d] as double[]))
+    assertEquals(true, TimeSeriesUtils.hasVariation([1e-20d, 2e-20d] as double[]))
+    assertEquals(false, TimeSeriesUtils.hasVariation([2.0d, Math.nextUp(2.0d)] as double[]))
   }
 
   @Test
@@ -72,7 +74,7 @@ class TimeSeriesUtilsTest {
       TimeSeriesUtils.solveLinearSystem(a, b)
     }
 
-    assertEquals('Singular matrix at column 1 - cannot solve linear system', exception.message)
+    assertEquals('Singular matrix: design rank 1 is less than 2', exception.message)
   }
 
   @Test
@@ -89,7 +91,7 @@ class TimeSeriesUtilsTest {
       TimeSeriesUtils.solveLinearSystem(a, b)
     }
 
-    assertEquals('Singular matrix at column 1 - cannot solve linear system', exception.message)
+    assertEquals('Singular matrix: design rank 1 is less than 2', exception.message)
   }
 
   @Test
@@ -118,7 +120,7 @@ class TimeSeriesUtilsTest {
       TimeSeriesUtils.invertMatrix(a)
     }
 
-    assertEquals('Singular matrix at column 1 - cannot invert matrix', exception.message)
+    assertEquals('Singular matrix: design rank 1 is less than 2', exception.message)
   }
 
   @Test

@@ -3,6 +3,8 @@ package se.alipsa.matrix.stats.timeseries
 import se.alipsa.matrix.stats.distribution.FDistribution
 import se.alipsa.matrix.stats.util.NumericConversion
 
+import se.alipsa.matrix.stats.util.NumericTolerance
+
 /**
  * The Chow test, proposed by econometrician Gregory Chow in 1960, tests whether the coefficients
  * in two linear regressions on different subsets of data are equal. It is the standard test for
@@ -117,7 +119,7 @@ class Chow {
     double numerator = (rssFull - (rss1 + rss2)) / k
     double denominator = (rss1 + rss2) / (n - 2 * k)
 
-    if (denominator < 1e-10) {
+    if (NumericTolerance.isNegligible(Math.sqrt(denominator), NumericTolerance.maxMagnitude(y))) {
       throw new IllegalArgumentException('Denominator too small - perfect fit in sub-models')
     }
 
@@ -125,7 +127,7 @@ class Chow {
 
     // Calculate p-value
     FDistribution fDist = new FDistribution(k, n - 2 * k)
-    double pValue = 1.0 - fDist.cumulativeProbability(fStatistic)
+    double pValue = fDist.survivalProbability(fStatistic)
 
     new ChowResult(
       statistic: BigDecimal.valueOf(fStatistic),

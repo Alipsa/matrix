@@ -9,6 +9,8 @@ import java.math.RoundingMode
 /**
  * Implements various ways of normalizing (scaling) data e.g.
  * scale the values so that the they have a mean of 0 and a standard deviation of 1
+ * Scalar results are Number: integral and BigDecimal inputs yield BigDecimal;
+ * Float and Double inputs preserve their floating type. Undefined results default to null.
  * It implements 4 different approaches
  * <ol>
  *   <li>logarithmic normalization</li>
@@ -30,17 +32,17 @@ class Normalize {
    * @param decimals optional number of decimal places to round to
    * @return the natural logarithm (base e) of the x value, or null/NaN for invalid input
    */
-  static <T extends Number> T logNorm(T x, int... decimals) {
-    if (x == null || x <= 0) {
+  static <T extends Number> Number logNorm(T x, int... decimals) {
+    if (x == null || x <= 0 || ((x instanceof Double || x instanceof Float) && Double.isNaN(x.doubleValue()))) {
       return null  // logNorm always returns null for zero/negative/invalid
     }
 
     if (x instanceof Float && (x as Float).isInfinite()) {
-      return x as T
+      return x
     }
 
     if (x instanceof Double && (x as Double).isInfinite()) {
-      return x as T
+      return x
     }
 
     BigDecimal logResult = x.log()
@@ -55,7 +57,7 @@ class Normalize {
   /**
    * Apply logarithmic normalization to an array of values.
    */
-  static <T extends Number> List<T> logNorm(T[] values, int... decimals) {
+  static <T extends Number> List<Number> logNorm(T[] values, int... decimals) {
     values.collect { logNorm(it, decimals) }
   }
 
@@ -114,26 +116,21 @@ class Normalize {
    * @param decimals optional number of decimal places to round to
    * @return the normalized value in [0, 1] range, or the requested missing-value sentinel for invalid input
    */
-  static <T extends Number> T minMaxNorm(T x, Number min, Number max,
+  static <T extends Number> Number minMaxNorm(T x, Number min, Number max,
                                          MissingValueType missingValueType = MissingValueType.NULL,
                                          int... decimals) {
-    if (x == null) {
-      return nullSentinel(missingValueType) as T
+    if (x == null || !finiteValues([x, min, max])) {
+      return nullSentinel(missingValueType)
     }
 
-    double xVal = x.doubleValue()
-    double minVal = min.doubleValue()
-    double maxVal = max.doubleValue()
-    double range = maxVal - minVal
-
+    BigDecimal range = (max as BigDecimal) - (min as BigDecimal)
     if (range == 0) {
-      return nullSentinel(missingValueType) as T
+      return nullSentinel(missingValueType)
     }
-
-    double result = (xVal - minVal) / range
+    BigDecimal result = ((x as BigDecimal) - (min as BigDecimal)) / range
 
     if (decimals.length > 0) {
-      BigDecimal bd = new BigDecimal(result).setScale(decimals[0], RoundingMode.HALF_EVEN)
+      BigDecimal bd = result.setScale(decimals[0], RoundingMode.HALF_EVEN)
       return convertToType(bd, x)
     }
 
@@ -148,7 +145,7 @@ class Normalize {
    * @param decimals optional number of decimal places to round to
    * @return the normalized values
    */
-  static <T extends Number> List<T> minMaxNorm(T[] values,
+  static <T extends Number> List<Number> minMaxNorm(T[] values,
                                                MissingValueType missingValueType = MissingValueType.NULL,
                                                int... decimals) {
     if (values.length == 0) {
@@ -156,8 +153,8 @@ class Normalize {
     }
 
     List<T> numbers = values.findAll { it != null } as List<T>
-    if (numbers.isEmpty()) {
-      return values.collect { nullSentinel(missingValueType) as T }
+    if (numbers.isEmpty() || !finiteValues(numbers as List<Number>)) {
+      return values.collect { nullSentinel(missingValueType) }
     }
     T min = numbers.min()
     T max = numbers.max()
@@ -182,6 +179,9 @@ class Normalize {
     }
 
     List<Number> numbers = numericValues(values)
+    if (!finiteValues(numbers)) {
+      return values.collect { nullSentinel(missingValueType) }
+    }
     Number min = numbers.min()
     Number max = numbers.max()
 
@@ -229,27 +229,21 @@ class Normalize {
    * @param decimals optional number of decimal places to round to
    * @return the normalized value, or the requested missing-value sentinel for invalid input
    */
-  static <T extends Number> T meanNorm(T x, Number mean, Number min, Number max,
+  static <T extends Number> Number meanNorm(T x, Number mean, Number min, Number max,
                                        MissingValueType missingValueType = MissingValueType.NULL,
                                        int... decimals) {
-    if (x == null) {
-      return nullSentinel(missingValueType) as T
+    if (x == null || !finiteValues([x, mean, min, max])) {
+      return nullSentinel(missingValueType)
     }
 
-    double xVal = x.doubleValue()
-    double meanVal = mean.doubleValue()
-    double minVal = min.doubleValue()
-    double maxVal = max.doubleValue()
-    double range = maxVal - minVal
-
+    BigDecimal range = (max as BigDecimal) - (min as BigDecimal)
     if (range == 0) {
-      return nullSentinel(missingValueType) as T
+      return nullSentinel(missingValueType)
     }
-
-    double result = (xVal - meanVal) / range
+    BigDecimal result = ((x as BigDecimal) - (mean as BigDecimal)) / range
 
     if (decimals.length > 0) {
-      BigDecimal bd = new BigDecimal(result).setScale(decimals[0], RoundingMode.HALF_EVEN)
+      BigDecimal bd = result.setScale(decimals[0], RoundingMode.HALF_EVEN)
       return convertToType(bd, x)
     }
 
@@ -264,7 +258,7 @@ class Normalize {
    * @param decimals optional number of decimal places to round to
    * @return the normalized values
    */
-  static <T extends Number> List<T> meanNorm(T[] values,
+  static <T extends Number> List<Number> meanNorm(T[] values,
                                              MissingValueType missingValueType = MissingValueType.NULL,
                                              int... decimals) {
     if (values.length == 0) {
@@ -272,8 +266,8 @@ class Normalize {
     }
 
     List<T> numbers = values.findAll { it != null } as List<T>
-    if (numbers.isEmpty()) {
-      return values.collect { nullSentinel(missingValueType) as T }
+    if (numbers.isEmpty() || !finiteValues(numbers as List<Number>)) {
+      return values.collect { nullSentinel(missingValueType) }
     }
     BigDecimal mean = Stat.mean(numbers)
     T min = numbers.min()
@@ -299,6 +293,9 @@ class Normalize {
     }
 
     List<Number> numbers = numericValues(values)
+    if (!finiteValues(numbers)) {
+      return values.collect { nullSentinel(missingValueType) }
+    }
     BigDecimal mean = Stat.mean(numbers)
     Number min = numbers.min()
     Number max = numbers.max()
@@ -345,23 +342,18 @@ class Normalize {
    * @param decimals optional number of decimal places to round to
    * @return the z-score, or null/NaN for invalid input
    */
-  static <T extends Number> T stdScaleNorm(T x, Number mean, Number stdDev, int... decimals) {
-    if (x == null) {
+  static <T extends Number> Number stdScaleNorm(T x, Number mean, Number stdDev, int... decimals) {
+    if (x == null || stdDev == null || !finiteValues([x, mean, stdDev])) {
       return null  // stdScaleNorm always returns null for invalid
     }
 
-    double xVal = x.doubleValue()
-    double meanVal = mean.doubleValue()
-    double stdDevVal = stdDev.doubleValue()
-
-    if (stdDevVal == 0) {
-      return null  // stdScaleNorm always returns null for zero stddev
+    if (stdDev == 0) {
+      return null
     }
-
-    double result = (xVal - meanVal) / stdDevVal
+    BigDecimal result = ((x as BigDecimal) - (mean as BigDecimal)) / (stdDev as BigDecimal)
 
     if (decimals.length > 0) {
-      BigDecimal bd = new BigDecimal(result).setScale(decimals[0], RoundingMode.HALF_EVEN)
+      BigDecimal bd = result.setScale(decimals[0], RoundingMode.HALF_EVEN)
       return convertToType(bd, x)
     }
 
@@ -371,12 +363,15 @@ class Normalize {
   /**
    * Apply standard deviation normalization to an array of values.
    */
-  static <T extends Number> List<T> stdScaleNorm(T[] values, int... decimals) {
+  static <T extends Number> List<Number> stdScaleNorm(T[] values, int... decimals) {
     if (values.length == 0) {
       return []
     }
 
-    List<T> list = values.toList()
+    List<T> list = values.findAll { it != null } as List<T>
+    if (!finiteValues(list as List<Number>)) {
+      return values.collect { null }
+    }
     BigDecimal mean = Stat.mean(list)
     BigDecimal stdDev = Stat.sd(list)
 
@@ -396,6 +391,9 @@ class Normalize {
 
     // nulls are excluded from stats but preserved in output via scalar null-handling
     List<Number> numbers = numericValues(values)
+    if (!finiteValues(numbers)) {
+      return values.collect { null }
+    }
     BigDecimal mean = Stat.mean(numbers)
     BigDecimal stdDev = Stat.sd(numbers)
 
@@ -523,46 +521,24 @@ class Normalize {
     transformedValue == null ? fallbackType : transformedValue.class
   }
 
+  private static boolean finiteValues(List<Number> values) {
+    values.every { Number value ->
+      value != null && (!(value instanceof Double || value instanceof Float) || Double.isFinite(value.doubleValue()))
+    }
+  }
+
   private static Number nullSentinel(MissingValueType missingValueType) {
     missingValueType.sentinel
   }
 
-  /**
-   * Converts a numeric value to the same type as the sample.
-   * For normalization operations, integer types are upgraded to Float since
-   * operations like log, normalization produce non-integer results.
-   */
-  private static <T extends Number> T convertToType(Number value, T sample) {
-    if (sample instanceof BigDecimal) {
-      // Always ensure we return BigDecimal, not BigInteger
-      BigDecimal result
-      if (value instanceof BigDecimal) {
-        result = (BigDecimal) value
-      } else {
-        result = new BigDecimal(value.toString())
-      }
-      // CRITICAL: Ensure scale > 0 to prevent Groovy from converting to BigInteger
-      // Groovy may auto-convert BigDecimal to BigInteger for whole numbers with scale 0
-      // We ensure minimum scale of 1 for all BigDecimal results
-      int targetScale = Math.max(result.scale(), 1)
-      if (result.scale() < targetScale) {
-        result = result.setScale(targetScale, RoundingMode.HALF_EVEN)
-      }
-      return result as T
-    }
+  /** Converts integer and decimal inputs to BigDecimal, preserving floating input types. */
+  private static Number convertToType(Number value, Number sample) {
     if (sample instanceof Double) {
-      return value.doubleValue() as T
+      return value.doubleValue()
     }
     if (sample instanceof Float) {
-      return value.floatValue() as T
+      return value.floatValue()
     }
-    // Integer types (BigInteger, Long, Integer, Short, Byte) are upgraded to Float
-    // because normalization operations produce non-integer results
-    if (sample instanceof BigInteger || sample instanceof Long || sample instanceof Integer ||
-        sample instanceof Short || sample instanceof Byte) {
-      return value.floatValue() as T
-    }
-    // Default to the value's natural type
-    value as T
+    value instanceof BigDecimal ? value : new BigDecimal(value.toString())
   }
 }

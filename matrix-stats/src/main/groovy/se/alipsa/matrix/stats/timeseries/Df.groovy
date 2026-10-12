@@ -1,5 +1,6 @@
 package se.alipsa.matrix.stats.timeseries
 
+import se.alipsa.matrix.stats.util.LeastSquaresKernel
 import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
@@ -77,25 +78,10 @@ class Df {
     int nObs = response.length
     int nPredictors = predictorCount(type)
     double[][] X = buildDesignMatrix(data, type, nObs, nPredictors)
-    double[][] XtX = crossProduct(X, nPredictors, nObs)
-    double[] Xty = crossProduct(X, response, nPredictors, nObs)
-
-    // Solve for coefficients using Gaussian elimination
-    double[] beta = TimeSeriesUtils.solveLinearSystem(XtX, Xty)
-
-    // The coefficient we care about is γ (coefficient for y_{t-1})
-    int gammaIndex = nPredictors - 1  // Last coefficient is always y_{t-1}
-    double gamma = beta[gammaIndex]
-
-    double rss = residualSumOfSquares(X, beta, response, nPredictors, nObs)
-    int df = nObs - nPredictors
-    double sigma2 = rss / df
-
-    // Calculate (X'X)^(-1) for standard errors
-    double[][] XtXinv = TimeSeriesUtils.invertMatrix(XtX)
-
-    // Standard error of gamma
-    double gammaSE = Math.sqrt(sigma2 * XtXinv[gammaIndex][gammaIndex])
+    LeastSquaresKernel.OlsComputation fit = LeastSquaresKernel.fitMultipleLinearRegression(response, X)
+    int gammaIndex = nPredictors - 1
+    double gamma = fit.coefficients()[gammaIndex]
+    double gammaSE = fit.standardErrors()[gammaIndex]
 
     // Calculate t-statistic (Dickey-Fuller statistic)
     double dfStatistic = gamma / gammaSE
@@ -173,44 +159,11 @@ class Df {
     designMatrix
   }
 
-  private static double[][] crossProduct(double[][] X, int nPredictors, int nObs) {
-    double[][] XtX = new double[nPredictors][nPredictors]
-    for (int i = 0; i < nPredictors; i++) {
-      for (int j = 0; j < nPredictors; j++) {
-        double sum = 0.0
-        for (int k = 0; k < nObs; k++) {
-          sum += X[k][i] * X[k][j]
-        }
-        XtX[i][j] = sum
-      }
-    }
-    XtX
-  }
 
-  private static double[] crossProduct(double[][] X, double[] response, int nPredictors, int nObs) {
-    double[] Xty = new double[nPredictors]
-    for (int i = 0; i < nPredictors; i++) {
-      double sum = 0.0
-      for (int k = 0; k < nObs; k++) {
-        sum += X[k][i] * response[k]
-      }
-      Xty[i] = sum
-    }
-    Xty
-  }
 
-  private static double residualSumOfSquares(double[][] X, double[] beta, double[] response, int nPredictors, int nObs) {
-    double rss = 0.0
-    for (int i = 0; i < nObs; i++) {
-      double fitted = 0.0
-      for (int j = 0; j < nPredictors; j++) {
-        fitted += X[i][j] * beta[j]
-      }
-      double residual = response[i] - fitted
-      rss += residual * residual
-    }
-    rss
-  }
+
+
+
 
   /**
    * Performs the Dickey-Fuller test on a List of numbers.
@@ -225,39 +178,7 @@ class Df {
    * These are MacKinnon (1996) approximate critical values.
    */
   private static double getCriticalValue(String type, int n, double significance) {
-    // Critical values depend on test type and sample size
-    // Using MacKinnon (1996) approximation
-    double[] params
-
-    if (type == 'none') {
-      if (significance == 0.01) {
-        params = [-2.66, -2.62, -1.26, 0.00] as double[]
-      } else if (significance == 0.05) {
-        params = [-1.95, -1.95, -0.99, 0.00] as double[]
-      } else {
-        params = [-1.60, -1.62, -0.88, 0.00] as double[]  // 10%
-      }
-    } else if (type == 'drift') {
-      if (significance == 0.01) {
-        params = [-3.75, -3.52, -1.79, -0.38] as double[]
-      } else if (significance == 0.05) {
-        params = [-3.00, -2.89, -1.47, -0.27] as double[]
-      } else {
-        params = [-2.63, -2.58, -1.29, -0.22] as double[]  // 10%
-      }
-    } else {  // trend
-      if (significance == 0.01) {
-        params = [-4.38, -3.95, -1.95, -0.40] as double[]
-      } else if (significance == 0.05) {
-        params = [-3.60, -3.43, -1.68, -0.31] as double[]
-      } else {
-        params = [-3.24, -3.13, -1.53, -0.26] as double[]  // 10%
-      }
-    }
-
-    // MacKinnon approximation: CV(T) = β₀ + β₁/T + β₂/T² + β₃/T³
-    double T = n as double
-    params[0] + params[1] / T + params[2] / (T * T) + params[3] / (T * T * T)
+    MacKinnonCriticalValues.value(type, n, significance)
   }
 
   /**

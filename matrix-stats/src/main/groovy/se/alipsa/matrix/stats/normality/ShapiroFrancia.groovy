@@ -4,6 +4,8 @@ import se.alipsa.matrix.stats.StatUtils
 import se.alipsa.matrix.stats.distribution.NormalDistribution
 import se.alipsa.matrix.stats.util.NumericConversion
 
+import se.alipsa.matrix.stats.util.NumericTolerance
+
 /**
  * The Shapiro-Francia test is a simplified and computationally efficient approximation to the
  * Shapiro-Wilk test, specifically designed for larger sample sizes. It provides a practical
@@ -122,7 +124,7 @@ class ShapiroFrancia {
     double mean = StatUtils.mean(sorted)
     double variance = StatUtils.variance(sorted, mean)
 
-    if (variance < 1e-10) {
+    if (NumericTolerance.isNegligible(Math.sqrt(variance), NumericTolerance.maxMagnitude(sorted))) {
       throw new IllegalArgumentException('Data has zero variance - values are too similar or identical')
     }
 
@@ -208,54 +210,14 @@ class ShapiroFrancia {
    * Uses the transformation to approximate normality based on Royston (1993).
    */
   private static double calculatePValue(double w, int n) {
-    // Transform W' to approximate normality
-    // Based on Royston (1993) adaptation for Shapiro-Francia
-
-    if (w >= 0.9999) {
-      return 1.0  // Nearly perfect fit
+    if (w >= 1.0d) {
+      return 1.0d
     }
-    if (w <= 0.0) {
-      return 0.0  // Impossible value
-    }
-
-    // Calculate log(1 - W')
-    // For normal data: W' ≈ 1, so log(1-W') is large negative
-    // For non-normal data: W' is smaller, so log(1-W') is closer to 0
-    double logOneMinusW = Math.log(1.0 - w)
-
-    NormalDistribution normalDist = new NormalDistribution(0.0, 1.0)
-
-    if (n <= 11) {
-      // Small sample approximation
-      // Use empirical transformation: larger (less negative) log(1-W') → lower p-value
-      double z = (logOneMinusW + 1.5) / 0.5  // Simple scaling for small n
-      // Lower tail: more negative log(1-W') → more negative z → lower CDF → lower p-value is wrong
-      // We want: less negative log(1-W') (non-normal) → lower p-value
-      // So we need upper tail
-      double pValue = 1.0 - normalDist.cumulativeProbability(z)
-      return Math.max(0.0, Math.min(1.0, pValue))
-    }
-    // Larger sample approximation (based on Royston 1993)
-    double lnN = Math.log(n)
-
-    // Approximate mean of log(1-W') under H0 (normality)
-    // These parameters are calibrated so that under H0, the transformed
-    // statistic follows approximately N(0,1)
-    double mu = -1.5861 - 0.31082 * lnN - 0.083751 * lnN * lnN
-
-    // Approximate standard deviation
-    double sigma = Math.exp(-0.4803 - 0.082676 * lnN + 0.0030302 * lnN * lnN)
-
-    // Normalize: under H0 (normality), this should be approximately N(0,1)
-    double z = (logOneMinusW - mu) / sigma
-
-    // For this transformation, smaller W' → larger (less negative) log(1-W') → larger z → larger CDF
-    // We want smaller W' (non-normal) → smaller p-value
-    // So we use upper tail: p = P(Z > z) = 1 - Φ(z)
-    double pValue = normalDist.cumulativeProbability(z)
-
-    // Ensure p-value is in valid range
-    return Math.max(0.0, Math.min(1.0, pValue))
+    double u = Math.log(n)
+    double v = Math.log(u)
+    double mu = -1.2725d + 1.0521d * (v - u)
+    double sigma = 1.0308d - 0.26758d * (v + 2 / u)
+    new NormalDistribution().cumulativeProbability(-(Math.log1p(-w) - mu) / sigma)
   }
 
   /**

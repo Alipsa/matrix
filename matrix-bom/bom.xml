@@ -50,7 +50,7 @@
     <matrixPictVersion>0.7.0-SNAPSHOT</matrixPictVersion>
     <matrixSpreadsheetVersion>2.5.1-SNAPSHOT</matrixSpreadsheetVersion>
     <matrixSqlVersion>2.5.1-SNAPSHOT</matrixSqlVersion>
-    <matrixStatsVersion>2.5.4-SNAPSHOT</matrixStatsVersion>
+    <matrixStatsVersion>2.6.0-SNAPSHOT</matrixStatsVersion>
     <matrixTablesawVersion>0.4.1-SNAPSHOT</matrixTablesawVersion>
     <matrixXChartVersion>0.4.1-SNAPSHOT</matrixXChartVersion>
   </properties>

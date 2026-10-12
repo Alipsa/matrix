@@ -12,6 +12,35 @@ import se.alipsa.matrix.stats.timeseries.Ccm
 class CcmTest {
 
   @Test
+  void testDirectionUsesTheRecoveredSeries() {
+    def result = new Ccm.CcmResult(xmapY: [0.1, 0.9], ymapX: [0.8, 0.2])
+    assertTrue(result.xCausesY())
+    assertFalse(result.yCausesX())
+    def reversed = new Ccm.CcmResult(xmapY: [0.8, 0.2], ymapX: [0.1, 0.9])
+    assertFalse(reversed.xCausesY())
+    assertTrue(reversed.yCausesX())
+  }
+
+  @Test
+  void testUnidirectionalSugiharaMapAndSeed() {
+    // Sugihara et al. (2012): X drives Y; recover X from Y's manifold.
+    double[] x = new double[400]
+    double[] y = new double[400]
+    x[0] = 0.4d
+    y[0] = 0.2d
+    for (int i = 0; i < 399; i++) {
+      x[i + 1] = x[i] * (3.8d - 3.8d * x[i])
+      y[i + 1] = y[i] * (3.5d - 3.5d * y[i] - 0.32d * x[i])
+    }
+    def result = Ccm.test(x, y, 2, 1, [10, 50, 100, 200, 399], 0L)
+    def repeated = Ccm.test(x, y, 2, 1, [10, 50, 100, 200, 399], 0L)
+    assertEquals(result.xmapY, repeated.xmapY)
+    assertEquals(result.ymapX, repeated.ymapX)
+    assertTrue(result.xCausesY())
+    assertFalse(result.yCausesX())
+  }
+
+  @Test
   void testCoupledLogisticMaps() {
     // Create coupled logistic maps where X drives Y
     // X: x_{t+1} = r * x_t * (1 - x_t)

@@ -1,0 +1,21 @@
+suppressPackageStartupMessages(library(MASS))
+print(packageVersion('MASS'))
+print(R.version.string)
+x <- 2000:2030
+u <- x - 2015
+y <- 3 + 0.5*u - 0.02*u^2 + 0.001*u^3 + sin(x)
+f <- lm(y ~ poly(x,3))
+print(summary(f)$r.squared, digits=17)
+print(predict(f, data.frame(x=2031)), digits=17)
+x <- 1:6; x2 <- 2*x; z <- c(1,0,1,0,1,1); y <- c(3.1,4.9,7.2,8.8,11.1,13)
+print(summary(lm(y ~ x + x2 + z)), digits=17)
+x <- 1:12; y <- c(2.1,3.9,6.2,7.8,10.1,12.2,13.8,16.1,18.2,19.9,22.1,24)
+for (s in c(0.5,0.75)) print(predict(loess(y ~ x, span=s, degree=2, surface='direct'))[1:4], digits=17)
+print(t.test(c(1e-7,2e-7,3e-7,4e-7),c(2e-7,3e-7,5e-7,6e-7)), digits=17)
+
+x <- rep(1:6, each=2); y <- c(2.1,1.9,4.1,3.8,6.2,5.9,8.1,7.8,10.2,9.9,12.1,11.8)
+print(loess(y~x,span=.61,degree=2,control=loess.control(surface='direct'))$fitted,digits=17)
+print(packageVersion('MASS'))
+print(MASS::cov.trob(cbind(mtcars$wt,mtcars$mpg)),digits=17)
+set.seed(42); km <- kmeans(iris[,1:4],3,nstart=50,iter.max=300)
+print(km$tot.withinss,digits=17); print(sort(km$size))

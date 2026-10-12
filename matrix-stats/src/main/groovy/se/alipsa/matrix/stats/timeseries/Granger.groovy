@@ -2,7 +2,10 @@ package se.alipsa.matrix.stats.timeseries
 
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.stats.distribution.FDistribution
+import se.alipsa.matrix.stats.util.LeastSquaresKernel
 import se.alipsa.matrix.stats.util.NumericConversion
+
+import se.alipsa.matrix.stats.util.NumericTolerance
 
 /**
  * The Granger causality test determines whether one time series is useful in forecasting another.
@@ -103,8 +106,8 @@ class Granger {
       throw new IllegalArgumentException("Lag must be at least 1 (got ${p})")
     }
 
-    if (n <= 2 * p + 1) {
-      throw new IllegalArgumentException("Insufficient observations for ${p} lags (need > ${2 * p + 1}, got ${n})")
+    if (n < 3 * p + 2) {
+      throw new IllegalArgumentException("Insufficient observations for ${p} lags (need >= ${3 * p + 2}, got ${n})")
     }
 
     // Build data for regression (dropping first p observations)
@@ -146,7 +149,7 @@ class Granger {
     double numerator = (rssRestricted - rssUnrestricted) / p
     double denominator = rssUnrestricted / (nObs - 2 * p - 1)
 
-    if (denominator < 1e-10) {
+    if (NumericTolerance.isNegligible(Math.sqrt(denominator), NumericTolerance.maxMagnitude(yResponse))) {
       throw new IllegalArgumentException('Unrestricted model has perfect fit (RSS ≈ 0)')
     }
 
@@ -156,7 +159,7 @@ class Granger {
     int df1 = p
     int df2 = nObs - 2 * p - 1
     FDistribution fDist = new FDistribution(df1, df2)
-    double pValue = 1.0 - fDist.cumulativeProbability(fStatistic)
+    double pValue = fDist.survivalProbability(fStatistic)
 
     new GrangerResult(
       statistic: BigDecimal.valueOf(fStatistic),
@@ -184,17 +187,26 @@ class Granger {
    * Select optimal lag using AIC.
    */
   private static int selectLag(double[] x, double[] y, int n) {
-    int maxPossibleLag = Math.min(10, (int) Math.floor((n - 1) / 3.0))
+    int maxPossibleLag = Math.min(10, (int) Math.floor((n - 2) / 3.0))
     double bestAIC = Double.POSITIVE_INFINITY
     int bestLag = 1
 
     for (int p = 1; p <= maxPossibleLag; p++) {
       try {
-        GrangerResult result = test(x, y, p)
-
-        // Calculate AIC: AIC = n * log(RSS/n) + 2k
-        int k = 2 * p + 1  // Number of parameters in unrestricted model
-        double aic = result.effectiveSampleSize * Math.log(result.rssUnrestricted / result.effectiveSampleSize) + 2 * k
+        int count = n - maxPossibleLag
+        double[] response = new double[count]
+        double[][] design = new double[count][2 * p + 1]
+        for (int i = 0; i < count; i++) {
+          int t = maxPossibleLag + i
+          response[i] = y[t]
+          design[i][0] = 1
+          for (int j = 1; j <= p; j++) {
+            design[i][j] = y[t - j]
+            design[i][p + j] = x[t - j]
+          }
+        }
+        double rss = LeastSquaresKernel.fitMultipleLinearRegression(response, design).residualSumOfSquares()
+        double aic = count * Math.log(rss / count) + 2 * (2 * p + 1)
 
         if (aic < bestAIC) {
           bestAIC = aic

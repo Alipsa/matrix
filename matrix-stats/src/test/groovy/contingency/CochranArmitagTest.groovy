@@ -12,6 +12,14 @@ import se.alipsa.matrix.stats.contingency.CochranArmitage
 class CochranArmitagTest {
 
   @Test
+  void testLargeTotalsAgainstR() {
+    // R 4.6.1: prop.trend.test(c(300,350,420),c(1000,1000,1000))$statistic.
+    // Hypergeometric variance differs from R's binomial variance by N/(N-1).
+    def result = CochranArmitage.test([300, 350, 420], [700, 650, 580])
+    assertEquals(Math.sqrt(31.378626d * 2999 / 3000), result.statistic as double, 1e-6d)
+  }
+
+  @Test
   void testIncreasingTrend() {
     // Clear increasing trend: more cases with higher exposure
     List<Integer> cases = [10, 20, 30]

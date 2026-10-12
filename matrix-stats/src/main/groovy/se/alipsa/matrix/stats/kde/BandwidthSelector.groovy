@@ -46,7 +46,7 @@ class BandwidthSelector {
   /**
    * Scott's rule for bandwidth selection.
    *
-   * Formula: h = 3.49 * σ * n^(-1/3)
+   * Formula: h = 1.06 * min(σ, IQR/1.34) * n^(-1/5)
    *
    * Reference: Scott, D. W. (1992). Multivariate Density Estimation.
    *
@@ -63,7 +63,7 @@ class BandwidthSelector {
       std = 1.0
     }
 
-    BigDecimal.valueOf(3.49 * std * Math.pow(n, -1.0 / 3.0))
+    BigDecimal.valueOf(1.06 * Math.min(std, computeIQR(sorted) / 1.34) * Math.pow(n, -0.2))
   }
 
   static double silvermanValue(double[] data) {

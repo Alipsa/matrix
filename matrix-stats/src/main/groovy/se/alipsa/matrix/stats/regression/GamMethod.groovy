@@ -14,7 +14,9 @@ import se.alipsa.matrix.stats.linear.MatrixAlgebra
  * <p>This implementation adds a penalty matrix scaled by {@code lambda}
  * to the normal equations: {@code (X'X + lambda*P)^-1 X'y}. The penalty is applied
  * only to columns that belong to smooth terms (identified via {@link Terms.TermInfo#isSmooth}).
- * Linear terms and the intercept are unpenalized.
+ * Linear terms and the intercept are unpenalized. The smooth penalty is lambda times identity,
+ * rather than a curvature penalty. Standard errors ignore effective degrees of freedom.
+ * Singular penalised systems throw; aliased coefficient handling is supported only by lm.
  *
  * <p>Weights and offsets are not yet supported. If the model frame carries non-null
  * weights or offsets, an {@link UnsupportedOperationException} is thrown.

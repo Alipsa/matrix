@@ -20,6 +20,16 @@ import se.alipsa.matrix.stats.regression.LogisticRegression
 class LogisticRegressionTest {
 
   @Test
+  void equationUsesSlopeSign() {
+    def model = new LogisticRegression([1, 2, 3, 4], [0, 1, 0, 1])
+    model.intercept = -2.65G
+    model.slope = 0.28G
+    assertTrue(model.toString().contains('+ 0.28'))
+    model.slope = -0.28G
+    assertTrue(model.toString().contains('- 0.28'))
+  }
+
+  @Test
   void testBasicLogisticRegression() {
     // Simple separable data
     List<Double> x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]

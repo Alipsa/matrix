@@ -1,5 +1,7 @@
 # Matrix Stats Module
 
+For 2.6.0 defaults, numeric return types, exact tests, and reproducible clustering, see [the migration examples](matrix-stats-2.6.md).
+
 `matrix-stats` extends the Matrix project with statistical tools for descriptive analysis,
 hypothesis testing, regression, formula/model-frame workflows, linear algebra,
 interpolation, native distributions, numerical solvers, time-series diagnostics, and clustering.

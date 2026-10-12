@@ -13,6 +13,12 @@ import se.alipsa.matrix.stats.contingency.Fisher
 class FisherTest {
 
   @Test
+  void testExtremeTailAgainstR() {
+    // R 4.6.1: fisher.test(matrix(c(200,10,10,200),2,byrow=TRUE))$p.value.
+    assertEquals(2.602029e-92d, Fisher.test([[200, 10], [10, 200]]).pValue as double, 2.7e-98d)
+  }
+
+  @Test
   void testBasic2x2Table() {
     // Classic tea tasting experiment example
     // Lady correctly identifies 3 out of 4 tea-first cups and 1 out of 4 milk-first cups
@@ -26,7 +32,7 @@ class FisherTest {
     assertEquals('two.sided', result.alternative)
 
     // Odds ratio = (3*3)/(1*1) = 9
-    assertEquals(9.0, result.oddsRatio, 0.001)
+    assertEquals(9.0, result.sampleOddsRatio, 0.001)
 
     // p-value should be around 0.486 for this table
     assertTrue(result.pValue > 0.4 && result.pValue < 0.5)
@@ -318,7 +324,7 @@ class FisherTest {
     def result = Fisher.test(table, 'greater')
 
     assertNotNull(result)
-    assertEquals(2_500_000_000.0d, result.oddsRatio as double, 0.5d)
+    assertEquals(2_500_000_000.0d, result.sampleOddsRatio as double, 0.5d)
     assertTrue(result.confidenceInterval[0] > 0G)
     assertTrue(result.confidenceInterval[1] > result.oddsRatio)
     assertTrue(result.pValue >= 0G && result.pValue <= 1G)
@@ -345,7 +351,7 @@ class FisherTest {
     def result = Fisher.test(table)
 
     double expectedOR = (6.0 * 8.0) / (3.0 * 2.0)
-    assertEquals(expectedOR, result.oddsRatio, 0.001)
+    assertEquals(expectedOR, result.sampleOddsRatio, 0.001)
   }
 
   @Test
@@ -356,7 +362,7 @@ class FisherTest {
 
     // With Haldane-Anscombe correction: (5.5 * 4.5) / (0.5 * 3.5)
     double expectedOR = (5.5 * 4.5) / (0.5 * 3.5)
-    assertEquals(expectedOR, result.oddsRatio, 0.001)
+    assertEquals(expectedOR, result.sampleOddsRatio, 0.001)
   }
 
   @Test
@@ -429,7 +435,7 @@ class FisherTest {
 
     assertNotNull(result)
     // Strong association: OR = (30*30)/(10*10) = 9
-    assertEquals(9.0, result.oddsRatio, 0.001)
+    assertEquals(9.0, result.sampleOddsRatio, 0.001)
     assertTrue(result.pValue < 0.05, 'Should detect significant association')
   }
 
@@ -484,7 +490,7 @@ class FisherTest {
     def table = [[12, 5], [9, 11]]
     def result = Fisher.test(table)
 
-    assertEquals(2.933, result.oddsRatio, 0.01, 'Odds ratio should match expected')
+    assertEquals(2.933, result.sampleOddsRatio, 0.01, 'Odds ratio should match expected')
     // Two-sided p-value should be reasonable (not extremely small or large)
     assertTrue(result.pValue > 0.1 && result.pValue < 0.3,
                "p-value should be in reasonable range (got ${result.pValue})")
