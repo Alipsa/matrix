@@ -142,7 +142,7 @@ class Ellipse {
   private static double[] robustCovariance(List<? extends Number> xs, List<? extends Number> ys, double mx, double my) {
     int n = xs.size()
     double[] weights = new double[n]
-    Arrays.fill(weights, 1.4d)
+    Arrays.fill(weights, 1.0d)
     double[] dx = new double[n]
     double[] dy = new double[n]
     double[] q = new double[n]

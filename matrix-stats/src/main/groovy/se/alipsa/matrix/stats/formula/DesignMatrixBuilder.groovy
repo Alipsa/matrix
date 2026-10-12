@@ -68,7 +68,7 @@ final class DesignMatrixBuilder {
         String key = factor.asFormulaString()
         Set<String> margin = new LinkedHashSet<>(factors)
         margin.remove(key)
-        coding[key] = key == fullFactor && term == orderedTerms.find { it.factors*.asFormulaString().contains(fullFactor) } || !earlier.contains(margin)
+        coding[key] = key == fullFactor && term == orderedTerms.find { it.factors*.asFormulaString().contains(fullFactor) } || !earlier.any { Set<String> preceding -> preceding.containsAll(margin) }
       }
       List<ColumnInfo> columns = encodeTerm(term, coding)
       earlier.add(factors)

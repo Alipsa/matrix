@@ -19,11 +19,11 @@
 - Correct Barnard's pooled statistic for each possible table. Barnard and Boschloo precompute table probabilities and refine the nuisance-parameter maximum; bounded optimization replaces repeated factorial/Fisher calculations.
 - Ellipses match ggplot2: `norm` uses classical sample covariance and the finite-sample F radius, `t` uses robust MASS-style covariance, and `euclid` uses the requested level as its radius. Correct vertical-major-axis orientation and validate at least four points, three segments, and supported types. Chart ellipse statistics share this implementation.
 - K-means defaults to squared Euclidean distance; explicit L1 clustering uses coordinate medians and reports absolute-distance cost. Add reproducible facade seeds and a 300-step per-restart limit; small elbow searches return their last candidate.
-- Normalize scalar methods return `Number`; integral inputs now produce fractional BigDecimal results. Float/Double types are preserved; singleton standard-score normalization returns null.
+- Normalize scalar methods return `Number`; integral inputs now produce fractional BigDecimal results. Non-finite scaling inputs yield missing values; Tablesaw preserves missing results. Float/Double types are preserved; singleton standard-score normalization returns null.
 - Scott KDE bandwidth matches R `bw.nrd`; all kernels have unit variance. Validate positive finite bandwidth/adjustment and at least two observations. Compact-kernel support and density curves change accordingly.
 - DF/ADF use MacKinnon response-surface critical values; ADF-GLS uses ERS values and Ng–Perron MAIC on a common sample. Granger AIC also compares lags on a common sample; automatic lag choices may change.
 - Formula columns follow R's term degree and first-appearance order, including factor-fastest interaction expansion; positional coefficient access can change.
-- Add exact one-sample KS for untied samples below 100 observations and explicit `exact`/`alternative` controls. Large-sample one-sample KS follows R's asymptotics.
+- Add exact one-sample KS for untied samples below 100 observations and explicit `exact`/`alternative` controls. Exact matrix powers rescale to avoid overflow for larger forced-exact samples. Large-sample one-sample KS follows R's asymptotics.
 - Johansen residualization avoids observation-square projection matrices; decision-tree split evaluation uses sorted running sums.
 - Give descriptive failures for empty/degenerate ANOVA and non-finite correlation inputs. Deprecate the Durbin-Watson alternative overload (no inferential p-value); document GAM ridge/standard-error limitations.
 

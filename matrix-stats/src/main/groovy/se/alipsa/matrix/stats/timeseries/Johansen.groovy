@@ -254,14 +254,15 @@ class Johansen {
   }
 
   private static ResidualMatrices projectResiduals(double[][] designMatrix, double[][] deltaY, double[][] laggedY) {
-    new ResidualMatrices(r0: residualise(designMatrix, deltaY), r1: residualise(designMatrix, laggedY))
+    def factorization = LeastSquaresKernel.factorize(designMatrix)
+    new ResidualMatrices(r0: residualise(designMatrix, deltaY, factorization), r1: residualise(designMatrix, laggedY, factorization))
   }
 
-  private static double[][] residualise(double[][] design, double[][] response) {
+  private static double[][] residualise(double[][] design, double[][] response, LeastSquaresKernel.QrFactorization factorization) {
     double[][] residuals = new double[response.length][response[0].length]
     (0..<response[0].length).each { int column ->
       double[] values = response.collect { double[] row -> row[column] } as double[]
-      double[] coefficients = LeastSquaresKernel.fitOls(values, design)
+      double[] coefficients = factorization.solve(values)
       (0..<response.length).each { int row ->
         double fitted = 0
         (0..<coefficients.length).each { int j -> fitted += design[row][j] * coefficients[j] }

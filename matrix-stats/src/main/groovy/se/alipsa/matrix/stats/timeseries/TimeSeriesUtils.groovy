@@ -87,11 +87,12 @@ final class TimeSeriesUtils {
       throw new IllegalArgumentException(RECTANGULAR_MATRIX_MESSAGE)
     }
 
+    def factorization = LeastSquaresKernel.factorize(A)
     double[][] result = new double[n][n]
     (0..<n).each { int column ->
       double[] unit = new double[n]
       unit[column] = 1
-      double[] solution = LeastSquaresKernel.fitOls(unit, A)
+      double[] solution = factorization.solve(unit)
       (0..<n).each { int row -> result[row][column] = solution[row] }
     }
     validateFiniteMatrix(result, 'matrix inverse')

@@ -137,6 +137,7 @@ final class MatrixAlgebra {
       throw new IllegalArgumentException('Only square matrices can be inverted')
     }
 
+    double scale = matrixNorm(matrix)
     double[][] augmented = new double[n][2 * n]
     for (int i = 0; i < n; i++) {
       for (int j = 0; j < n; j++) {
@@ -152,7 +153,7 @@ final class MatrixAlgebra {
       }
 
       double pivot = augmented[k][k]
-      if (Math.abs(pivot) <= SINGULARITY_THRESHOLD * matrixNorm(matrix)) {
+      if (Math.abs(pivot) <= SINGULARITY_THRESHOLD * scale) {
         log.warn("Singular pivot at column $k while inverting ${n}x${n} matrix")
         throw new SingularMatrixException("Singular matrix at column ${k} - cannot invert matrix")
       }
@@ -196,7 +197,8 @@ final class MatrixAlgebra {
     if (n != shape[1]) {
       throw new IllegalArgumentException('Cholesky decomposition requires a square matrix')
     }
-    validateSymmetric(matrix)
+    double scale = matrixNorm(matrix)
+    validateSymmetric(matrix, scale)
 
     double[][] lower = new double[n][n]
     for (int i = 0; i < n; i++) {
@@ -207,7 +209,7 @@ final class MatrixAlgebra {
         }
 
         if (i == j) {
-          if (sum <= SINGULARITY_THRESHOLD * matrixNorm(matrix)) {
+          if (sum <= SINGULARITY_THRESHOLD * scale) {
             log.warn("Non-positive diagonal at row $i during Cholesky decomposition")
             throw new SingularMatrixException('Matrix is not positive definite')
           }
@@ -234,7 +236,8 @@ final class MatrixAlgebra {
     if (n != shape[1]) {
       throw new IllegalArgumentException('Eigenvalue decomposition requires a square matrix')
     }
-    validateSymmetric(matrix)
+    double scale = matrixNorm(matrix)
+    validateSymmetric(matrix, scale)
 
     double[][] a = DoubleArrayUtils.deepCopy(matrix)
     if (n == 1) {
@@ -257,7 +260,7 @@ final class MatrixAlgebra {
         }
       }
 
-      if (maxOffDiagonal <= JACOBI_CONVERGENCE_THRESHOLD * matrixNorm(matrix)) {
+      if (maxOffDiagonal <= JACOBI_CONVERGENCE_THRESHOLD * scale) {
         return diagonal(a)
       }
 
@@ -312,11 +315,10 @@ final class MatrixAlgebra {
     maximum
   }
 
-  private static void validateSymmetric(double[][] matrix) {
+  private static void validateSymmetric(double[][] matrix, double scale) {
     for (int i = 0; i < matrix.length; i++) {
       for (int j = i + 1; j < matrix.length; j++) {
         double difference = Math.abs(matrix[i][j] - matrix[j][i])
-        double scale = matrixNorm(matrix)
         if (difference > SYMMETRY_THRESHOLD * scale) {
           throw new IllegalArgumentException('Matrix must be symmetric')
         }

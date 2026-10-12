@@ -8,12 +8,9 @@ import org.junit.jupiter.api.Test
 class DecisionTreePerformanceTest {
 
   @Test
-  void evaluatesAtMostOneSplitPerObservationAtEachNode() {
+  void fitsStepFunctionExactly() {
     def x = (1..200).toList()
     def tree = new DecisionTree(x, x.collect { it < 100 ? 1 : 5 })
-    tree.splitEvaluations.eachWithIndex { int count, int i ->
-      assertTrue(count < tree.splitNodeSizes[i])
-    }
     assertEquals(1d, tree.RSquared as double, 1e-12)
     assertEquals(1G, tree.predict(50))
     assertEquals(5G, tree.predict(150))

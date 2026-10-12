@@ -45,9 +45,7 @@ public final class LeastSquaresKernel {
   public static double[] fitOls(double[] response, double[][] predictors) {
     validateOlsInputs(response, predictors);
 
-    OlsComputation result = fitRankRevealing(response, predictors);
-    requireFullRank(result, predictors[0].length);
-    return result.coefficients();
+    return factorize(predictors).solve(response);
   }
 
   /**
@@ -167,78 +165,19 @@ public final class LeastSquaresKernel {
    */
   public static OlsComputation fitRankRevealing(double[] response, double[][] predictors) {
     validateOlsInputs(response, predictors);
+    QrFactorization factorization = factorize(predictors);
     int n = response.length;
     int p = predictors[0].length;
-    double[][] qr = new double[n][p];
-    double[] qty = response.clone();
-    double[] originalNorm = new double[p];
-    for (int i = 0; i < n; i++) {
-      if (!Double.isFinite(response[i])) {
-        throw new IllegalArgumentException("Response values must be finite");
-      }
-      for (int j = 0; j < p; j++) {
-        double value = predictors[i][j];
-        if (!Double.isFinite(value)) {
-          throw new IllegalArgumentException("Predictor values must be finite");
-        }
-        qr[i][j] = value;
-        originalNorm[j] = Math.hypot(originalNorm[j], value);
-      }
-    }
-    int[] retained = new int[Math.min(n, p)];
-    boolean[] aliased = new boolean[p];
-    java.util.Arrays.fill(aliased, true);
-    int rank = 0;
-    for (int j = 0; j < p && rank < n; j++) {
-      double norm = 0.0d;
-      for (int i = rank; i < n; i++) {
-        norm = Math.hypot(norm, qr[i][j]);
-      }
-      if (originalNorm[j] == 0.0d || norm / originalNorm[j] < RANK_TOLERANCE) {
-        continue;
-      }
-      double alpha = -Math.copySign(norm, qr[rank][j]);
-      double[] v = new double[n - rank];
-      for (int i = rank; i < n; i++) {
-        v[i - rank] = qr[i][j] / norm;
-      }
-      v[0] -= alpha / norm;
-      double vv = 0.0d;
-      for (double value : v) {
-        vv += value * value;
-      }
-      for (int column = j + 1; column < p; column++) {
-        double dot = 0.0d;
-        for (int i = rank; i < n; i++) {
-          dot += v[i - rank] * qr[i][column];
-        }
-        double factor = 2.0d * dot / vv;
-        for (int i = rank; i < n; i++) {
-          qr[i][column] -= factor * v[i - rank];
-        }
-      }
-      double dot = 0.0d;
-      for (int i = rank; i < n; i++) {
-        dot += v[i - rank] * qty[i];
-      }
-      for (int i = rank; i < n; i++) {
-        qty[i] -= 2.0d * dot / vv * v[i - rank];
-      }
-      qr[rank][j] = alpha;
-      retained[rank++] = j;
-      aliased[j] = false;
-    }
-    double[] coefficients = new double[p];
+    int rank = factorization.rank;
+    double[][] qr = factorization.qr;
+    int[] retained = factorization.retained;
+    boolean[] aliased = factorization.aliased;
+    double[] qty = factorization.transform(response);
+    double[] coefficients = factorization.solveTransformed(qty);
     double[] standardErrors = new double[p];
-    java.util.Arrays.fill(coefficients, Double.NaN);
     java.util.Arrays.fill(standardErrors, Double.NaN);
     double[][] inverseR = new double[rank][rank];
     for (int i = rank - 1; i >= 0; i--) {
-      double value = qty[i];
-      for (int j = i + 1; j < rank; j++) {
-        value -= qr[i][retained[j]] * coefficients[retained[j]];
-      }
-      coefficients[retained[i]] = value / qr[i][retained[i]];
       for (int column = i; column < rank; column++) {
         double rhs = i == column ? 1.0d : 0.0d;
         for (int j = i + 1; j < rank; j++) {
@@ -265,6 +204,137 @@ public final class LeastSquaresKernel {
       }
     }
     return new OlsComputation(coefficients, standardErrors, rss, variance, rank, aliased, covariance);
+  }
+
+  /**
+   * Factor a design once for repeated least-squares solves.
+   * @param predictors finite rectangular design matrix
+   * @return reusable QR factorization with column-relative rank selection
+   */
+  public static QrFactorization factorize(double[][] predictors) {
+    if (predictors == null) {
+      throw new IllegalArgumentException("Design matrix cannot be null");
+    }
+    validateOlsInputs(new double[predictors.length], predictors);
+    return new QrFactorization(predictors);
+  }
+
+  /** Reusable immutable Householder QR decomposition for multiple response vectors. */
+  public static final class QrFactorization {
+    private final double[][] qr;
+    private final double[][] reflectors;
+    private final double[] reflectorNorms;
+    private final int[] retained;
+    private final boolean[] aliased;
+    private final int rank;
+
+    private QrFactorization(double[][] predictors) {
+      int n = predictors.length;
+      int p = predictors[0].length;
+      qr = new double[n][p];
+      reflectors = new double[Math.min(n, p)][];
+      reflectorNorms = new double[Math.min(n, p)];
+      double[] originalNorm = new double[p];
+      for (int i = 0; i < n; i++) {
+        for (int j = 0; j < p; j++) {
+          double value = predictors[i][j];
+          if (!Double.isFinite(value)) {
+            throw new IllegalArgumentException("Predictor values must be finite");
+          }
+          qr[i][j] = value;
+          originalNorm[j] = Math.hypot(originalNorm[j], value);
+        }
+      }
+      retained = new int[Math.min(n, p)];
+      aliased = new boolean[p];
+      java.util.Arrays.fill(aliased, true);
+      int rank = 0;
+      for (int j = 0; j < p && rank < n; j++) {
+        double norm = 0.0d;
+        for (int i = rank; i < n; i++) {
+          norm = Math.hypot(norm, qr[i][j]);
+        }
+        if (originalNorm[j] == 0.0d || norm / originalNorm[j] < RANK_TOLERANCE) {
+          continue;
+        }
+        double alpha = -Math.copySign(norm, qr[rank][j]);
+        double[] v = new double[n - rank];
+        for (int i = rank; i < n; i++) {
+          v[i - rank] = qr[i][j] / norm;
+        }
+        v[0] -= alpha / norm;
+        double vv = 0.0d;
+        for (double value : v) {
+          vv += value * value;
+        }
+        for (int column = j + 1; column < p; column++) {
+          double dot = 0.0d;
+          for (int i = rank; i < n; i++) {
+            dot += v[i - rank] * qr[i][column];
+          }
+          double factor = 2.0d * dot / vv;
+          for (int i = rank; i < n; i++) {
+            qr[i][column] -= factor * v[i - rank];
+          }
+        }
+        reflectors[rank] = v;
+        reflectorNorms[rank] = vv;
+        qr[rank][j] = alpha;
+        retained[rank++] = j;
+        aliased[j] = false;
+      }
+      this.rank = rank;
+    }
+
+    private double[] transform(double[] response) {
+      if (response == null || response.length != qr.length) {
+        throw new IllegalArgumentException("Response length must match design rows");
+      }
+      double[] qty = response.clone();
+      for (double value : qty) {
+        if (!Double.isFinite(value)) {
+          throw new IllegalArgumentException("Response values must be finite");
+        }
+      }
+      for (int k = 0; k < rank; k++) {
+        double[] v = reflectors[k];
+        double dot = 0;
+        for (int i = k; i < qty.length; i++) {
+          dot += v[i - k] * qty[i];
+        }
+        double scale = 2 * dot / reflectorNorms[k];
+        for (int i = k; i < qty.length; i++) {
+          qty[i] -= scale * v[i - k];
+        }
+      }
+      return qty;
+    }
+
+    /**
+     * Solve a full-rank least-squares system using the stored decomposition.
+     * @param response finite response vector
+     * @return coefficient vector
+     */
+    public double[] solve(double[] response) {
+      int p = qr[0].length;
+      if (rank < p) {
+        throw new IllegalArgumentException("Singular matrix: design rank " + rank + " is less than " + p);
+      }
+      return solveTransformed(transform(response));
+    }
+
+    private double[] solveTransformed(double[] qty) {
+      double[] coefficients = new double[qr[0].length];
+      java.util.Arrays.fill(coefficients, Double.NaN);
+      for (int i = rank - 1; i >= 0; i--) {
+        double value = qty[i];
+        for (int j = i + 1; j < rank; j++) {
+          value -= qr[i][retained[j]] * coefficients[retained[j]];
+        }
+        coefficients[retained[i]] = value / qr[i][retained[i]];
+      }
+      return coefficients;
+    }
   }
 
   private static void requireFullRank(OlsComputation result, int columns) {

@@ -53,7 +53,7 @@ class Fisher {
    * @return FisherResult containing p-value, odds ratio, and confidence interval
    * @throws IllegalArgumentException if table is not 2×2 or contains negative values
    */
-  static FisherResult test(List<List<Number>> table, String alternative = 'two.sided', Number confidenceLevel = 0.95) {
+  static FisherResult test(List<? extends List<? extends Number>> table, String alternative = 'two.sided', Number confidenceLevel = 0.95) {
     validateTable(table)
 
     int a = table[0][0].intValue()
@@ -73,7 +73,7 @@ class Fisher {
    * @return FisherResult containing p-value, odds ratio, and confidence interval
    * @throws IllegalArgumentException if table is not 2×2 or contains negative values
    */
-  static FisherResult test(List<List<Number>> table, Alternative alternative, Number confidenceLevel = 0.95) {
+  static FisherResult test(List<? extends List<? extends Number>> table, Alternative alternative, Number confidenceLevel = 0.95) {
     if (alternative == null) {
       throw new IllegalArgumentException(ALTERNATIVE_NULL_MESSAGE)
     }
@@ -114,7 +114,7 @@ class Fisher {
     test(table, alternative.label, confidenceLevel)
   }
 
-  private static void validateTable(List<List<Number>> table) {
+  private static void validateTable(List<? extends List<? extends Number>> table) {
     if (table == null || table.size() != 2) {
       throw new IllegalArgumentException("Fisher's exact test requires a 2×2 table (got ${table?.size() ?: 0} rows)")
     }
@@ -277,11 +277,11 @@ class Fisher {
 
     @Override
     String toString() {
-      BigDecimal percent = (confidenceLevel as BigDecimal) * 100G
+      BigDecimal percent = ((confidenceLevel ?: 0.95G) as BigDecimal) * 100G
       """Fisher's Exact Test Result:
   p-value: ${pValue}
   odds ratio: ${oddsRatio}
-  ${confidenceInterval ? sprintf('%s%% CI: [%.4f, %.4f]', percent.stripTrailingZeros().toPlainString(), confidenceInterval[0], confidenceInterval[1]) : 'CI: N/A'}
+  ${confidenceInterval ? sprintf('%s%% CI: [%.4f, %.4f]', percent.stripTrailingZeros().toPlainString(), confidenceInterval[0].doubleValue(), confidenceInterval[1].doubleValue()) : 'CI: N/A'}
   alternative: ${alternative}"""
     }
   }

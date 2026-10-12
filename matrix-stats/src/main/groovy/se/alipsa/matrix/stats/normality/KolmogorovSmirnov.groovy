@@ -275,18 +275,44 @@ class KolmogorovSmirnov {
     double[][] power = new double[size][size]
     (0..<size).each { int i -> power[i][i] = 1 }
     int exponent = n
+    int powerScale = 0
+    int matrixScale = 0
     while (exponent > 0) {
       if (exponent % 2 != 0) {
         power = MatrixAlgebra.multiply(power, matrix)
+        powerScale += matrixScale + rescalePower(power)
       }
       exponent = exponent.intdiv(2)
       if (exponent > 0) {
         matrix = MatrixAlgebra.multiply(matrix, matrix)
+        matrixScale = 2 * matrixScale + rescalePower(matrix)
       }
     }
     double probability = power[k - 1][k - 1]
-    (1..n).each { int i -> probability *= i / (double) n }
+    // R's m_power tracks decimal exponents while keeping products below overflow.
+    (1..n).each { int i ->
+      probability *= i / (double) n
+      if (probability > 0 && probability < 1e-140d) {
+        probability *= 1e140d
+        powerScale -= 140
+      }
+    }
+    probability *= Math.pow(10.0d, powerScale)
     Math.max(0.0d, Math.min(1.0d, 1 - probability))
+  }
+
+  private static int rescalePower(double[][] values) {
+    double maximum = 0
+    values.each { double[] row -> row.each { double value -> maximum = Math.max(maximum, Math.abs(value)) } }
+    if (maximum < 1e140d) {
+      return 0
+    }
+    values.each { double[] row ->
+      for (int i = 0; i < row.length; i++) {
+        row[i] /= 1e140d
+      }
+    }
+    140
   }
 
   // Birnbaum-Tingey exact one-sided survival probability, as in R.

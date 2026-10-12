@@ -162,12 +162,6 @@ class DecisionTree {
     }
   }
 
-  @groovy.transform.PackageScope
-  final List<Integer> splitEvaluations = []
-
-  @groovy.transform.PackageScope
-  final List<Integer> splitNodeSizes = []
-
   /** Root node of the decision tree */
   private Node root
 
@@ -386,8 +380,6 @@ class DecisionTree {
    */
   private BigDecimal findBestSplit(List<BigDecimal> xData, List<BigDecimal> yData) {
     int n = xData.size()
-    splitNodeSizes << n
-    splitEvaluations << (n - 1)
     List<Integer> order = (0..<n).toList().sort { int a, int b -> xData[a] <=> xData[b] }
     // Centre before accumulating squares to preserve small variation at large offsets.
     BigDecimal center = Stat.mean(yData)

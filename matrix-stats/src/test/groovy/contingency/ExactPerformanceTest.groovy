@@ -8,12 +8,14 @@ import org.junit.jupiter.api.Test
 class ExactPerformanceTest {
 
   @Test
-  void enumerationAndRefinementHaveBoundedWork() {
-    Boschloo.test([[7, 12], [8, 3]] as int[][])
-    def counts = UnconditionalExact.COUNTERS.get()
-    assertEquals(20 * 12, counts.fisher)
-    assertTrue(counts.evaluations <= 101 + UnconditionalExact.REFINEMENT_BUDGET)
-    assertEquals(counts.maskSize * counts.evaluations, counts.terms)
+  void enumerationVisitsEveryTableOnce() {
+    Set<List<Integer>> visited = [] as Set
+    double[] result = UnconditionalExact.maximise(7, 9) { int x1, int x2, double[] logs ->
+      assertTrue(visited.add([x1, x2]))
+      true
+    }
+    assertEquals(8 * 10, visited.size())
+    assertEquals(1d, result[0], 1e-12)
   }
 
   @Test

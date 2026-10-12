@@ -7,3 +7,5 @@ print(pt(-5, 30), digits = 17)
 print(pf(100, 3, 100, lower.tail = FALSE), digits = 17)
 print(pchisq(c(1999, 9999, 99999), c(2000, 10000, 100000)), digits = 17)
 print(pchisq(200, 2, lower.tail = FALSE), digits = 17)
+
+print(2*pt(-c(50,1e5,1e7),10),digits=17)

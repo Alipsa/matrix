@@ -7,13 +7,9 @@ import groovy.transform.PackageScope
 @SuppressWarnings('DuplicateNumberLiteral')
 class UnconditionalExact {
 
-  static final ThreadLocal<Map<String, Integer>> COUNTERS = new ThreadLocal<>()
-
   static final int REFINEMENT_BUDGET = 240
 
   static double[] maximise(int n1, int n2, Closure<Boolean> extreme) {
-    Map<String, Integer> counters = [evaluations: 0, terms: 0, maskSize: 0, fisher: 0]
-    COUNTERS.set(counters)
     int n = n1 + n2
     double[] factorial = new double[n + 1]
     (1..n).each { int i -> factorial[i] = factorial[i - 1] + Math.log(i) }
@@ -27,10 +23,7 @@ class UnconditionalExact {
         }
       }
     }
-    counters.maskSize = mask.size()
     Closure<Double> probability = { double pi ->
-      counters.evaluations++
-      counters.terms += mask.size()
       double sum = 0
       for (int i = 0; i < mask.size(); i++) {
         int successes = mask[i][0]
@@ -90,9 +83,6 @@ class UnconditionalExact {
   }
 
   static double fisher(int a, int n1, int c, int n2, double[] factorial) {
-    if (COUNTERS.get() != null) {
-      COUNTERS.get().fisher++
-    }
     int total = n1 + n2
     int successes = a + c
     int lo = Math.max(0, successes - n2)

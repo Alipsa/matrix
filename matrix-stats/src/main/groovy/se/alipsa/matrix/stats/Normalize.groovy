@@ -33,7 +33,7 @@ class Normalize {
    * @return the natural logarithm (base e) of the x value, or null/NaN for invalid input
    */
   static <T extends Number> Number logNorm(T x, int... decimals) {
-    if (x == null || x <= 0) {
+    if (x == null || x <= 0 || ((x instanceof Double || x instanceof Float) && Double.isNaN(x.doubleValue()))) {
       return null  // logNorm always returns null for zero/negative/invalid
     }
 
@@ -119,7 +119,7 @@ class Normalize {
   static <T extends Number> Number minMaxNorm(T x, Number min, Number max,
                                          MissingValueType missingValueType = MissingValueType.NULL,
                                          int... decimals) {
-    if (x == null) {
+    if (x == null || !finiteValues([x, min, max])) {
       return nullSentinel(missingValueType)
     }
 
@@ -153,7 +153,7 @@ class Normalize {
     }
 
     List<T> numbers = values.findAll { it != null } as List<T>
-    if (numbers.isEmpty()) {
+    if (numbers.isEmpty() || !finiteValues(numbers as List<Number>)) {
       return values.collect { nullSentinel(missingValueType) }
     }
     T min = numbers.min()
@@ -179,6 +179,9 @@ class Normalize {
     }
 
     List<Number> numbers = numericValues(values)
+    if (!finiteValues(numbers)) {
+      return values.collect { nullSentinel(missingValueType) }
+    }
     Number min = numbers.min()
     Number max = numbers.max()
 
@@ -229,7 +232,7 @@ class Normalize {
   static <T extends Number> Number meanNorm(T x, Number mean, Number min, Number max,
                                        MissingValueType missingValueType = MissingValueType.NULL,
                                        int... decimals) {
-    if (x == null) {
+    if (x == null || !finiteValues([x, mean, min, max])) {
       return nullSentinel(missingValueType)
     }
 
@@ -263,7 +266,7 @@ class Normalize {
     }
 
     List<T> numbers = values.findAll { it != null } as List<T>
-    if (numbers.isEmpty()) {
+    if (numbers.isEmpty() || !finiteValues(numbers as List<Number>)) {
       return values.collect { nullSentinel(missingValueType) }
     }
     BigDecimal mean = Stat.mean(numbers)
@@ -290,6 +293,9 @@ class Normalize {
     }
 
     List<Number> numbers = numericValues(values)
+    if (!finiteValues(numbers)) {
+      return values.collect { nullSentinel(missingValueType) }
+    }
     BigDecimal mean = Stat.mean(numbers)
     Number min = numbers.min()
     Number max = numbers.max()
@@ -337,7 +343,7 @@ class Normalize {
    * @return the z-score, or null/NaN for invalid input
    */
   static <T extends Number> Number stdScaleNorm(T x, Number mean, Number stdDev, int... decimals) {
-    if (x == null || stdDev == null) {
+    if (x == null || stdDev == null || !finiteValues([x, mean, stdDev])) {
       return null  // stdScaleNorm always returns null for invalid
     }
 
@@ -362,7 +368,10 @@ class Normalize {
       return []
     }
 
-    List<T> list = values.toList()
+    List<T> list = values.findAll { it != null } as List<T>
+    if (!finiteValues(list as List<Number>)) {
+      return values.collect { null }
+    }
     BigDecimal mean = Stat.mean(list)
     BigDecimal stdDev = Stat.sd(list)
 
@@ -382,6 +391,9 @@ class Normalize {
 
     // nulls are excluded from stats but preserved in output via scalar null-handling
     List<Number> numbers = numericValues(values)
+    if (!finiteValues(numbers)) {
+      return values.collect { null }
+    }
     BigDecimal mean = Stat.mean(numbers)
     BigDecimal stdDev = Stat.sd(numbers)
 
@@ -507,6 +519,12 @@ class Normalize {
   private static Class transformedType(List values, Class fallbackType) {
     def transformedValue = values.find { it != null }
     transformedValue == null ? fallbackType : transformedValue.class
+  }
+
+  private static boolean finiteValues(List<Number> values) {
+    values.every { Number value ->
+      value != null && (!(value instanceof Double || value instanceof Float) || Double.isFinite(value.doubleValue()))
+    }
   }
 
   private static Number nullSentinel(MissingValueType missingValueType) {

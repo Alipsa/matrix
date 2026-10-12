@@ -22,7 +22,7 @@ class SpecialFunctions {
   private static final double GAMMA_TINY = 1e-300
   private static final int MAX_ITERATIONS = 200
   private static final MathContext BETA_MC = new MathContext(50, RoundingMode.HALF_EVEN)
-  private static final BigDecimal BETA_EPSILON = new BigDecimal('1e-15')
+  private static final BigDecimal BETA_EPSILON = new BigDecimal('1e-30')
   private static final BigDecimal BETA_TINY = new BigDecimal('1e-40')
   private static final String A_LABEL = 'a'
   private static final String X_LABEL = 'x'

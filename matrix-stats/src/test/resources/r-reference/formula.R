@@ -7,3 +7,7 @@ print(coef(lm(y~0+g,d)), digits=17)
 
 d$z <- c(2,1,4,3,6,5,8,9); d$w <- c(1,1,2,2,3,3,4,5)
 for (f in c('y~x+I(x^2)','y~z+x','y~g*x','y~x:z+w','y~(x+z+w)^2','y~w+g+x')) print(colnames(model.matrix(as.formula(f),d)))
+
+margin <- expand.grid(a=factor(c('p','q')),b=factor(c('u','v')),c=factor(c('u','v')))
+margin$y <- 1:8
+print(model.matrix(y~a:b+a:c,margin))

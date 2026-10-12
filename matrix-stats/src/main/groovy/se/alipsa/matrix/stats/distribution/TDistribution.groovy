@@ -49,7 +49,7 @@ class TDistribution implements ContinuousDistribution {
 
   BigDecimal cdf(BigDecimal t) {
 
-    BigDecimal x = degreesOfFreedom / (degreesOfFreedom + t * t)
+    BigDecimal x = degreesOfFreedom.divide(degreesOfFreedom + t * t, java.math.MathContext.DECIMAL128)
     BigDecimal beta = SpecialFunctions.regularizedIncompleteBeta(x, degreesOfFreedom / 2.0, 0.5)
 
     if (t >= 0) {
@@ -102,7 +102,7 @@ class TDistribution implements ContinuousDistribution {
 
   BigDecimal twoTailedPValue(BigDecimal t) {
     BigDecimal absT = t.abs()
-    SpecialFunctions.regularizedIncompleteBeta(degreesOfFreedom / (degreesOfFreedom + absT * absT), degreesOfFreedom / 2.0, 0.5)
+    SpecialFunctions.regularizedIncompleteBeta(degreesOfFreedom.divide(degreesOfFreedom + absT * absT, java.math.MathContext.DECIMAL128), degreesOfFreedom / 2.0, 0.5)
   }
 
   BigDecimal twoTailedPValue(Number t) {

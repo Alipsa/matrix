@@ -11,6 +11,27 @@ import se.alipsa.matrix.tablesaw.Normalizer
 class NormalizeTest {
 
   @Test
+  void undefinedFloatingResultsBecomeMissing() {
+    [DoubleColumn.create('d', [-1d, 0d, 1d] as double[]),
+     FloatColumn.create('f', [-1f, 0f, 1f] as float[])].each { column ->
+      def logs = Normalizer.logNorm(column)
+      Assertions.assertTrue(logs.isMissing(0))
+      Assertions.assertTrue(logs.isMissing(1))
+      Assertions.assertFalse(logs.isMissing(2))
+    }
+    [DoubleColumn.create('d', [2d, 2d] as double[]), DoubleColumn.create('d', [2d] as double[]),
+     FloatColumn.create('f', [2f, 2f] as float[]), FloatColumn.create('f', [2f] as float[])].each { column ->
+      Assertions.assertEquals(column.size(), Normalizer.stdScaleNorm(column).countMissing())
+    }
+    [DoubleColumn.create('d', [1d, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY] as double[]),
+     FloatColumn.create('f', [1f, Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY] as float[])].each { column ->
+      [Normalizer.minMaxNorm(column), Normalizer.meanNorm(column), Normalizer.stdScaleNorm(column)].each { result ->
+        Assertions.assertEquals(column.size(), result.countMissing())
+      }
+    }
+  }
+
+  @Test
   void testLogNorm() {
     def obs = DoubleColumn.create('values', [1200, 34567, 3456, 12, 3456, 985, 1211])
     def norm = Normalizer.logNorm(obs, 6)

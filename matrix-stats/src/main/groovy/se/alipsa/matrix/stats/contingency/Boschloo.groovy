@@ -111,7 +111,6 @@ class Boschloo {
     double[] optimum = UnconditionalExact.maximise(n1, n2) { int x1, int x2, double[] logs ->
       double candidate
       if (x1 == a && x2 == c) {
-        UnconditionalExact.COUNTERS.get().fisher++
         candidate = observedFisherP
       } else {
         candidate = UnconditionalExact.fisher(x1, n1, x2, n2, logs)

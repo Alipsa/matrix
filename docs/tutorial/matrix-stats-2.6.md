@@ -15,7 +15,8 @@ assert Normalize.stdScaleNorm([7]) == [null]
 ```
 
 The scalar log, min-max, mean, and standard-score methods return `Number`. Integral and BigDecimal
-inputs produce BigDecimal; Float and Double inputs preserve their type. Optional decimal places
+inputs produce BigDecimal; Float and Double inputs preserve their type. Non-finite inputs or
+summary parameters in min-max, mean, and standard-score scaling produce missing values. Optional decimal places
 use half-even rounding; leaving them out avoids requested rounding. Missing/undefined results
 use `MissingValueType.NULL` by default; min-max and mean scaling also accept `FLOAT_NAN` or
 `DOUBLE_NAN`. Min/max, mean and standard deviation describe the original sample in scalar calls.
@@ -35,7 +36,9 @@ println result.sampleOddsRatio
 `two.sided`; `less` and `greater` give directional tests and intervals. `confidenceLevel`
 defaults to 0.95 and must be strictly between zero and one. `oddsRatio` is the conditional
 maximum-likelihood estimate, and `confidenceInterval` is exact. Boundary estimates/endpoints
-can be `Double.POSITIVE_INFINITY`, so use `Number` for these values. `sampleOddsRatio` retains
+can be `Double.POSITIVE_INFINITY`, so use `Number` for these values. Assigning an infinite
+estimate or endpoint to `BigDecimal` throws `NumberFormatException` even when the assignment
+compiles. Check `Double.isFinite(value.doubleValue())` before a BigDecimal conversion. `sampleOddsRatio` retains
 the sample cross-product estimate, including the existing zero-cell correction.
 
 ## Reproducible Euclidean clustering
