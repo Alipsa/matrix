@@ -308,7 +308,7 @@ class NumberExtension {
    * <p>For values where {@code abs &lt; 1e-10} (strictly less than), this method uses the Taylor series to avoid
    * catastrophic cancellation. The series terminates when a term's magnitude drops below 1e-34, so the omitted
    * term is smaller than that threshold before DECIMAL64 rounding.
-   * For {@code abs &gt;= 1e-10} it computes {@code log(self.add(BigDecimal.ONE, CALCULATION_CONTEXT))} using the BigDecimal series.
+   * For {@code abs &gt;= 1e-10} it computes {@code log(1 + self)}, with the addition rounded to DECIMAL128, using the BigDecimal series.
    * Both paths return values rounded to {@link MathContext#DECIMAL64}.
    *
    * <h3>Usage Example</h3>
@@ -795,11 +795,14 @@ class NumberExtension {
     while (true) {
       MathContext context = new MathContext(precision, RoundingMode.HALF_EVEN)
       BigDecimal halfPi = calculatePi(context).divide(TWO, context)
-      BigDecimal quotient = angle.divide(halfPi, context).setScale(0, RoundingMode.HALF_EVEN)
-      BigDecimal remainder = angle - quotient * halfPi
+      // Bound arithmetic on very long inputs while retaining their full precision at the cap,
+      // where rounding must not turn a near-pole into an exactly zero remainder.
+      BigDecimal reductionAngle = precision < MAX_TRIGONOMETRIC_PRECISION ? angle.round(context) : angle
+      BigDecimal quotient = reductionAngle.divide(halfPi, context).setScale(0, RoundingMode.HALF_EVEN)
+      BigDecimal remainder = reductionAngle - quotient * halfPi
       boolean zeroRemainder = remainder.signum() == 0
-      // |reduction error| <= |quotient| * ulp(halfPi) <= 10^(integerDigits + 1 - precision)
-      long errorExponent = integerDigits + 1 - precision
+      // Cover both the π reduction error and rounding the input angle with an extra decimal order.
+      long errorExponent = integerDigits + 2 - precision
       long separation = zeroRemainder ? 0 : (remainder.precision() as long) - remainder.scale() - 1 - errorExponent
       if ((!zeroRemainder && separation >= REDUCTION_GUARD_DIGITS) || precision >= MAX_TRIGONOMETRIC_PRECISION) {
         int quadrant = Math.floorMod(quotient.remainder(FOUR).intValue(), 4)

@@ -1246,7 +1246,6 @@ class NumberExtensionTest {
     NumberExtension.ulp(value)
   }
 
-
   @Test
   void testLogRetainsRelativePrecisionJustBelowOne() {
     BigDecimal ln10 = 2.302585092994045684017991454684364207601G
@@ -1334,6 +1333,41 @@ class NumberExtensionTest {
     assertEquals(huge.log(), huge.log1p())
     [3.0G, -0.5G, 1e-10G, -1e-10G].each { BigDecimal x ->
       assertEquals((x + 1).log(), x.log1p(), "log1p(${x})")
+    }
+  }
+
+  @Test
+  void testTrigonometryForLongInputsMatchesHighPrecisionRationalAngles() {
+    MathContext referenceContext = new MathContext(80, RoundingMode.HALF_EVEN)
+    Map<BigDecimal, BigDecimal> angles = [
+        (new BigDecimal('0.8' + '3' * 999_998)): 5.0G.divide(6.0G, referenceContext),
+        (new BigDecimal('2.5' + '3' * 999_998)): 38.0G.divide(15.0G, referenceContext)
+    ]
+    angles.each { BigDecimal angle, BigDecimal reference ->
+      [1G, -1G].each { BigDecimal sign ->
+        assertEquals((sign * reference).sin(), (sign * angle).sin())
+        assertEquals((sign * reference).cos(), (sign * angle).cos())
+        assertEquals((sign * reference).tan(), (sign * angle).tan())
+      }
+    }
+  }
+
+  @Test
+  @ResourceLock('NumberExtension.cachedPi')
+  void testRoundingNearPoleAtPrecisionCapDoesNotCreateExactPole() {
+    def cacheField = NumberExtension.getDeclaredField('cachedPi')
+    def calculatePi = NumberExtension.getDeclaredMethod('calculatePi', MathContext)
+    cacheField.accessible = true
+    calculatePi.accessible = true
+    BigDecimal original = cacheField.get(null) as BigDecimal
+    try {
+      MathContext cap = new MathContext(512, RoundingMode.HALF_EVEN)
+      BigDecimal halfPi = (calculatePi.invoke(null, cap) as BigDecimal).divide(2G, cap)
+      BigDecimal offset = 1e-600G
+      assertEquals(offset.round(MathContext.DECIMAL64), (halfPi + offset).cos().negate())
+      assertEquals(-1e600G, (halfPi + offset).tan())
+    } finally {
+      cacheField.set(null, original)
     }
   }
 
