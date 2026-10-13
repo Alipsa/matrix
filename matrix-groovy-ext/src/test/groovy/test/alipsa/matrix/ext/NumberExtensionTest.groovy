@@ -5,11 +5,14 @@ import static org.junit.jupiter.api.Assertions.*
 import groovy.transform.CompileStatic
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.parallel.ResourceLock
 
 import se.alipsa.matrix.ext.NumberExtension
 
 import java.math.MathContext
+import java.math.RoundingMode
+import java.util.concurrent.TimeUnit
 
 @SuppressWarnings('ClassSize')
 class NumberExtensionTest {
@@ -1241,6 +1244,97 @@ class NumberExtensionTest {
   @CompileStatic
   private static BigDecimal ulpOfNumber(Number value) {
     NumberExtension.ulp(value)
+  }
+
+
+  @Test
+  void testLogRetainsRelativePrecisionJustBelowOne() {
+    BigDecimal ln10 = 2.302585092994045684017991454684364207601G
+    ['1e-18', '1e-20', '1e-25'].each { String delta ->
+      BigDecimal d = new BigDecimal(delta)
+      BigDecimal x = 1 - d
+      BigDecimal lnReference = -d - d * d / 2
+      assertEquals(lnReference.round(MathContext.DECIMAL64), x.log(), "log(1 - ${delta})")
+      assertEquals(lnReference.divide(ln10, new MathContext(40)).round(MathContext.DECIMAL64), x.log10(),
+          "log10(1 - ${delta})")
+    }
+    assertEquals(-6.931471805599453E+24G, 2G.log(1 - 1e-25G))
+  }
+
+  @Test
+  void testTrigonometryRetainsRelativePrecisionNearZeros() {
+    BigDecimal pi60 = 3.14159265358979323846264338327950288419716939937510582097494G
+    BigDecimal piAt25 = 3.141592653589793238462643G
+    BigDecimal halfPiAt25 = pi60.divide(2G).round(new MathContext(25))
+
+    assertEquals((pi60 - NumberExtension.PI32).round(MathContext.DECIMAL64), NumberExtension.PI32.sin())
+    assertEquals((pi60 - piAt25).round(MathContext.DECIMAL64), piAt25.sin())
+    assertEquals((piAt25 - pi60).round(MathContext.DECIMAL64), (-piAt25).sin())
+    assertEquals((pi60.divide(2G) - halfPiAt25).round(MathContext.DECIMAL64), halfPiAt25.cos())
+    assertEquals((piAt25 - pi60).round(MathContext.DECIMAL64), piAt25.tan())
+  }
+
+  @Test
+  void testTrigonometryQuadrantsMatchDoubleReference() {
+    [-7.0d, -4.0d, -2.0d, -0.9d, 0.9d, 2.0d, 4.0d, 5.5d, 7.0d, 100.0d, Math.PI / 4, -Math.PI / 4].each { double d ->
+      BigDecimal angle = new BigDecimal(d)
+      assertEquals(Math.sin(d), angle.sin().doubleValue(), 1e-15, "sin(${d})")
+      assertEquals(Math.cos(d), angle.cos().doubleValue(), 1e-15, "cos(${d})")
+      assertEquals(Math.tan(d), angle.tan().doubleValue(), 1e-15 * Math.max(1.0d, Math.abs(Math.tan(d))), "tan(${d})")
+    }
+  }
+
+  @Test
+  @ResourceLock('NumberExtension.cachedPi')
+  void testReductionNearMultipleOfPiIsBestEffortBeyondPrecisionCap() {
+    def cacheField = NumberExtension.getDeclaredField('cachedPi')
+    def calculatePi = NumberExtension.getDeclaredMethod('calculatePi', MathContext)
+    cacheField.accessible = true
+    calculatePi.accessible = true
+    BigDecimal original = cacheField.get(null) as BigDecimal
+
+    try {
+      BigDecimal pi600 = calculatePi.invoke(null, new MathContext(600)) as BigDecimal
+      BigDecimal result = pi600.sin()
+      assertTrue(result.abs() < 1e-500G, "expected a negligible best-effort result, got ${result}")
+    } finally {
+      cacheField.set(null, original)
+    }
+  }
+
+  @Test
+  @ResourceLock('NumberExtension.cachedPi')
+  void testExactHalfPiAtPrecisionCapGivesCanonicalZeroAndTangentError() {
+    def cacheField = NumberExtension.getDeclaredField('cachedPi')
+    def calculatePi = NumberExtension.getDeclaredMethod('calculatePi', MathContext)
+    cacheField.accessible = true
+    calculatePi.accessible = true
+    BigDecimal original = cacheField.get(null) as BigDecimal
+
+    try {
+      // Same rounding mode as the production reduction loop, so the test does not depend on
+      // the parity of π's 512th digit.
+      MathContext cap = new MathContext(512, RoundingMode.HALF_EVEN)
+      BigDecimal halfPi = (calculatePi.invoke(null, cap) as BigDecimal).divide(2G, cap)
+      BigDecimal cosine = halfPi.cos()
+      assertEquals(0G, cosine)
+      assertEquals(0, cosine.scale())
+      assertEquals(1G, halfPi.sin())
+      ArithmeticException e = assertThrows(ArithmeticException) { halfPi.tan() }
+      assertEquals('Tangent undefined (angle reduces to an exact multiple of π/2)', e.message)
+    } finally {
+      cacheField.set(null, original)
+    }
+  }
+
+  @Test
+  @Timeout(value = 2, unit = TimeUnit.SECONDS)
+  void testLog1pDoesNotExpandLargeInputs() {
+    BigDecimal huge = new BigDecimal('1E+5000000')
+    assertEquals(huge.log(), huge.log1p())
+    [3.0G, -0.5G, 1e-10G, -1e-10G].each { BigDecimal x ->
+      assertEquals((x + 1).log(), x.log1p(), "log1p(${x})")
+    }
   }
 
 }

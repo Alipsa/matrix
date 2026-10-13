@@ -1,5 +1,14 @@
 # Matrix-groovy-ext release history
 
+## v0.4.1, 2026-10-13
+- Fixed `log`, `log10` and `log(x, base)` to retain DECIMAL64 relative accuracy for inputs just below 1. `2G.log(0.5G)` now returns `-1` instead of `-1.000000000000000`; only the scale changes.
+- Made `sin`, `cos` and `tan` reduce modulo π/2 with adaptive π precision, retaining DECIMAL64 relative accuracy near their zeros (including `sin(PI32)`, previously wrong at the third significant digit). Beyond the 512-digit cap results are best effort. The `1E+470` rejection boundary and its message are unchanged.
+- Made `tan` reduce its angle once instead of twice.
+- For pathological angles equal to an odd multiple of π/2 at all 512 digits of the reduction cap, `tan` now throws `ArithmeticException` with “angle reduces to an exact multiple of π/2” instead of returning finite noise; `cos` returns canonical `0`.
+- Prevented `log1p()` from expanding very large inputs into an exact integer before taking the logarithm.
+- Corrected the POM project, license and SCM URLs to point to `main`.
+- Updated dependency examples and extension metadata for `0.4.1`.
+
 ## v0.4.0, 2026-09-22
 - Improved trigonometric accuracy by retaining DECIMAL128 guard precision in derived functions and rounding only their public results.
 - Made trigonometric range reduction calculate π at a precision derived from the angle magnitude, reject requests above 512 digits, and cache eligible values for reuse.
