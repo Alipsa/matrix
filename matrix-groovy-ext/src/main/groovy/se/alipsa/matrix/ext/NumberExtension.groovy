@@ -102,8 +102,16 @@ class NumberExtension {
   private static final BigDecimal TWO = BigDecimal.valueOf(2)
   private static final BigDecimal THREE = BigDecimal.valueOf(3)
   private static final int CBRT_ITERATIONS = 3
-  private static final BigDecimal TWO_PI = PI32 * TWO
-  private static final int STATIC_PI_LIMIT = PI32.precision() - RESULT_CONTEXT.precision - 2
+  private static final BigDecimal FOUR = BigDecimal.valueOf(4)
+  /** Angles at or below this magnitude are evaluated without quadrant reduction. */
+  private static final BigDecimal QUARTER_PI = PI32.divide(FOUR, CALCULATION_CONTEXT)
+  /**
+   * Required decimal orders of magnitude between a reduced angle and its reduction error bound,
+   * so the reduced angle carries more than DECIMAL64 relative accuracy.
+   */
+  private static final int REDUCTION_GUARD_DIGITS = RESULT_CONTEXT.precision + 3
+  /** Minimum extra π digits added per retry when a reduced angle is too close to its error bound. */
+  private static final int REDUCTION_PRECISION_STEP = 16
   private static final BigDecimal RESULT_PI = PI32.round(RESULT_CONTEXT)
   private static final BigDecimal RESULT_HALF_PI = PI32.divide(BigDecimal.valueOf(2), HALF_PI_CONTEXT)
   private static volatile BigDecimal cachedPi
@@ -203,7 +211,8 @@ class NumberExtension {
     MathContext mc = CALCULATION_CONTEXT
     BigDecimal two = 2
     // Argument reduction: scale to [1, 10) using BigDecimal magnitude, then to [0.5, 2.0] with powers of 2
-    int tenPower = value.precision() - value.scale() - 1
+    // Avoid cancelling logarithm corrections for values close to one.
+    int tenPower = (value >= 0.5 && value <= two) ? 0 : value.precision() - value.scale() - 1
     BigDecimal x = tenPower != 0 ? value.scaleByPowerOfTen(-tenPower) : value
     int twoPower = 0
     while (x > two) {
@@ -299,7 +308,7 @@ class NumberExtension {
    * <p>For values where {@code abs &lt; 1e-10} (strictly less than), this method uses the Taylor series to avoid
    * catastrophic cancellation. The series terminates when a term's magnitude drops below 1e-34, so the omitted
    * term is smaller than that threshold before DECIMAL64 rounding.
-   * For {@code abs &gt;= 1e-10} it computes {@code log(self + 1)} using the BigDecimal series.
+   * For {@code abs &gt;= 1e-10} it computes {@code log(1 + self)}, with the addition rounded to DECIMAL128, using the BigDecimal series.
    * Both paths return values rounded to {@link MathContext#DECIMAL64}.
    *
    * <h3>Usage Example</h3>
@@ -322,7 +331,7 @@ class NumberExtension {
     if (self.abs() < 1e-10) {
       log1pSmall(self).round(MathContext.DECIMAL64)
     } else {
-      log(self + 1)
+      log(self.add(BigDecimal.ONE, CALCULATION_CONTEXT))
     }
   }
 
@@ -749,29 +758,64 @@ class NumberExtension {
     hypot(toBigDecimal(x, 'hypot'), toBigDecimal(y, 'hypot'))
   }
 
+  /** An angle reduced to {@code remainder = angle - k * π/2} with {@code quadrant = k mod 4}. */
+  private static final class ReducedAngle {
+
+    final BigDecimal remainder
+    final int quadrant
+
+    ReducedAngle(BigDecimal remainder, int quadrant) {
+      this.remainder = remainder
+      this.quadrant = quadrant
+    }
+
+  }
+
   /**
-   * Reduces an angle modulo 2π. The π precision grows with the integer part of the angle,
-   * preserving enough fractional digits for a DECIMAL64 trigonometric result.
+   * Reduces an angle modulo π/2 so the Taylor series run on {@code |remainder| <= ~π/4}.
+   * <p>The π precision starts from the integer part of the angle and grows while the remainder is
+   * within {@link #REDUCTION_GUARD_DIGITS} orders of magnitude of the reduction error bound, so
+   * angles close to a multiple of π/2 keep DECIMAL64 relative accuracy. Growth is capped at
+   * {@link #MAX_TRIGONOMETRIC_PRECISION}; beyond the cap the reduction is best effort.
    */
-  private static BigDecimal reduceAngle(BigDecimal angle) {
-    if (angle.abs() <= TWO_PI) {
-      return angle
+  private static ReducedAngle reduceToQuadrant(BigDecimal angle) {
+    if (angle.abs() <= QUARTER_PI) {
+      return new ReducedAngle(angle.round(CALCULATION_CONTEXT), 0)
     }
 
-    long integerDigits = (angle.precision() as long) - angle.scale()
-    if (integerDigits <= STATIC_PI_LIMIT) {
-      return angle.remainder(TWO_PI)
-    }
-
+    long integerDigits = Math.max(1L, (angle.precision() as long) - angle.scale())
     long requestedPrecision = integerDigits + CALCULATION_CONTEXT.precision + 8
     if (requestedPrecision > MAX_TRIGONOMETRIC_PRECISION) {
       throw new ArithmeticException("Angle magnitude is too large for trigonometric range reduction: ${angle}")
     }
 
-    int precision = Math.max(CALCULATION_CONTEXT.precision, requestedPrecision as int)
-    MathContext reductionContext = new MathContext(precision, RoundingMode.HALF_EVEN)
-    BigDecimal preciseTwoPi = calculatePi(reductionContext).multiply(BigDecimal.valueOf(2), reductionContext)
-    angle.remainder(preciseTwoPi)
+    int precision = requestedPrecision as int
+    long previousSeparation = 0
+    long previousIncrease = 0
+    while (true) {
+      MathContext context = new MathContext(precision, RoundingMode.HALF_EVEN)
+      BigDecimal halfPi = calculatePi(context).divide(TWO, context)
+      // Bound arithmetic on very long inputs while retaining their full precision at the cap,
+      // where rounding must not turn a near-pole into an exactly zero remainder.
+      BigDecimal reductionAngle = precision < MAX_TRIGONOMETRIC_PRECISION ? angle.round(context) : angle
+      BigDecimal quotient = reductionAngle.divide(halfPi, context).setScale(0, RoundingMode.HALF_EVEN)
+      BigDecimal remainder = reductionAngle - quotient * halfPi
+      boolean zeroRemainder = remainder.signum() == 0
+      // Cover both the π reduction error and rounding the input angle with an extra decimal order.
+      long errorExponent = integerDigits + 2 - precision
+      long separation = zeroRemainder ? 0 : (remainder.precision() as long) - remainder.scale() - 1 - errorExponent
+      if ((!zeroRemainder && separation >= REDUCTION_GUARD_DIGITS) || precision >= MAX_TRIGONOMETRIC_PRECISION) {
+        int quadrant = Math.floorMod(quotient.remainder(FOUR).intValue(), 4)
+        return new ReducedAngle(zeroRemainder ? BigDecimal.ZERO : remainder.round(CALCULATION_CONTEXT), quadrant)
+      }
+      // A remainder dominated by reduction error shrinks with that error, so its separation stops
+      // growing with precision. Double the precision then instead of creeping towards the cap.
+      boolean stalled = previousIncrease > 0 && 2 * (separation - previousSeparation) < previousIncrease
+      long increase = stalled ? precision : Math.max(REDUCTION_PRECISION_STEP as long, REDUCTION_GUARD_DIGITS - separation + 2)
+      previousSeparation = separation
+      previousIncrease = increase
+      precision = Math.min(MAX_TRIGONOMETRIC_PRECISION as long, precision + increase) as int
+    }
   }
 
   /** Computes π using Machin's formula at the requested precision. */
@@ -836,7 +880,7 @@ class NumberExtension {
   /**
    * Returns the sine of this BigDecimal value (in radians).
    * <p>
-   * This method uses higher-precision range reduction followed by a Taylor series expansion
+   * This method uses range reduction modulo π/2 at adaptive precision followed by a Taylor series expansion
    * to retain accuracy for large angles while returning a BigDecimal result.
    *
    * <h3>Usage Example</h3>
@@ -853,13 +897,18 @@ class NumberExtension {
    * @throws ArithmeticException if the angle magnitude requires more than 512 digits of π for range reduction (roughly 1E+470 and above)
    */
   static BigDecimal sin(BigDecimal self) {
-    sinInternal(self).round(RESULT_CONTEXT)
+    ReducedAngle reduced = reduceToQuadrant(self)
+    BigDecimal result = switch (reduced.quadrant) {
+      case 0 -> sinSeries(reduced.remainder)
+      case 1 -> cosSeries(reduced.remainder)
+      case 2 -> sinSeries(reduced.remainder).negate()
+      default -> cosSeries(reduced.remainder).negate()
+    }
+    result.round(RESULT_CONTEXT)
   }
 
   /** Computes sine with guard precision for use by derived functions. */
-  private static BigDecimal sinInternal(BigDecimal self) {
-    BigDecimal reducedAngle = reduceAngle(self).round(CALCULATION_CONTEXT)
-
+  private static BigDecimal sinSeries(BigDecimal reducedAngle) {
     BigDecimal result = reducedAngle
     BigDecimal term = reducedAngle
     BigDecimal xSquared = reducedAngle.multiply(reducedAngle, CALCULATION_CONTEXT)
@@ -897,7 +946,7 @@ class NumberExtension {
   /**
    * Returns the cosine of this BigDecimal value (in radians).
    * <p>
-   * This method uses higher-precision range reduction followed by a Taylor series expansion
+   * This method uses range reduction modulo π/2 at adaptive precision followed by a Taylor series expansion
    * to retain accuracy for large angles while returning a BigDecimal result.
    *
    * <h3>Usage Example</h3>
@@ -914,13 +963,18 @@ class NumberExtension {
    * @throws ArithmeticException if the angle magnitude requires more than 512 digits of π for range reduction (roughly 1E+470 and above)
    */
   static BigDecimal cos(BigDecimal self) {
-    cosInternal(self).round(RESULT_CONTEXT)
+    ReducedAngle reduced = reduceToQuadrant(self)
+    BigDecimal result = switch (reduced.quadrant) {
+      case 0 -> cosSeries(reduced.remainder)
+      case 1 -> sinSeries(reduced.remainder).negate()
+      case 2 -> cosSeries(reduced.remainder).negate()
+      default -> sinSeries(reduced.remainder)
+    }
+    result.round(RESULT_CONTEXT)
   }
 
   /** Computes cosine with guard precision for use by derived functions. */
-  private static BigDecimal cosInternal(BigDecimal self) {
-    BigDecimal reducedAngle = reduceAngle(self).round(CALCULATION_CONTEXT)
-
+  private static BigDecimal cosSeries(BigDecimal reducedAngle) {
     BigDecimal result = BigDecimal.ONE
     BigDecimal term = BigDecimal.ONE
     BigDecimal xSquared = reducedAngle.multiply(reducedAngle, CALCULATION_CONTEXT)
@@ -1036,7 +1090,7 @@ class NumberExtension {
    * @param self the angle in radians
    * @return the tangent of the angle as a BigDecimal
    * @see #tan(BigDecimal)
-   * @throws ArithmeticException if the internal cosine approximation is exactly zero
+   * @throws ArithmeticException if the angle reduces to an exact multiple of π/2 at the 512-digit reduction cap
    * @throws ArithmeticException if the angle magnitude requires more than 512 digits of π for range reduction (roughly 1E+470 and above)
    */
   static BigDecimal tan(Number self) {
@@ -1046,28 +1100,32 @@ class NumberExtension {
   /**
    * Returns the tangent of this BigDecimal value (in radians).
    * <p>
-   * Tangent is computed as {@code sin(x) / cos(x)} using the corresponding BigDecimal
-   * implementations. A BigDecimal cannot represent an exact irrational tangent pole,
-   * and an exact-zero cosine approximation is not expected, so values near odd
-   * multiples of π/2 produce a large finite result. Its magnitude is limited by how
-   * precisely the caller represented the angle.
+   * The angle is reduced once to {@code r = x - k·π/2}; the tangent is then {@code sin(r) / cos(r)}
+   * for even {@code k} and {@code -cos(r) / sin(r)} for odd {@code k}. A BigDecimal cannot
+   * represent an exact irrational tangent pole, so values near odd multiples of π/2 produce a
+   * large finite result. Its magnitude is limited by how precisely the caller represented the angle.
    *
    * @param self the angle in radians
    * @return the tangent of the angle as a BigDecimal
-   * @throws ArithmeticException if the internal cosine approximation is exactly zero
+   * @throws ArithmeticException if the angle reduces to an exact multiple of π/2 at the 512-digit reduction cap
    * @throws ArithmeticException if the angle magnitude requires more than 512 digits of π for range reduction (roughly 1E+470 and above)
    */
   static BigDecimal tan(BigDecimal self) {
-    BigDecimal sinVal = sinInternal(self)
-    BigDecimal cosVal = cosInternal(self)
+    ReducedAngle reduced = reduceToQuadrant(self)
+    BigDecimal sinValue = sinSeries(reduced.remainder)
+    BigDecimal cosValue = cosSeries(reduced.remainder)
+    // tan(r + kπ/2) is tan(r) for even k and -cot(r) for odd k
+    boolean evenQuadrant = reduced.quadrant % 2 == 0
+    BigDecimal numerator = evenQuadrant ? sinValue : cosValue.negate()
+    BigDecimal denominator = evenQuadrant ? cosValue : sinValue
 
-    if (cosVal == 0) {
-      // Defensive only: an exact zero from the DECIMAL128 approximation is not
-      // expected and was not observed. Guards against future precision changes.
-      throw new ArithmeticException('Tangent undefined (cos is 0)')
+    if (denominator == 0) {
+      // Only an odd quadrant can reach this: cos(r) >= 0.707 for |r| <= π/4. It requires an angle
+      // that equals k·π/2 to all 512 digits of the reduction cap, so the remainder is exactly zero.
+      throw new ArithmeticException('Tangent undefined (angle reduces to an exact multiple of π/2)')
     }
 
-    sinVal.divide(cosVal, CALCULATION_CONTEXT).round(RESULT_CONTEXT)
+    numerator.divide(denominator, CALCULATION_CONTEXT).round(RESULT_CONTEXT)
   }
 
   /**

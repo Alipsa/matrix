@@ -13,13 +13,13 @@ For Maven:
 <dependency>
    <groupId>se.alipsa.matrix</groupId>
    <artifactId>matrix-groovy-ext</artifactId>
-   <version>0.4.0</version>
+   <version>0.4.1</version>
 </dependency>
 ```
 For Gradle:
 
 ```groovy
-implementation('se.alipsa.matrix:matrix-groovy-ext:0.4.0')
+implementation('se.alipsa.matrix:matrix-groovy-ext:0.4.1')
 ```
 
 ## Usage Examples
@@ -65,6 +65,7 @@ BigDecimal piDegrees = NumberExtension.PI32.toDegrees() // 180.0000000000000
 ```
 
 Trigonometric range reduction supports angles requiring up to 512 digits of π (roughly through `1E+469`); larger `BigDecimal` angles throw `ArithmeticException` rather than attempting unbounded computation.
+Angles close to a multiple of π/2 retain DECIMAL64 relative accuracy by adding π digits as needed, up to the same 512-digit cap; beyond the cap results are best effort. At the cap, an exactly zero remainder produces canonical zero for `sin` or `cos`; `tan` throws `ArithmeticException` for an odd multiple of π/2.
 Angle conversions use the internal high-precision π value, return DECIMAL64-rounded
 results, and canonicalize zero, so their precision and output do not depend on the input scale.
 

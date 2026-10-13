@@ -123,14 +123,14 @@ publishing {
       pom {
         name = 'Matrix Groovy Extensions'
         description = "${project.description}"
-        url = "https://github.com/Alipsa/matrix/matrix-groovy-ext"
+        url = "https://github.com/Alipsa/matrix/tree/main/matrix-groovy-ext"
         properties = [
             'maven.compiler.release': "${javaCompile.options.release.get()}"
         ]
         licenses {
           license {
             name = 'MIT License'
-            url = 'https://raw.githubusercontent.com/Alipsa/matrix/master/LICENSE'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/main/LICENSE'
           }
         }
         developers {
@@ -140,7 +140,7 @@ publishing {
           }
         }
         scm {
-          url = 'https://github.com/Alipsa/matrix/tree/master/matrix-groovy-ext'
+          url = 'https://github.com/Alipsa/matrix/tree/main/matrix-groovy-ext'
           connection = 'scm:git:https://github.com/Alipsa/matrix.git'
           developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
         }
