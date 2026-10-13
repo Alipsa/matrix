@@ -6,6 +6,7 @@ import groovy.transform.CompileStatic
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
+import org.junit.jupiter.api.function.Executable
 import org.junit.jupiter.api.parallel.ResourceLock
 
 import se.alipsa.matrix.ext.NumberExtension
@@ -1368,10 +1369,9 @@ class NumberExtensionTest {
       BigDecimal angle = halfPi + offset
       // Beyond the reduction cap, only best-effort behavior is guaranteed.
       BigDecimal cosine = angle.cos()
-      assertTrue(cosine.signum() != 0)
-      assertTrue(cosine.abs() < 1e-500G)
-      // A near-pole input must remain evaluable rather than throwing for an exact pole.
-      angle.tan()
+      assertTrue(cosine.signum() != 0, "expected a non-zero best-effort cosine, got ${cosine}")
+      assertTrue(cosine.abs() < 1e-500G, "expected a negligible best-effort cosine, got ${cosine}")
+      assertDoesNotThrow({ angle.tan() } as Executable)
     } finally {
       cacheField.set(null, original)
     }
