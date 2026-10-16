@@ -388,7 +388,7 @@ The map-key benchmark also covers scalar lists and lists of records:
 ```
 
 `rows` defaults to 30000 cells per workload, `warmups` to 5 unmeasured writes, and `runs`
-to 7 measured writes. The task uses a 512 MiB heap and reports median, average, minimum,
+to 7 measured writes (`runs` must be at least 1). The task uses a 512 MiB heap and reports median, average, minimum,
 and maximum write times; timings do not determine test success.
 
 ## Type and map-key behavior in 0.3.2

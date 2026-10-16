@@ -759,10 +759,11 @@ class MatrixAvroWriter {
                                        String columnName, AvroWriteContext context, String path) {
     Schema elem = fieldSchema.getElementType()
     List output = new ArrayList(input.size())
-    for (int index = 0; index < input.size(); index++) {
-      Object value = input[index]
+    int index = 0
+    for (Object value : input) {
       String elementPath = value instanceof Map || value instanceof List ? "$path[$index]" : path
       output.add(toAvroValue(elem, value, decConv, columnName, context, elementPath))
+      index++
     }
     output
   }

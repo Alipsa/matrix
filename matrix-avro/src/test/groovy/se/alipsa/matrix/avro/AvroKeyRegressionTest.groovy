@@ -139,6 +139,34 @@ class AvroKeyRegressionTest {
   }
 
   @Test
+  void linkedListsUseIterationAndRetainFailureIndexes() {
+    List values = new IteratorOnlyList([1, 2, 3])
+    Matrix input = Matrix.builder('Sequential').columns([value: [values]]).types(List).build()
+    assertEquals([1, 2, 3], MatrixAvroReader.read(MatrixAvroWriter.writeBytes(input))[0, 'value'])
+
+    List invalid = new IteratorOnlyList([1, 'bad'])
+    List nested = new IteratorOnlyList([invalid])
+    Matrix bad = Matrix.builder('Sequential').columns([value: [nested]]).types(List).build()
+    def options = new AvroWriteOptions().columnSchemas([
+        value: AvroSchemaDecl.array(AvroSchemaDecl.arrayOf(Integer))])
+    def error = assertThrows(AvroSchemaException) { MatrixAvroWriter.writeBytes(bad, options) }
+    assertTrue(error.message.contains('value[0][1]'))
+    assertEquals(0, error.rowNumber)
+  }
+
+  private static final class IteratorOnlyList extends LinkedList<Object> {
+
+    IteratorOnlyList(Collection<?> values) {
+      super(values)
+    }
+
+    @Override
+    Object get(int index) {
+      throw new AssertionError('Array processing must not use indexed access')
+    }
+  }
+
+  @Test
   void ordinaryMapsAndBothImmutableImplementationsRemainSupported() {
     [new HashMap([NAME: 1]), new LinkedHashMap([NAME: 1]),
      new java.util.concurrent.ConcurrentHashMap([NAME: 1]), new TreeMap([NAME: 1]),

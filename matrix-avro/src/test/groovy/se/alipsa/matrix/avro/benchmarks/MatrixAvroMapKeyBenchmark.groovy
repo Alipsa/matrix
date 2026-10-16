@@ -28,11 +28,15 @@ class MatrixAvroMapKeyBenchmark {
   /**
    * Runs in-memory write benchmarks with the selected row, warmup, and run counts.
    * @param args optional rows, warmups, and runs; defaults are 30000, 5, and 7
+   * @throws IllegalArgumentException if runs is less than 1
    */
   static void main(String[] args) {
     int rows = args.size() > 0 ? args[0] as int : DEFAULT_ROWS
     int warmups = args.size() > 1 ? args[1] as int : DEFAULT_WARMUPS
     int runs = args.size() > RUNS_ARG_INDEX ? args[RUNS_ARG_INDEX] as int : DEFAULT_RUNS
+    if (runs < 1) {
+      throw new IllegalArgumentException('runs must be at least 1')
+    }
     ['record', MAP_WORKLOAD, SPARSE_WORKLOAD, SCALAR_LIST_WORKLOAD, NESTED_LIST_WORKLOAD].each { String kind ->
       Matrix matrix = buildMatrix(kind, rows)
       AvroWriteOptions options = optionsFor(kind)
