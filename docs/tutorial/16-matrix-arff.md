@@ -219,7 +219,7 @@ Important interoperability limitations:
 
 | Option | Applies to | Default | Accepted values |
 |--------|------------|---------|-----------------|
-| `charset` | Read/write File, Path, URL input and byte streams | UTF-8 | A `Charset`, or its name in SPI maps; null resets to UTF-8 |
+| `charset` | Read/write File, Path, URL input and byte streams | UTF-8 | A `Charset` (encoding-capable for writes), or its name in SPI maps; null resets to UTF-8 |
 | `integerType` | Read INTEGER attributes, including nested and sparse values | `Integer` | `Integer`, `Long`, `BigDecimal`; SPI also accepts case-insensitive simple or fully-qualified names; null resets to `Integer` |
 
 Byte input is decoded strictly. Select the source encoding explicitly when it is not UTF-8; malformed bytes produce

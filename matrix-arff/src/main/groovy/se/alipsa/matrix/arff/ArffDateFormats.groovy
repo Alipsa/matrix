@@ -1,5 +1,7 @@
 package se.alipsa.matrix.arff
 
+import groovy.transform.PackageScope
+
 import java.text.ParseException
 import java.text.ParsePosition
 import java.text.SimpleDateFormat
@@ -57,7 +59,7 @@ class ArffDateFormats {
   }
 
   /** Whether the entire string matches this column's date formatter, in every date mode. */
-  @groovy.transform.PackageScope
+  @PackageScope
   static boolean parsesCompletely(SimpleDateFormat format, String value) {
     ParsePosition position = new ParsePosition(0)
     format.parse(value, position) != null && position.index == value.length()

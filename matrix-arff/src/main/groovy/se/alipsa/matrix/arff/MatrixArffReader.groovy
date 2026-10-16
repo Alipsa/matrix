@@ -26,7 +26,6 @@ class MatrixArffReader {
 
   private static final String EMPTY_NOMINAL = 'Nominal attribute must declare at least one value'
   private static final String FILE_NULL = 'File cannot be null'
-  private static final String ZERO_TEXT = '0'
   private static final Logger log = Logger.getLogger(MatrixArffReader)
   private static final Pattern DATE_TYPE_PATTERN = Pattern.compile(/(?i)^date(?:\s+(.*))?$/)
   private static final String INVALID_DATE_FORMAT = 'Invalid @ATTRIBUTE DATE format'
@@ -314,6 +313,16 @@ class MatrixArffReader {
     }
     char next = line.charAt(keyword.length())
     Character.isWhitespace(next) || ArffScanner.isQuoteChar(next) || next == OPEN_BRACE_CHAR
+  }
+
+  private static Number integerZero(Class type) {
+    if (type == Long) {
+      return 0L
+    }
+    if (type == BigDecimal) {
+      return BigDecimal.ZERO
+    }
+    0
   }
 
   private static Number integerValue(String value, Class type) {
@@ -696,7 +705,7 @@ class MatrixArffReader {
   private static Object sparseDefaultValue(ArffAttribute attr) {
     switch (attr.type) {
       case ArffType.NUMERIC -> BigDecimal.ZERO
-      case ArffType.INTEGER -> integerValue(ZERO_TEXT, attr.javaType)
+      case ArffType.INTEGER -> integerZero(attr.javaType)
       case ArffType.NOMINAL -> attr.nominalValues[0]
       case ArffType.DATE -> new Date(0L)
       default -> OMITTED

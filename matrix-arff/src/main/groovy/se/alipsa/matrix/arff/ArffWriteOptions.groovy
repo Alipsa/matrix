@@ -145,8 +145,15 @@ class ArffWriteOptions {
     charset
   }
 
-  /** Set the stream charset; null resets to UTF-8. Writer/String entry points do not use this option. */
+  /**
+   * Set an encoding-capable stream charset; null resets to UTF-8.
+   * Writer/String entry points do not use this option.
+   * @throws IllegalArgumentException when the charset does not support encoding
+   */
   ArffWriteOptions charset(Charset value) {
+    if (value != null && !value.canEncode()) {
+      throw new IllegalArgumentException("charset ${value.name()} does not support encoding")
+    }
     charset = value ?: StandardCharsets.UTF_8
     this
   }

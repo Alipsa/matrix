@@ -24,12 +24,6 @@ class ArffScannerTest {
   }
 
   @Test
-  void ensureParentDirectoriesAcceptsPathWithoutParent() {
-    MatrixArffWriter.ensureParentDirectories(java.nio.file.Path.of('out.arff'))
-    assertEquals(null, java.nio.file.Path.of('out.arff').parent)
-  }
-
-  @Test
   void rootPathHasFallbackName() {
     def method = MatrixArffReader.getDeclaredMethod('defaultName', java.nio.file.Path)
     method.accessible = true

@@ -1465,4 +1465,19 @@ hello
     assertEquals('日本', MatrixArffReader.read(new ByteArrayInputStream(output.toByteArray()),
         new ArffReadOptions().charset(charset))[0, 'c'])
   }
+
+  @Test
+  void sparseIntegerDefaultsReuseTypedZeroConstants() {
+    def header = '@relation sparse\n' + (0..<64).collect { "@attribute c$it integer" }.join('\n')
+    def text = header + '\n@data\n{}\n{}\n{}'
+    [(Integer): 0, (Long): 0L, (BigDecimal): BigDecimal.ZERO].each { Class type, Number zero ->
+      def m = MatrixArffReader.readString(text, new ArffReadOptions().integerType(type))
+      m.rows().each { row ->
+        row.each { value ->
+          assertEquals(type, value.class)
+          assertSame(zero, value)
+        }
+      }
+    }
+  }
 }

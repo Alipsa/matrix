@@ -6,8 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows
 
 import org.junit.jupiter.api.Test
 
+import se.alipsa.matrix.arff.ArffReadOptions
 import se.alipsa.matrix.arff.ArffTypeDecl
 import se.alipsa.matrix.arff.ArffWriteOptions
+
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
 
 class ArffWriteOptionsTest {
 
@@ -33,5 +37,19 @@ class ArffWriteOptionsTest {
     assertEquals(['b'] as Set, options.stringColumns)
     assertEquals([a: ['x', 'y']], options.nominalMappings)
     assertSame(options.nominalMappings, options.nominalMappings, 'the immutable view should be cached')
+  }
+
+  @Test
+  void rejectsDecoderOnlyCharsetThroughTypedAndSpiOptions() {
+    def charset = Charset.forName('ISO-2022-CN')
+    def options = new ArffWriteOptions()
+    def error = assertThrows(IllegalArgumentException) { options.charset(charset) }
+    assertEquals('charset ISO-2022-CN does not support encoding', error.message)
+    assertEquals(StandardCharsets.UTF_8, options.charset)
+    [charset, 'ISO-2022-CN'].each { value ->
+      error = assertThrows(IllegalArgumentException) { ArffWriteOptions.fromMap([charset: value]) }
+      assertEquals('charset ISO-2022-CN does not support encoding', error.message)
+    }
+    assertSame(charset, new ArffReadOptions().charset(charset).charset)
   }
 }
