@@ -19,7 +19,6 @@ import se.alipsa.matrix.avro.exceptions.AvroSchemaException
 import se.alipsa.matrix.avro.exceptions.AvroValidationException
 import se.alipsa.matrix.core.Matrix
 
-import java.lang.reflect.Method
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.LocalDateTime
@@ -978,9 +977,7 @@ class MatrixAvroWriterTest {
   }
 
   private static boolean isCompatible(Schema schema, Object value) {
-    Method method = MatrixAvroWriter.getDeclaredMethod('isCompatible', Schema, Object)
-    method.accessible = true
-    method.invoke(null, schema, value) as boolean
+    AvroSchemaTestSupport.isCompatible(schema, value)
   }
 
   private static final class TrackingOutputStream extends ByteArrayOutputStream implements Closeable {

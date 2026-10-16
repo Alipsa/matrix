@@ -1,7 +1,6 @@
 package se.alipsa.matrix.avro
 
 import org.apache.avro.Conversions
-import org.apache.avro.LogicalType
 import org.apache.avro.LogicalTypes
 import org.apache.avro.Schema
 import org.apache.avro.UnresolvedUnionException
@@ -455,8 +454,7 @@ class MatrixAvroWriter {
   private static Schema recordFieldSchema(ColumnProfile profile, String columnName, String namespace) {
     Schema record = Schema.createRecord(columnName + '_record', null, namespace, false)
     List<Schema.Field> fields = []
-    profile.recordSample.keySet().each { Object key ->
-      String fieldName = String.valueOf(key)
+    profile.recordKeys.each { String fieldName ->
       AvroSchemaUtil.validateAvroFieldName(fieldName, "${columnName}.${fieldName}")
       Class<?> valueClass = profile.recordFieldClasses[fieldName] ?: String
       NestedNumericProfile numericProfile = profile.recordNumericProfiles[fieldName]
@@ -494,13 +492,11 @@ class MatrixAvroWriter {
     if (clazz == BigDecimal) {
       return decimalMeta != null ? decimalFieldSchema(decimalMeta) : Schema.create(Schema.Type.DOUBLE) // fallback like Parquet writer
     }
-    Schema primitive = primitiveFieldSchema(clazz)
+    Schema primitive = scalarFieldSchema(clazz)
     if (primitive != null) {
       return primitive
     }
-    Schema logical = logicalFieldSchema(clazz)
-    // Fallback
-    logical != null ? logical : Schema.create(Schema.Type.STRING)
+    Schema.create(Schema.Type.STRING)
   }
   private static Schema decimalFieldSchema(int[] decimalMeta) {
     int precision = decimalMeta[0] > 0 ? decimalMeta[0] : 10
@@ -521,52 +517,9 @@ class MatrixAvroWriter {
     }
     [profile.precision, scaleZero ? 0 : profile.scale] as int[]
   }
-  private static Schema primitiveFieldSchema(Class<?> clazz) {
-    if (clazz == String) {
-      return Schema.create(Schema.Type.STRING)
-    }
-    if (clazz == Boolean || clazz == boolean.class) {
-      return Schema.create(Schema.Type.BOOLEAN)
-    }
-    if (clazz == Integer || clazz == int.class) {
-      return Schema.create(Schema.Type.INT)
-    }
-    if (clazz == Long || clazz == long.class || clazz == BigInteger) {
-      return Schema.create(Schema.Type.LONG)
-    }
-    if (clazz == Float || clazz == float.class) {
-      return Schema.create(Schema.Type.FLOAT)
-    }
-    if (clazz == Double || clazz == double.class) {
-      return Schema.create(Schema.Type.DOUBLE)
-    }
-    if (clazz == byte[].class) {
-      return Schema.create(Schema.Type.BYTES)
-    }
-    null
-  }
-  private static Schema logicalFieldSchema(Class<?> clazz) {
-    if (clazz == LocalDate || clazz == java.sql.Date) {
-      return withLogicalType(Schema.Type.INT, LogicalTypes.date())
-    }
-    if (clazz == LocalTime || clazz == Time) {
-      return withLogicalType(Schema.Type.INT, LogicalTypes.timeMillis())
-    }
-    if (clazz == Instant || clazz == Date) {
-      return withLogicalType(Schema.Type.LONG, LogicalTypes.timestampMillis())
-    }
-    if (clazz == LocalDateTime) {
-      return withLogicalType(Schema.Type.LONG, LogicalTypes.localTimestampMicros())
-    }
-    if (clazz == UUID) {
-      return withLogicalType(Schema.Type.STRING, LogicalTypes.uuid())
-    }
-    null
-  }
-  private static Schema withLogicalType(Schema.Type type, LogicalType logicalType) {
-    Schema s = Schema.create(type)
-    logicalType.addToSchema(s)
-    s
+  private static Schema scalarFieldSchema(Class<?> clazz) {
+    AvroScalarTypeDecl scalarType = AvroSchemaDecl.scalarTypeForClass(clazz)
+    scalarType == null ? null : AvroSchemaUtil.scalarSchema(scalarType)
   }
   // ----------------------------------------------------------------------
   // Row writing
@@ -601,11 +554,13 @@ class MatrixAvroWriter {
         Object v = matrix.get(r, colIndexes[c])
         Schema fs = fieldSchemas.get(col)
         try {
-          if (!isCompatible(fs, v)) {
-            AvroSchemaCompatibility.CompatibilityFailure failure = AvroSchemaCompatibility.findIncompatibleValue(fs, v, col)
-            String failurePath = failure?.path ?: col
-            Schema failureSchema = failure?.schema ?: fs
-            Object failureValue = failure == null ? v : failure.value
+          AvroWriteContext context = new AvroWriteContext(col)
+          AvroSchemaCompatibility.CompatibilityFailure failure =
+              AvroSchemaCompatibility.findIncompatibleValue(fs, v, col, context)
+          if (failure != null) {
+            String failurePath = failure.path ?: col
+            Schema failureSchema = failure.schema
+            Object failureValue = failure.value
             throw new AvroSchemaException(
                 "Value does not match schema type at $failurePath",
                 col,
@@ -613,7 +568,7 @@ class MatrixAvroWriter {
                 failureValue?.getClass()?.simpleName ?: NULL_TYPE_NAME
             )
           }
-          rec.put(col, toAvroValue(fs, v, decConv, col))
+          rec.put(col, toAvroValue(fs, v, decConv, col, context, col))
         } catch (AvroSchemaException e) {
           throw e.withRowNumber(r)
         } catch (Exception e) {
@@ -650,31 +605,31 @@ class MatrixAvroWriter {
    * @return the Avro-compatible value ready for writing
    * @throws UnresolvedUnionException if value cannot be matched to any union branch
    */
-  private static Object toAvroValue(Schema fieldSchema, Object v, Conversions.DecimalConversion decConv, String columnName) {
+  private static Object toAvroValue(Schema fieldSchema, Object v, Conversions.DecimalConversion decConv, String columnName, AvroWriteContext context, String path) {
     if (v == null) {
       return null
     }
     if (fieldSchema.getType() == Schema.Type.UNION) {
-      return toUnionAvroValue(fieldSchema, v, decConv, columnName)
+      return toUnionAvroValue(fieldSchema, v, decConv, columnName, context, path)
     }
     Object logicalValue = toLogicalAvroValue(fieldSchema, v, decConv, columnName)
     if (!NO_AVRO_VALUE.is(logicalValue)) {
       return logicalValue
     }
-    toPrimitiveAvroValue(fieldSchema, v, decConv, columnName)
+    toPrimitiveAvroValue(fieldSchema, v, decConv, columnName, context, path)
   }
   private static Object toUnionAvroValue(Schema fieldSchema, Object v, Conversions.DecimalConversion decConv,
-                                         String columnName) {
+                                         String columnName, AvroWriteContext context, String path) {
     List<Schema> types = fieldSchema.getTypes()
     if (types.size() == 2 && (types[0].getType() == Schema.Type.NULL || types[1].getType() == Schema.Type.NULL)) {
       Schema nonNull = (types[0].getType() == Schema.Type.NULL) ? types[1] : types[0]
-      return toAvroValue(nonNull, v, decConv, columnName)
+      return toAvroValue(nonNull, v, decConv, columnName, context, path)
     }
     Schema branch = types.find { Schema candidate ->
-      candidate.getType() != Schema.Type.NULL && isCompatible(candidate, v)
+      candidate.getType() != Schema.Type.NULL && AvroSchemaCompatibility.findIncompatibleValue(candidate, v, path, context) == null
     }
     if (branch != null) {
-      return toAvroValue(branch, v, decConv, columnName)
+      return toAvroValue(branch, v, decConv, columnName, context, path)
     }
     throw new UnresolvedUnionException(fieldSchema, v)
   }
@@ -755,7 +710,7 @@ class MatrixAvroWriter {
     NO_AVRO_VALUE
   }
   private static Object toPrimitiveAvroValue(Schema fieldSchema, Object v, Conversions.DecimalConversion decConv,
-                                             String columnName) {
+                                             String columnName, AvroWriteContext context, String path) {
     switch (fieldSchema.getType()) {
       case Schema.Type.STRING -> v.toString()
       case Schema.Type.BOOLEAN -> (Boolean) v
@@ -764,9 +719,9 @@ class MatrixAvroWriter {
       case Schema.Type.FLOAT -> Number.isInstance(v) ? ((Number) v).floatValue() : v.toString()
       case Schema.Type.DOUBLE -> Number.isInstance(v) ? ((Number) v).doubleValue() : v.toString()
       case Schema.Type.BYTES -> toBytesAvroValue(v)
-      case Schema.Type.ARRAY -> toArrayAvroValue(fieldSchema, (List) v, decConv, columnName)
-      case Schema.Type.MAP -> toMapAvroValue(fieldSchema, (Map) v, decConv, columnName)
-      case Schema.Type.RECORD -> toRecordAvroValue(fieldSchema, (Map) v, decConv, columnName)
+      case Schema.Type.ARRAY -> toArrayAvroValue(fieldSchema, (List) v, decConv, columnName, context, path)
+      case Schema.Type.MAP -> toMapAvroValue(fieldSchema, (Map) v, decConv, columnName, context, path)
+      case Schema.Type.RECORD -> toRecordAvroValue(fieldSchema, (Map) v, decConv, columnName, context, path)
       default -> v.toString()
     }
   }
@@ -801,25 +756,35 @@ class MatrixAvroWriter {
     BigDecimal.isInstance(v) ? ByteBuffer.wrap(((BigDecimal) v).unscaledValue().toByteArray()) : v.toString()
   }
   private static List toArrayAvroValue(Schema fieldSchema, List input, Conversions.DecimalConversion decConv,
-                                       String columnName) {
+                                       String columnName, AvroWriteContext context, String path) {
     Schema elem = fieldSchema.getElementType()
-    input?.collect { Object e -> toAvroValue(elem, e, decConv, columnName) } ?: []
+    List output = new ArrayList(input.size())
+    int index = 0
+    for (Object value : input) {
+      String elementPath = value instanceof Map || value instanceof List ? "$path[$index]" : path
+      output.add(toAvroValue(elem, value, decConv, columnName, context, elementPath))
+      index++
+    }
+    output
   }
   private static Map<String, Object> toMapAvroValue(Schema fieldSchema, Map input, Conversions.DecimalConversion decConv,
-                                                     String columnName) {
+                                                     String columnName, AvroWriteContext context, String path) {
     Schema vs = fieldSchema.getValueType()
     Map<String, Object> outMap = [:]
-    input?.each { key, value ->
-      outMap[key?.toString()] = toAvroValue(vs, value, decConv, columnName)
+    context.keys(input, path).normalized.each { String key, Object value ->
+      String valuePath = value instanceof Map || value instanceof List ? "$path['$key']" : path
+      outMap[key] = toAvroValue(vs, value, decConv, columnName, context, valuePath)
     }
     outMap
   }
   private static GenericData.Record toRecordAvroValue(Schema fieldSchema, Map input,
-                                                      Conversions.DecimalConversion decConv, String columnName) {
+                                                      Conversions.DecimalConversion decConv, String columnName, AvroWriteContext context, String path) {
     GenericData.Record record = new GenericData.Record(fieldSchema)
+    AvroWriteContext.MapKeys keys = context.keys(input, path)
     fieldSchema.getFields().each { Schema.Field field ->
-      def value = input == null ? null : input.get(field.name())
-      record.put(field.name(), toAvroValue(field.schema(), value, decConv, columnName))
+      def value = keys.value(field.name())
+      String fieldPath = value instanceof Map || value instanceof List ? "$path.${field.name()}" : path
+      record.put(field.name(), toAvroValue(field.schema(), value, decConv, columnName, context, fieldPath))
     }
     record
   }
@@ -990,14 +955,19 @@ class MatrixAvroWriter {
       }
     }
   }
-  private static void scanMapValue(Map map, ColumnProfile profile, int rowNumber) {
+  private static void scanMapValue(Map input, ColumnProfile profile, int rowNumber) {
+    Map<String, Object> map
+    try {
+      map = new AvroWriteContext(profile.name).keys(input, profile.name).normalized
+    } catch (AvroSchemaException e) {
+      throw e.withRowNumber(rowNumber)
+    }
     if (!profile.recordSeen) {
       profile.recordSeen = true
       profile.recordLike = true
-      profile.recordSample = map
-      profile.recordKeys = new LinkedHashSet<>(map.keySet()*.toString())
+      profile.recordKeys = new LinkedHashSet<String>(map.keySet())
     } else if (profile.recordLike) {
-      Set<String> keys = new LinkedHashSet<>(map.keySet()*.toString())
+      Set<String> keys = new LinkedHashSet<String>(map.keySet())
       if (profile.recordKeys != keys) {
         profile.recordLike = false
       }
@@ -1064,16 +1034,6 @@ class MatrixAvroWriter {
         throw new IllegalArgumentException("columnSchemas['$columnName'] does not match any Matrix column")
       }
     }
-  }
-  /**
-   * Checks whether a Java value can be written under an Avro schema.
-   *
-   * @param schema the Avro schema to check against
-   * @param value the Java value to check (may be null)
-   * @return true if the value can be serialized under the schema
-   */
-  private static boolean isCompatible(Schema schema, Object value) {
-    AvroSchemaCompatibility.isCompatible(schema, value)
   }
   private static BigDecimal decimalValue(Number value, String columnName) {
     decimalValue(value, columnName, null, -1)

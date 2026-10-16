@@ -17,7 +17,6 @@ final class ColumnProfile {
   Class<?> mapValueClass
   boolean recordLike = false
   boolean recordSeen = false
-  Map recordSample
   Set<String> recordKeys
   DecimalColumnProfile decimalProfile
   NestedNumericProfile listNumericProfile
