@@ -486,9 +486,45 @@ class MatrixAvroReader {
         appendRecordValues(rec, fields, columns, rowNumber)
         rowNumber++
       }
-      return Matrix.builder(matrixName).columns(columns).build()
+      return Matrix.builder(matrixName).columns(columns).types(fields.collect { convertedType(it.schema()) }).build()
     } finally {
       dfs.close()
+    }
+  }
+  private static Class<?> convertedType(Schema schema) {
+    if (schema.type == Schema.Type.UNION) {
+      Set<Class<?>> types = schema.types.findAll { it.type != Schema.Type.NULL }
+          .collect { convertedType(it) } as Set<Class<?>>
+      return types.size() == 1 ? types.first() : Object
+    }
+    LogicalType logical = schema.logicalType
+    if (logical instanceof LogicalTypes.Decimal) {
+      return schema.type == Schema.Type.BYTES && ((LogicalTypes.Decimal) logical).scale == 0 &&
+          schema.getProp(AvroSchemaUtil.JAVA_TYPE_PROPERTY) == AvroSchemaUtil.BIG_INTEGER_JAVA_TYPE
+          ? BigInteger : BigDecimal
+    }
+    Class<?> logicalClass = switch (logical?.name) {
+      case 'date' -> LocalDate
+      case 'time-millis', 'time-micros' -> LocalTime
+      case 'timestamp-millis', 'timestamp-micros' -> Instant
+      case 'local-timestamp-millis', 'local-timestamp-micros' -> LocalDateTime
+      case 'uuid' -> String
+      default -> null
+    }
+    if (logicalClass != null) {
+      return logicalClass
+    }
+    switch (schema.type) {
+      case Schema.Type.BOOLEAN -> Boolean
+      case Schema.Type.INT -> Integer
+      case Schema.Type.LONG -> Long
+      case Schema.Type.FLOAT -> Float
+      case Schema.Type.DOUBLE -> Double
+      case Schema.Type.STRING, Schema.Type.ENUM -> String
+      case Schema.Type.BYTES, Schema.Type.FIXED -> byte[]
+      case Schema.Type.ARRAY -> List
+      case Schema.Type.MAP, Schema.Type.RECORD -> Map
+      default -> Object
     }
   }
   private static void appendRecordValues(GenericRecord rec, List<Schema.Field> fields,

@@ -268,8 +268,12 @@ abstract class AvroSchemaDecl {
     }
     result
   }
+  @PackageScope
+  static AvroScalarTypeDecl scalarTypeForClass(Class<?> javaType) {
+    SCALAR_TYPE_BY_CLASS[javaType]
+  }
   private static AvroScalarTypeDecl toScalarType(Class<?> javaType) {
-    AvroScalarTypeDecl scalarType = SCALAR_TYPE_BY_CLASS[javaType]
+    AvroScalarTypeDecl scalarType = scalarTypeForClass(javaType)
     if (scalarType != null) {
       return scalarType
     }

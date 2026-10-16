@@ -19,4 +19,10 @@ final class AvroSchemaTestSupport {
         ? schema.types.find { Schema type -> type.type != Schema.Type.NULL }
         : schema
   }
+  static boolean isCompatible(Schema schema, Object value) {
+    def method = Class.forName('se.alipsa.matrix.avro.AvroSchemaCompatibility')
+        .getDeclaredMethod('isCompatible', Schema, Object)
+    method.accessible = true
+    method.invoke(null, schema, value) as boolean
+  }
 }

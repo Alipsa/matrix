@@ -384,3 +384,39 @@ See `src/test/groovy/test/alipsa/matrix/avro/`:
 ## License
 
 Same license as the parent Matrix project (MIT). See the repository [LICENSE file](../LICENSE).
+
+## Type and map-key behavior in 0.3.2
+
+Imported columns carry the Java types returned by the reader, including empty and all-null
+columns. `matrix.type(column)` and comparisons with `Object` therefore change. Nullable
+unions use their non-null converted class; unions whose branches convert to different
+classes use `Object`. UUID and enum values become `String`, bytes and fixed become `byte[]`,
+arrays become `List`, and maps and records become `Map`. Timestamps become `Instant`
+(or `LocalDateTime` for local timestamps). Marked scale-zero bytes decimals become
+`BigInteger`; other decimals become `BigDecimal`.
+
+Read-then-write pipelines retain `FLOAT` and small-valued `LONG` columns rather than
+inferring `DOUBLE` and `INT`. This changes generated schemas for downstream consumers
+using fixed reader schemas. It does not preserve every original schema: enum and fixed,
+for example, are exported using their converted Java representations. Declared `Byte`
+and `Short` columns, including primitive variants, now write as Avro `INT` and read as
+`Integer`; the original narrow Java type is not preserved.
+
+Map keys are converted to text consistently for records and maps. Null keys and distinct
+keys with the same text are rejected with `AvroSchemaException` carrying column, row
+(zero-based), and nested path context. A literal `"null"` key remains valid.
+
+```groovy
+import se.alipsa.matrix.avro.*
+import se.alipsa.matrix.core.Matrix
+
+String field = 'name'
+def input = Matrix.builder('People').columns([person: [[("${field}"): 'Alice']]])
+    .types(Map).build()
+byte[] bytes = MatrixAvroWriter.writeBytes(input) // default write options
+Matrix output = MatrixAvroReader.read(bytes)     // default read options
+assert output[0, 'person'].name == 'Alice'
+assert output.type('person') == Map
+```
+
+No new options are required. Existing read and write option defaults remain in effect.

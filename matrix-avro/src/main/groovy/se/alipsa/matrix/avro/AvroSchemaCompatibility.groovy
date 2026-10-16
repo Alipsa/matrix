@@ -24,8 +24,12 @@ final class AvroSchemaCompatibility {
   }
 
   static CompatibilityFailure findIncompatibleValue(Schema schema, Object value, String path) {
+    findIncompatibleValue(schema, value, path, new AvroWriteContext())
+  }
+
+  static CompatibilityFailure findIncompatibleValue(Schema schema, Object value, String path, AvroWriteContext context) {
     if (value == null) {
-      return null
+      return schema.isNullable() ? null : new CompatibilityFailure(path, value, schema)
     }
     if (schema.type == Schema.Type.UNION) {
       CompatibilityFailure firstFailure = null
@@ -33,7 +37,7 @@ final class AvroSchemaCompatibility {
         if (candidate.type == Schema.Type.NULL) {
           continue
         }
-        CompatibilityFailure failure = findIncompatibleValue(candidate, value, path)
+        CompatibilityFailure failure = findIncompatibleValue(candidate, value, path, context)
         if (failure == null) {
           return null
         }
@@ -50,13 +54,13 @@ final class AvroSchemaCompatibility {
       return isLeafCompatible(schema, value) ? null : new CompatibilityFailure(path, value, schema)
     }
     if (schema.type == Schema.Type.ARRAY) {
-      return findIncompatibleArrayValue(schema, value, path)
+      return findIncompatibleArrayValue(schema, value, path, context)
     }
     if (schema.type == Schema.Type.MAP) {
-      return findIncompatibleMapValue(schema, value, path)
+      return findIncompatibleMapValue(schema, value, path, context)
     }
     if (schema.type == Schema.Type.RECORD) {
-      return findIncompatibleRecordValue(schema, value, path)
+      return findIncompatibleRecordValue(schema, value, path, context)
     }
     isLeafCompatible(schema, value) ? null : new CompatibilityFailure(path, value, schema)
   }
@@ -135,14 +139,14 @@ final class AvroSchemaCompatibility {
     NumericKinds.toBigDecimal(value)
   }
 
-  private static CompatibilityFailure findIncompatibleArrayValue(Schema schema, Object value, String path) {
+  private static CompatibilityFailure findIncompatibleArrayValue(Schema schema, Object value, String path, AvroWriteContext context) {
     if (!List.isInstance(value)) {
       return new CompatibilityFailure(path, value, schema)
     }
     List values = (List) value
     for (int index = 0; index < values.size(); index++) {
-      String elementPath = path == null ? null : "$path[$index]"
-      CompatibilityFailure failure = findIncompatibleValue(schema.elementType, values[index], elementPath)
+      String elementPath = "${path ?: AvroWriteContext.ROOT_PATH}[$index]"
+      CompatibilityFailure failure = findIncompatibleValue(schema.elementType, values[index], elementPath, context)
       if (failure != null) {
         return failure
       }
@@ -150,22 +154,25 @@ final class AvroSchemaCompatibility {
     null
   }
 
-  private static CompatibilityFailure findIncompatibleMapValue(Schema schema, Object value, String path) {
+  private static CompatibilityFailure findIncompatibleMapValue(Schema schema, Object value, String path, AvroWriteContext context) {
     if (!Map.isInstance(value)) {
       return new CompatibilityFailure(path, value, schema)
     }
     Map values = (Map) value
+    context.keys(values, path)
     for (Map.Entry entry : values.entrySet()) {
-      String valuePath = path == null ? null : "$path['${entry.key}']"
-      CompatibilityFailure failure = findIncompatibleValue(schema.valueType, entry.value, valuePath)
+      boolean nested = entry.value instanceof Map || entry.value instanceof List
+      String valuePath = nested ? "${path ?: AvroWriteContext.ROOT_PATH}['${entry.key}']" : null
+      CompatibilityFailure failure = findIncompatibleValue(schema.valueType, entry.value, valuePath, context)
       if (failure != null) {
-        return failure
+        return nested ? failure : new CompatibilityFailure(
+            "${path ?: AvroWriteContext.ROOT_PATH}['${entry.key}']", failure.value, failure.schema)
       }
     }
     null
   }
 
-  private static CompatibilityFailure findIncompatibleRecordValue(Schema schema, Object value, String path) {
+  private static CompatibilityFailure findIncompatibleRecordValue(Schema schema, Object value, String path, AvroWriteContext context) {
     if (GenericRecord.isInstance(value)) {
       return null
     }
@@ -173,11 +180,15 @@ final class AvroSchemaCompatibility {
       return new CompatibilityFailure(path, value, schema)
     }
     Map values = (Map) value
+    AvroWriteContext.MapKeys keys = context.keys(values, path)
     for (Schema.Field field : schema.fields) {
-      String fieldPath = path == null ? null : "$path.${field.name()}"
-      CompatibilityFailure failure = findIncompatibleValue(field.schema(), values.get(field.name()), fieldPath)
+      Object fieldValue = keys.value(field.name())
+      boolean nested = fieldValue instanceof Map || fieldValue instanceof List
+      String fieldPath = nested ? "${path ?: AvroWriteContext.ROOT_PATH}.${field.name()}" : null
+      CompatibilityFailure failure = findIncompatibleValue(field.schema(), fieldValue, fieldPath, context)
       if (failure != null) {
-        return failure
+        return nested ? failure : new CompatibilityFailure(
+            "${path ?: AvroWriteContext.ROOT_PATH}.${field.name()}", failure.value, failure.schema)
       }
     }
     null

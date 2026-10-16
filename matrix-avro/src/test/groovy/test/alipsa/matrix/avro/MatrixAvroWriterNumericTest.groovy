@@ -13,7 +13,6 @@ import se.alipsa.matrix.avro.MatrixAvroWriter
 import se.alipsa.matrix.avro.exceptions.AvroSchemaException
 import se.alipsa.matrix.core.Matrix
 
-import java.lang.reflect.Method
 
 class MatrixAvroWriterNumericTest {
 
@@ -199,8 +198,6 @@ class MatrixAvroWriterNumericTest {
   }
 
   private static boolean isCompatible(Schema schema, Object value) {
-    Method method = MatrixAvroWriter.getDeclaredMethod('isCompatible', Schema, Object)
-    method.accessible = true
-    (boolean) method.invoke(null, schema, value)
+    AvroSchemaTestSupport.isCompatible(schema, value)
   }
 }
