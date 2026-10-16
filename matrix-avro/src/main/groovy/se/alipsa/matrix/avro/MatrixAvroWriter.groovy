@@ -758,9 +758,13 @@ class MatrixAvroWriter {
   private static List toArrayAvroValue(Schema fieldSchema, List input, Conversions.DecimalConversion decConv,
                                        String columnName, AvroWriteContext context, String path) {
     Schema elem = fieldSchema.getElementType()
-    input.withIndex().collect { Object e, int index ->
-      toAvroValue(elem, e, decConv, columnName, context, "$path[$index]")
+    List output = new ArrayList(input.size())
+    for (int index = 0; index < input.size(); index++) {
+      Object value = input[index]
+      String elementPath = value instanceof Map || value instanceof List ? "$path[$index]" : path
+      output.add(toAvroValue(elem, value, decConv, columnName, context, elementPath))
     }
+    output
   }
   private static Map<String, Object> toMapAvroValue(Schema fieldSchema, Map input, Conversions.DecimalConversion decConv,
                                                      String columnName, AvroWriteContext context, String path) {

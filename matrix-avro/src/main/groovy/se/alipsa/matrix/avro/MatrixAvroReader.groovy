@@ -37,6 +37,29 @@ import java.time.*
  */
 class MatrixAvroReader {
 
+  private static final Map<String, LogicalValueConversion> LOGICAL_CONVERSIONS = [
+      'date': new LogicalValueConversion(LocalDate, { Object value -> toLocalDate(value) }),
+      'time-millis': new LogicalValueConversion(LocalTime, { Object value -> toLocalTimeMillis(value) }),
+      'time-micros': new LogicalValueConversion(LocalTime, { Object value -> toLocalTimeMicros(value) }),
+      'timestamp-millis': new LogicalValueConversion(Instant, { Object value -> toInstantMillis(value) }),
+      'timestamp-micros': new LogicalValueConversion(Instant, { Object value -> toInstantMicros(value) }),
+      'local-timestamp-millis': new LogicalValueConversion(LocalDateTime, { Object value -> toLocalDateTimeMillis(value) }),
+      'local-timestamp-micros': new LogicalValueConversion(LocalDateTime, { Object value -> toLocalDateTimeMicros(value) }),
+      'uuid': new LogicalValueConversion(String, { Object value -> value.toString() })
+  ].asImmutable()
+
+  private static final class LogicalValueConversion {
+
+    final Class<?> resultType
+    final Closure<?> converter
+
+    LogicalValueConversion(Class<?> resultType, Closure<?> converter) {
+      this.resultType = resultType
+      this.converter = converter
+    }
+  }
+
+
   private static final String DEFAULT_MATRIX_NAME = 'AvroMatrix'
   private static final String FILE_PARAMETER = 'file'
   private static final String OPTIONS_NULL_MESSAGE = 'Options cannot be null'
@@ -499,18 +522,9 @@ class MatrixAvroReader {
     }
     LogicalType logical = schema.logicalType
     if (logical instanceof LogicalTypes.Decimal) {
-      return schema.type == Schema.Type.BYTES && ((LogicalTypes.Decimal) logical).scale == 0 &&
-          schema.getProp(AvroSchemaUtil.JAVA_TYPE_PROPERTY) == AvroSchemaUtil.BIG_INTEGER_JAVA_TYPE
-          ? BigInteger : BigDecimal
+      return isBigIntegerDecimal(schema, (LogicalTypes.Decimal) logical) ? BigInteger : BigDecimal
     }
-    Class<?> logicalClass = switch (logical?.name) {
-      case 'date' -> LocalDate
-      case 'time-millis', 'time-micros' -> LocalTime
-      case 'timestamp-millis', 'timestamp-micros' -> Instant
-      case 'local-timestamp-millis', 'local-timestamp-micros' -> LocalDateTime
-      case 'uuid' -> String
-      default -> null
-    }
+    Class<?> logicalClass = LOGICAL_CONVERSIONS.get(logical?.name)?.resultType
     if (logicalClass != null) {
       return logicalClass
     }
@@ -593,17 +607,7 @@ class MatrixAvroReader {
     if (LogicalTypes.Decimal.isInstance(lt)) {
       return toDecimalValue((LogicalTypes.Decimal) lt, schema, v)
     }
-    switch (lt.name) {
-      case 'date' -> toLocalDate(v)
-      case 'time-millis' -> toLocalTimeMillis(v)
-      case 'time-micros' -> toLocalTimeMicros(v)
-      case 'timestamp-millis' -> toInstantMillis(v)
-      case 'timestamp-micros' -> toInstantMicros(v)
-      case 'local-timestamp-millis' -> toLocalDateTimeMillis(v)
-      case 'local-timestamp-micros' -> toLocalDateTimeMicros(v)
-      case 'uuid' -> v.toString()
-      default -> null
-    }
+    LOGICAL_CONVERSIONS.get(lt.name)?.converter?.call(v)
   }
   private static Object convertSchemaValue(Schema schema, Object v) {
     switch (schema.getType()) {
@@ -735,6 +739,10 @@ class MatrixAvroReader {
     int nanos    = (int) (Math.floorMod(micros, NANOS_PER_MILLI) * NANOS_PER_MICRO)
     return LocalDateTime.ofEpochSecond(seconds, nanos, ZoneOffset.UTC)
   }
+  private static boolean isBigIntegerDecimal(Schema schema, LogicalTypes.Decimal decimal) {
+    schema.type == Schema.Type.BYTES && decimal.scale == 0 &&
+        AvroSchemaUtil.BIG_INTEGER_JAVA_TYPE == schema.getProp(AvroSchemaUtil.JAVA_TYPE_PROPERTY)
+  }
   /**
    * Converts an Avro decimal logical type value to its corresponding Matrix number.
    *
@@ -758,8 +766,7 @@ class MatrixAvroReader {
       throw new IllegalArgumentException('Decimal logical type on non-bytes/fixed field')
     }
     BigInteger unscaled = new BigInteger(bytes)
-    if (schema.getType() == Schema.Type.BYTES && scale == 0 &&
-        AvroSchemaUtil.BIG_INTEGER_JAVA_TYPE == schema.getProp(AvroSchemaUtil.JAVA_TYPE_PROPERTY)) {
+    if (isBigIntegerDecimal(schema, dec)) {
       return unscaled
     }
     new BigDecimal(unscaled, scale)

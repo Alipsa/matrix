@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.avro.exceptions.AvroSchemaException
 import se.alipsa.matrix.core.Matrix
 
+@SuppressWarnings(['GStringAsMapKey', 'UnnecessaryStringInstantiation'])
 class AvroKeyRegressionTest {
 
   private enum Key { NAME }
@@ -114,6 +115,27 @@ class AvroKeyRegressionTest {
     Schema mapUnion = Schema.createUnion(Schema.createMap(Schema.create(Schema.Type.INT)), Schema.create(Schema.Type.STRING))
     assertThrows(AvroSchemaException) { AvroSchemaCompatibility.isCompatible(mapUnion, collision) }
     assertThrows(AvroSchemaException) { AvroSchemaCompatibility.isCompatible(mapUnion, [(null): 1]) }
+  }
+
+  @Test
+  void arrayFailuresRetainScalarAndNestedContainerPaths() {
+    def numbers = new AvroWriteOptions().columnSchemas([
+        value: AvroSchemaDecl.array(AvroSchemaDecl.arrayOf(Integer))])
+    Matrix badNumbers = Matrix.builder('Arrays').columns([value: [[[1, 'bad']]]]).types(List).build()
+    def scalarError = assertThrows(AvroSchemaException) { MatrixAvroWriter.writeBytes(badNumbers, numbers) }
+    assertTrue(scalarError.message.contains('value[0][1]'))
+    assertEquals(0, scalarError.rowNumber)
+
+    def records = new AvroWriteOptions().columnSchemas([
+        value: AvroSchemaDecl.array(AvroSchemaDecl.record([nested: AvroSchemaDecl.mapOf(Integer)]))])
+    Matrix badKeys = Matrix.builder('Arrays').columns([value: [[[nested: [(null): 1]]]]]).types(List).build()
+    def keyError = assertThrows(AvroSchemaException) { MatrixAvroWriter.writeBytes(badKeys, records) }
+    assertTrue(keyError.message.contains('value[0].nested'))
+    assertEquals('value', keyError.columnName)
+    assertEquals(0, keyError.rowNumber)
+
+    Matrix valid = Matrix.builder('Arrays').columns([value: [[[nested: [a: 1]]]]]).types(List).build()
+    assertEquals([[nested: [a: 1]]], MatrixAvroReader.read(MatrixAvroWriter.writeBytes(valid, records))[0, 'value'])
   }
 
   @Test

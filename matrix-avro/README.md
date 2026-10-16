@@ -381,9 +381,15 @@ See `src/test/groovy/test/alipsa/matrix/avro/`:
 - `MatrixAvroRoundTripTest` for logical types, decimals, and nested collections
 - `AvroFormatProviderTest` for SPI option parsing and round-tripping
 
-## License
+The map-key benchmark also covers scalar lists and lists of records:
 
-Same license as the parent Matrix project (MIT). See the repository [LICENSE file](../LICENSE).
+```sh
+./gradlew :matrix-avro:avroMapKeyBenchmark -Prows=30000 -Pwarmups=5 -Pruns=7
+```
+
+`rows` defaults to 30000 cells per workload, `warmups` to 5 unmeasured writes, and `runs`
+to 7 measured writes. The task uses a 512 MiB heap and reports median, average, minimum,
+and maximum write times; timings do not determine test success.
 
 ## Type and map-key behavior in 0.3.2
 
@@ -420,3 +426,7 @@ assert output.type('person') == Map
 ```
 
 No new options are required. Existing read and write option defaults remain in effect.
+
+## License
+
+Same license as the parent Matrix project (MIT). See the repository [LICENSE file](../LICENSE).

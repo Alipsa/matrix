@@ -101,8 +101,12 @@ class AvroReadTypesTest {
     [Schema.Type.INT, Schema.Type.LONG, Schema.Type.FLOAT].each { type ->
       Schema nullable = Schema.createUnion(Schema.create(Schema.Type.NULL), Schema.create(type))
       Object small = 1
-      if (type == Schema.Type.FLOAT) small = Float.valueOf(1f)
-      if (type == Schema.Type.LONG) small = Long.valueOf(1L)
+      if (type == Schema.Type.FLOAT) {
+        small = Float.valueOf(1f)
+      }
+      if (type == Schema.Type.LONG) {
+        small = Long.valueOf(1L)
+      }
       [[], [null], [small]].each { values ->
         Matrix result = MatrixAvroReader.read(fixture(nullable, values))
         2.times {

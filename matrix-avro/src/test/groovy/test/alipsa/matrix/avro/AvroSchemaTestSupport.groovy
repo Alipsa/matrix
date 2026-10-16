@@ -4,6 +4,8 @@ import groovy.transform.PackageScope
 
 import org.apache.avro.Schema
 
+import se.alipsa.matrix.avro.AvroSchemaCompatibility
+
 /**
  * Shared schema assertions for Matrix Avro tests.
  */
@@ -20,7 +22,7 @@ final class AvroSchemaTestSupport {
         : schema
   }
   static boolean isCompatible(Schema schema, Object value) {
-    def method = Class.forName('se.alipsa.matrix.avro.AvroSchemaCompatibility')
+    def method = AvroSchemaCompatibility
         .getDeclaredMethod('isCompatible', Schema, Object)
     method.accessible = true
     method.invoke(null, schema, value) as boolean

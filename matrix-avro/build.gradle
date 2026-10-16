@@ -101,6 +101,18 @@ tasks.register('avroConversionBenchmark', JavaExec) {
   args rows, warmups, runs
 }
 
+tasks.register('avroMapKeyBenchmark', JavaExec) {
+  group = 'benchmark'
+  description = 'Run MatrixAvro map-key and array allocation benchmarks (in-memory)'
+  classpath = sourceSets.test.runtimeClasspath
+  mainClass = 'se.alipsa.matrix.avro.benchmarks.MatrixAvroMapKeyBenchmark'
+  jvmArgs '-Xms512m', '-Xmx512m'
+  def rows = project.findProperty('rows') ?: '30000'
+  def warmups = project.findProperty('warmups') ?: '5'
+  def runs = project.findProperty('runs') ?: '7'
+  args rows, warmups, runs
+}
+
 tasks.register('avroParquetBenchmark', JavaExec) {
   group = 'benchmark'
   description = 'Run Avro vs Parquet performance comparison benchmark'

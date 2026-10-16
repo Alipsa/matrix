@@ -145,10 +145,13 @@ final class AvroSchemaCompatibility {
     }
     List values = (List) value
     for (int index = 0; index < values.size(); index++) {
-      String elementPath = "${path ?: AvroWriteContext.ROOT_PATH}[$index]"
-      CompatibilityFailure failure = findIncompatibleValue(schema.elementType, values[index], elementPath, context)
+      Object element = values[index]
+      boolean nested = element instanceof Map || element instanceof List
+      String elementPath = nested ? "${path ?: AvroWriteContext.ROOT_PATH}[$index]" : null
+      CompatibilityFailure failure = findIncompatibleValue(schema.elementType, element, elementPath, context)
       if (failure != null) {
-        return failure
+        return nested ? failure : new CompatibilityFailure(
+            "${path ?: AvroWriteContext.ROOT_PATH}[$index]", failure.value, failure.schema)
       }
     }
     null
