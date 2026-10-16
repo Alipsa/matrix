@@ -17,8 +17,8 @@
 - Add `ArffReadOptions.integerType`: `Integer` (default), `Long` for large integral values, or `BigDecimal` to also
   accept fractions. Sparse defaults use the selected type; SPI accepts Class values or case-insensitive type names.
 - Add read/write `charset` options (UTF-8 by default); decoder-only charsets are rejected when setting write options.
-  Malformed input bytes now fail instead of being replaced with
-  U+FFFD; unencodable output and unpaired UTF-16 surrogates are rejected before writing bytes **(changed)**.
+  Malformed input bytes now fail instead of being replaced with U+FFFD; unencodable output and unpaired UTF-16
+  surrogates are rejected before writing bytes **(changed)**.
 - Nominal declarations accept whitespace as well as commas between values; quote values containing spaces.
   Trailing/doubled commas no longer declare an empty value (use `''`); duplicate values are errors **(changed)**.
   Accept `@attribute c{a,b}` without a separating space **(changed)**.
