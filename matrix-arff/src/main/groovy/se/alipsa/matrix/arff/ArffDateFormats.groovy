@@ -1,5 +1,7 @@
 package se.alipsa.matrix.arff
 
+import groovy.transform.PackageScope
+
 import java.text.ParseException
 import java.text.ParsePosition
 import java.text.SimpleDateFormat
@@ -54,6 +56,13 @@ class ArffDateFormats {
       throw new ParseException("Unparseable date: \"$value\"", errorIndex)
     }
     parsed
+  }
+
+  /** Whether the entire string matches this column's date formatter, in every date mode. */
+  @PackageScope
+  static boolean parsesCompletely(SimpleDateFormat format, String value) {
+    ParsePosition position = new ParsePosition(0)
+    format.parse(value, position) != null && position.index == value.length()
   }
 
   /** The zone in which a {@code LocalDate}/{@code LocalDateTime} is placed on the time line before formatting. */

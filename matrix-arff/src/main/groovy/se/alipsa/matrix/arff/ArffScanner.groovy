@@ -30,17 +30,6 @@ final class ArffScanner {
     }
   }
 
-  /** Result of one scan: the indexes of the target character outside quotes, and whether a quote was left open. */
-  private static final class Scan {
-    final List<Integer> matches
-    final boolean unterminatedQuote
-
-    Scan(List<Integer> matches, boolean unterminatedQuote) {
-      this.matches = matches
-      this.unterminatedQuote = unterminatedQuote
-    }
-  }
-
   @PackageScope
   static boolean isQuoteChar(char c) {
     c == SINGLE_QUOTE_CHAR || c == DOUBLE_QUOTE_CHAR
@@ -80,31 +69,32 @@ final class ArffScanner {
    */
   @PackageScope
   static int indexOfOutsideQuotes(String text, char target, int from) {
-    Integer match = scan(text, target).matches.find { Integer index -> index >= from }
-    match == null ? -1 : match
+    scan(text, target, from, true, null, false)
   }
 
   /** Indexes of every {@code target} outside quoted tokens, in encounter order. */
   @PackageScope
   static List<Integer> indexesOutsideQuotes(String text, char target) {
-    scan(text, target).matches
+    List<Integer> matches = []
+    scan(text, target, 0, false, matches, false)
+    matches
   }
 
   /** Index of the last {@code target} outside a quoted token, or -1. */
   @PackageScope
   static int lastIndexOfOutsideQuotes(String text, char target) {
-    List<Integer> matches = scan(text, target).matches
-    matches.isEmpty() ? -1 : matches.last()
+    scan(text, target, 0, false, null, false)
   }
 
   /** Whether {@code text} opens a quoted token that is never closed. */
   @PackageScope
   static boolean hasUnterminatedQuote(String text) {
-    scan(text, SINGLE_QUOTE_CHAR).unterminatedQuote
+    scan(text, SINGLE_QUOTE_CHAR, 0, false, null, true) == 1
   }
 
-  private static Scan scan(String text, char target) {
-    List<Integer> matches = []
+  private static int scan(String text, char target, int from, boolean firstOnly,
+                          List<Integer> matches, boolean checkQuote) {
+    int last = -1
     boolean inQuote = false
     boolean escape = false
     char quoteChar = 0
@@ -125,11 +115,17 @@ final class ArffScanner {
         quoteChar = c
         continue
       }
-      if (c == target) {
-        matches.add(i)
+      if (c == target && i >= from) {
+        if (firstOnly) {
+          return i
+        }
+        last = i
+        if (matches != null) {
+          matches.add(i)
+        }
       }
     }
-    new Scan(matches, inQuote)
+    checkQuote ? (inQuote ? 1 : 0) : last
   }
 
 }

@@ -3,6 +3,9 @@ package se.alipsa.matrix.arff
 import se.alipsa.matrix.core.spi.OptionDescriptor
 import se.alipsa.matrix.core.spi.OptionMaps
 
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
+
 /**
  * Typed options for ARFF read operations via the SPI.
  */
@@ -14,6 +17,8 @@ class ArffReadOptions {
   private static final String FAIL_ON_UNDECLARED_NOMINAL_VALUE = 'failOnUndeclaredNominalValue'
   private static final String OMITTED_STRING_FALLBACK = 'omittedStringFallback'
   private static final String INSTANCE_WEIGHT_COLUMN = 'instanceWeightColumn'
+  private static final String INTEGER_TYPE = 'integerType'
+  private static final String CHARSET = 'charset'
   private static final String DATE_MODE = 'dateMode'
 
   private String fallbackMatrixName = null
@@ -23,6 +28,8 @@ class ArffReadOptions {
   private Boolean failOnUndeclaredNominalValue = null
   private String omittedStringFallback = null
   private String instanceWeightColumn = null
+  private Class<? extends Number> integerType = Integer
+  private Charset charset = StandardCharsets.UTF_8
   private ArffDateMode dateMode = ArffDateMode.UTC
 
   String getFallbackMatrixName() {
@@ -115,6 +122,31 @@ class ArffReadOptions {
     this
   }
 
+  /** Java type of INTEGER attributes; Integer by default. */
+  Class<? extends Number> getIntegerType() {
+    integerType
+  }
+
+  /** Accept Integer (default), Long, or BigDecimal; null resets to Integer. */
+  ArffReadOptions integerType(Class<? extends Number> value) {
+    if (value != null && !(value in [Integer, Long, BigDecimal])) {
+      throw new IllegalArgumentException('integerType must be Integer, Long or BigDecimal')
+    }
+    integerType = value ?: Integer
+    this
+  }
+
+  /** Character encoding for byte streams; UTF-8 by default. */
+  Charset getCharset() {
+    charset
+  }
+
+  /** Set the stream charset; null resets to UTF-8. Writer/String entry points do not use this option. */
+  ArffReadOptions charset(Charset value) {
+    charset = value ?: StandardCharsets.UTF_8
+    this
+  }
+
   static ArffReadOptions fromMap(Map<String, ?> options) {
     ArffReadOptions result = new ArffReadOptions()
     Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
@@ -145,11 +177,23 @@ class ArffReadOptions {
     if (normalized.containsKey('datemode')) {
       result.dateMode(ArffOptionValues.enumValue(normalized.datemode, ArffDateMode, DATE_MODE))
     }
+    if (normalized.containsKey('integertype')) {
+      result.integerType(ArffOptionValues.integerTypeValue(normalized.integertype))
+    }
+    if (normalized.containsKey(CHARSET)) {
+      result.charset(ArffOptionValues.charsetValue(normalized[CHARSET]))
+    }
     result
   }
 
   Map<String, ?> toMap() {
     Map<String, Object> result = [:]
+    if (integerType != Integer) {
+      result[INTEGER_TYPE] = integerType
+    }
+    if (charset != StandardCharsets.UTF_8) {
+      result[CHARSET] = charset
+    }
     if (fallbackMatrixName != null) {
       result.fallbackMatrixName = fallbackMatrixName
     }
@@ -183,6 +227,8 @@ class ArffReadOptions {
 
   static List<OptionDescriptor> descriptors() {
     [
+        new OptionDescriptor(INTEGER_TYPE, Class, Integer, 'INTEGER Java type: Integer, Long or BigDecimal (Class or case-insensitive simple/fully-qualified name)'),
+        new OptionDescriptor(CHARSET, Charset, StandardCharsets.UTF_8, 'Byte-stream charset (Charset or name); malformed/unmappable text is rejected'),
         new OptionDescriptor('fallbackMatrixName', String, null, 'Fallback Matrix name when the ARFF file has no @RELATION'),
         new OptionDescriptor(STRICT, Boolean, false, 'Enable fail-fast validation for unknown attribute types, row length mismatches and undeclared nominal values unless overridden by specific options'),
         new OptionDescriptor(FAIL_ON_UNKNOWN_ATTRIBUTE_TYPE, Boolean, STRICT, 'Fail when an unknown @ATTRIBUTE type is encountered instead of falling back to STRING'),

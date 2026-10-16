@@ -192,7 +192,7 @@ Limitations:
   `java.io.StreamTokenizer`; all escapes emitted by Weka's writer are supported
 - an empty comma field (`1,,3`) reads as missing; Weka rejects it as a premature end of line
 - INTEGER attributes are read as `Integer` (Weka stores all numeric types as `double`), so integral values outside the
-  `int` range are rejected
+  `int` range are rejected unless `integerType(Long)` or `integerType(BigDecimal)` is selected
 - an omitted STRING cell in a sparse row whose column never has an explicit value reads as `null`; Weka has no value
   there either (the raw cell is `0` and it fails on access) and liac-arff yields the string `"0"`. Set
   `omittedStringFallback('0')` to get that value
@@ -201,7 +201,8 @@ Limitations:
   an explicit `?` when the cell is missing
 - omitted STRING values inside relational cells are resolved per nested `Matrix`; Weka appears to share one STRING
   dictionary across all cells of the relational attribute, so files relying on cross-cell dictionary index 0 may differ
-- nominal data values are validated against the declaration only in strict mode (Weka always validates)
+- on read, nominal data values are validated against the declaration only in strict mode (Weka always validates);
+  on write, declared nominal values are always validated
 - instance weights are kept only when `instanceWeightColumn` is set; otherwise they are discarded (Weka keeps them on
   the `Instance`). The name is reserved at every relational depth: a file whose sub-relation declares an attribute with
   that name must be read with another option value, and on writing a nested column with that name becomes the nested
@@ -210,7 +211,7 @@ Limitations:
 
 ## Default Behavior
 
-The defaults are intentionally lenient so basic imports and exports work without extra configuration:
+Row and unknown-type validation is lenient by default; malformed headers and invalid writes are always rejected:
 
 - matrix name defaults to `@RELATION` when present, otherwise to the fallback name from `ArffReadOptions.fallbackMatrixName(...)`, otherwise to the source name such as the file name or `ArffMatrix`
 - ARFF missing values (an unquoted `?`) read as `null`; `null`, `NaN` and infinite values write as `?`. A quoted `'?'` is
@@ -227,6 +228,7 @@ The defaults are intentionally lenient so basic imports and exports work without
 - dense rows with extra trailing values ignore the extras unless strict row-length validation is enabled
 - unknown attribute types fall back to `STRING` unless strict unknown-type validation is enabled
 - `String` and `Object` columns are inferred as nominal only when their distinct-value count is at or below `nominalThreshold`, and for datasets with 10 or more rows also at or below 10% of the row count
+- Boolean columns are written as nominal `{false,true}` and read back as strings
 - DATE output uses `yyyy-MM-dd'T'HH:mm:ss` unless `dateFormat(...)` or `dateFormatsByColumn(...)` overrides it
 
 To inspect the currently available SPI options at runtime:
@@ -413,3 +415,67 @@ Generic Matrix SPI round-trip:
 Matrix matrix = Matrix.read([fallbackMatrixName: 'fallback'], new File('input.arff'))
 matrix.write([inferNominals: false], new File('output.arff'))
 ```
+
+### Charset and INTEGER compatibility
+
+| Option | Applies to | Default | Accepted values |
+|--------|------------|---------|-----------------|
+| `charset` | Read/write File, Path, URL input and byte streams | UTF-8 | A `Charset` (encoding-capable for writes), or its name in SPI maps; null resets to UTF-8 |
+| `integerType` | Read INTEGER attributes, including nested and sparse values | `Integer` | `Integer`, `Long`, `BigDecimal`; SPI also accepts case-insensitive simple or fully-qualified names; null resets to `Integer` |
+
+Byte input is decoded strictly. Select the source encoding explicitly when it is not UTF-8; malformed bytes produce
+an error mentioning `charset`. A caller-supplied Reader/Writer or String entry point owns its encoding and skips the
+byte-encoding checks. Files and streams validate every emitted declaration and relevant cell before writing bytes.
+A genuine I/O error during printing (for example a full disk) can still leave a partial file and is reported to the
+caller. A supplied `PrintWriter` is flushed and checked before and after writing; an existing error state is rejected.
+
+To exchange a Latin-1 file with large INTEGER values, create the Matrix, write it, and read it with matching options:
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.arff.ArffReadOptions
+import se.alipsa.matrix.arff.ArffWriteOptions
+import se.alipsa.matrix.arff.ArffTypeDecl
+import se.alipsa.matrix.arff.MatrixArffReader
+import se.alipsa.matrix.arff.MatrixArffWriter
+import java.nio.charset.StandardCharsets
+
+Matrix data = Matrix.builder('cities')
+    .data(id: [3000000000L], city: ['Malmö'])
+    .types(Long, String).build()
+File file = new File('cities.arff')
+MatrixArffWriter.write(data, file, new ArffWriteOptions()
+    .charset(StandardCharsets.ISO_8859_1)
+    .attributeTypesByColumn([id: ArffTypeDecl.INTEGER]))
+Matrix restored = MatrixArffReader.read(file, new ArffReadOptions()
+    .charset(StandardCharsets.ISO_8859_1).integerType(Long))
+assert restored[0, 'id'] == 3000000000L
+assert restored[0, 'city'] == 'Malmö'
+
+// The same options through the Matrix SPI (map first):
+Matrix fromSpi = Matrix.read([charset: 'ISO-8859-1', integerType: 'Long'], file)
+data.write([charset: 'ISO-8859-1', attributeTypesByColumn: [id: 'INTEGER']], file)
+```
+
+`integerType(BigDecimal)` also accepts fractional INTEGER input. With the default `Integer`, values outside the
+`int` range or with a fractional part fail; values written outside that range require `Long` or `BigDecimal` to read
+back. NaN and infinite numeric cells continue to write as `?`.
+
+### Validation and compatibility changes in 0.3.1
+
+- Header matching is locale-independent. An initial BOM is ignored. Missing `@DATA`, unknown header keywords and
+  stray pre-data lines fail even in lenient mode; empty/comment-only input still yields an empty Matrix.
+  Keywords accept whitespace, quotes or `{` as boundaries, so `@relationship` is rejected.
+- Nominal declarations split on whitespace and commas: `{a b}` declares two values, `{a,b,}` declares two,
+  `{'',a}` preserves an empty value, and `{a,a}` fails with line context. `@attribute c{a,b}` is accepted.
+- Writer validation rejects duplicate column names, out-of-mapping nominal cells, invalid numeric cells, fractional
+  INTEGER cells and DATE strings that do not fully match the selected format, including WEKA mode. Parseable numeric
+  and date strings are still accepted. Numeric strings must use ASCII without surrounding whitespace: `''`, blank
+  strings, `'?'`, `' 1 '` and non-ASCII digits are errors. Use `null` for missing numeric values.
+- Boolean columns default to nominal `{false,true}` and read back as `'false'`/`'true'`; explicit type and
+  `stringColumns` overrides still apply. Explicit Boolean nominal columns need no mappings.
+- Lenient dense row mismatches still pad/drop values and now produce one warning per read, including nested rows.
+  Set `failOnRowLengthMismatch(true)` to fail instead.
+- File validation failures preserve existing contents; I/O errors propagate. Encoding validation includes nested names,
+  declarations of all-null DATE columns, and nested cell values. Unpaired surrogates are rejected on byte output.
+- Path overloads support NIO providers such as zip filesystems and null output paths fail with `IllegalArgumentException`.

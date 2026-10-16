@@ -1109,4 +1109,375 @@ hello
     assertTrue(exception.message.contains("{0 'unterminated}"))
   }
 
+
+  @Test
+  void writerRejectsInvalidCellsBeforeOpeningFile() {
+    def target = new File(tempDir, 'preserved.arff')
+    [[ArffTypeDecl.NUMERIC, '1,5'], [ArffTypeDecl.INTEGER, 1.5], [ArffTypeDecl.DATE, 'abc'],
+     [ArffTypeDecl.NUMERIC, '١٢.5'], [ArffTypeDecl.INTEGER, '?']].each { type, value ->
+      target.text = 'original'
+      def m = Matrix.builder('m').data(c: [value]).types(value.class).build()
+      def error = assertThrows(IllegalArgumentException) {
+        MatrixArffWriter.write(m, target, new ArffWriteOptions().attributeTypesByColumn([c: type]))
+      }
+      assertTrue(error.message.contains("Column 'c'"))
+      assertTrue(error.message.contains('row 0'))
+      assertEquals('original', target.text)
+    }
+  }
+
+  @Test
+  void headerValidationReportsSourceLocations() {
+    ['@relationship r', '@DATAX', '@atribute a numeric', '@relation r\n@attribute a numeric',
+     '@relation r\n@attribute a numeric\n1'].each { text ->
+      def error = assertThrows(IllegalArgumentException) { MatrixArffReader.readString(text) }
+      assertTrue(error.message.contains('line'))
+    }
+  }
+
+  @Test
+  void nominalDeclarationsUseWekaSeparatorsAndRejectDuplicates() {
+    ['c{a,b,}', 'c {a b}'].each { declaration ->
+      def m = MatrixArffReader.readString("@relation r\n@attribute $declaration\n@data\na\nb")
+      assertEquals(['a', 'b'], m.column('c'))
+    }
+    def error = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString('@relation r\n@attribute c {a,a}\n@data\na')
+    }
+    assertTrue(error.message.contains('line 2'))
+    assertTrue(error.message.contains('@attribute c {a,a}'))
+  }
+
+  @Test
+  void writeErrorsReachTheCaller() {
+    def m = Matrix.builder('m').data(c: [1]).types(Integer).build()
+    Writer broken = new Writer() {
+      @Override
+      void write(char[] chars, int offset, int length) { throw new IOException('disk full') }
+      @Override
+      void flush() { }
+      @Override
+      void close() { }
+    }
+    def error = assertThrows(IOException) { MatrixArffWriter.write(m, broken) }
+    assertEquals('disk full', error.message)
+  }
+
+  @Test
+  @SuppressWarnings('LocaleSetDefault')
+  void readsHeaderUnderTurkishLocale() {
+    Locale saved = Locale.default
+    try {
+      Locale.default = Locale.forLanguageTag('tr-TR')
+      def m = MatrixArffReader.readString('@relation r\n@attribute a numeric\n@attribute b string\n@attribute c integer\n@data\n1,x,2')
+      assertEquals(['a', 'b', 'c'], m.columnNames())
+      assertEquals([BigDecimal, String, Integer], m.types())
+      assertEquals(1, m.rowCount())
+    } finally {
+      Locale.default = saved
+    }
+  }
+
+  @Test
+  void bomEmptyInputAndQuotedKeywordBoundaries() {
+    def text = "\uFEFF@relation'r'\n@attribute'a b' numeric\n@data\n1"
+    assertEquals('r', MatrixArffReader.readString(text).matrixName)
+    assertEquals(['a b'], MatrixArffReader.read(new ByteArrayInputStream(text.getBytes('UTF-8'))).columnNames())
+    ['', '% comment\n\n'].each { assertEquals(0, MatrixArffReader.readString(it).rowCount()) }
+  }
+
+  @Test
+  void integerTypeCompatibilityAndSparseDefaults() {
+    def text = '@relation r\n@attribute c integer\n@data\n3000000000\n{}'
+    def error = assertThrows(IllegalArgumentException) { MatrixArffReader.readString(text) }
+    assertTrue(error.message.contains('integerType(Long)'))
+    def m = MatrixArffReader.readString(text, new ArffReadOptions().integerType(Long))
+    assertEquals([3000000000L, 0L], m.column('c'))
+    assertEquals(Long, m[1, 'c'].class)
+    m = MatrixArffReader.readString(text.replace('3000000000', '1.5'), new ArffReadOptions().integerType(BigDecimal))
+    assertEquals(1.5, m[0, 'c'])
+    assertEquals(0.0, m[1, 'c'])
+    assertEquals(BigDecimal, m[1, 'c'].class)
+    assertThrows(IllegalArgumentException) { new ArffReadOptions().integerType(Double) }
+    assertEquals(Integer, new ArffReadOptions().integerType(null).integerType)
+    ['Long', 'java.lang.Long', 'long'].each { name ->
+      assertEquals(Long, ArffReadOptions.fromMap([integerType: name]).integerType)
+    }
+    assertEquals(Long, ArffReadOptions.fromMap(new ArffReadOptions().integerType(Long).toMap()).integerType)
+    def target = new File(tempDir, 'integer-spi.arff')
+    target.text = text
+    assertEquals(Long, Matrix.read([integerType: 'Long'], target).type('c'))
+  }
+
+  @Test
+  void validForcedNumericAndDateCellsStillRoundTrip() {
+    [ArffTypeDecl.NUMERIC, ArffTypeDecl.REAL, ArffTypeDecl.INTEGER].each { type ->
+      def opts = new ArffWriteOptions().attributeTypesByColumn([c: type])
+      def m = Matrix.builder('m').data(c: ['1', '2', null]).types(String).build()
+      assert MatrixArffReader.readString(MatrixArffWriter.writeString(m, opts)).column('c') == [1, 2, null]
+      ['', ' ', '?', ' 1 ', '1 ', '١٢'].each { value ->
+        m = Matrix.builder('m').data(c: [value]).types(String).build()
+        assertThrows(IllegalArgumentException) { MatrixArffWriter.writeString(m, opts) }
+      }
+      m = Matrix.builder('m').data(c: [1.0d, Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY]).types(Double).build()
+      assert MatrixArffReader.readString(MatrixArffWriter.writeString(m, opts)).column('c') == [1, null, null, null]
+      m = Matrix.builder('m').data(c: [1.0f, Float.NaN, Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY]).types(Float).build()
+      assert MatrixArffReader.readString(MatrixArffWriter.writeString(m, opts)).column('c') == [1, null, null, null]
+    }
+    def m = Matrix.builder('m').data(c: [3000000000L]).types(Long).build()
+    def text = MatrixArffWriter.writeString(m, new ArffWriteOptions().attributeTypesByColumn([c: ArffTypeDecl.INTEGER]))
+    assertEquals(3000000000L, MatrixArffReader.readString(text, new ArffReadOptions().integerType(Long))[0, 'c'])
+    [se.alipsa.matrix.arff.ArffDateMode.UTC, se.alipsa.matrix.arff.ArffDateMode.WEKA].each { mode ->
+      def opts = new ArffWriteOptions().attributeTypesByColumn([c: ArffTypeDecl.DATE]).dateMode(mode)
+      m = Matrix.builder('m').data(c: ['2024-01-02T03:04:05']).types(String).build()
+      text = MatrixArffWriter.writeString(m, opts)
+      assertNotNull(MatrixArffReader.readString(text, new ArffReadOptions().dateMode(mode))[0, 'c'])
+      m = Matrix.builder('m').data(c: ['2024-01-02T03:04:05 junk']).types(String).build()
+      assertThrows(IllegalArgumentException) { MatrixArffWriter.writeString(m, opts) }
+    }
+    m = Matrix.builder('m').data(c: ['2024-01-02']).types(String).build()
+    text = MatrixArffWriter.writeString(m, new ArffWriteOptions().attributeTypesByColumn([c: ArffTypeDecl.DATE])
+        .dateFormatsByColumn([c: 'yyyy-MM-dd']))
+    assertEquals(1704153600000L, MatrixArffReader.readString(text)[0, 'c'].time)
+  }
+
+  @Test
+  void schemaFailuresLeaveTargetsUntouched() {
+    def target = new File(tempDir, 'schema.arff')
+    def cases = [
+        [Matrix.builder('m').data(c: [1]).types(Integer).build(), new ArffWriteOptions().nominalColumns(['c'])],
+        [Matrix.builder('m').data(c: [new Date()]).types(Date).build(), new ArffWriteOptions().dateFormat('yyyy-qq')],
+        [Matrix.builder('m').data(c: ['x']).types(String).build(), new ArffWriteOptions().attributeTypesByColumn([c: ArffTypeDecl.RELATIONAL])],
+        [Matrix.builder('m').data(c: ['a', 'z']).types(String).build(), new ArffWriteOptions().nominalMappings([c: ['a', 'b']])]
+    ]
+    cases.each { m, opts ->
+      target.text = 'original'
+      assertThrows(IllegalArgumentException) { MatrixArffWriter.write(m, target, opts) }
+      assertEquals('original', target.text)
+      def stream = new ByteArrayOutputStream()
+      assertThrows(IllegalArgumentException) { MatrixArffWriter.write(m, stream, opts) }
+      assertEquals(0, stream.size())
+    }
+    def duplicate = Matrix.builder().columnNames(['a', 'a']).rows([[1, 2], [3, 4]]).build()
+    assertThrows(IllegalArgumentException) { MatrixArffWriter.writeString(duplicate) }
+    def nested = Matrix.builder('m').data(bag: [duplicate]).types(Matrix).build()
+    assertThrows(IllegalArgumentException) { MatrixArffWriter.writeString(nested) }
+  }
+
+  @Test
+  void printWriterErrorStatesAreReported() {
+    def m = Matrix.builder('m').data(c: [1]).types(Integer).build()
+    Writer broken = new Writer() {
+      @Override
+      void write(char[] chars, int offset, int length) { throw new IOException('disk full') }
+      @Override
+      void flush() { }
+      @Override
+      void close() { }
+    }
+    def pw = new PrintWriter(broken)
+    assertThrows(IOException) { MatrixArffWriter.write(m, pw) }
+    def error = assertThrows(IllegalArgumentException) { MatrixArffWriter.write(m, pw) }
+    assertTrue(error.message.contains('already in an error state'))
+  }
+
+  @Test
+  void charsetOptionsAndStrictDecoding() {
+    def latin = java.nio.charset.StandardCharsets.ISO_8859_1
+    def m = Matrix.builder('m').data(c: ['Malmö']).types(String).build()
+    def output = new ByteArrayOutputStream()
+    MatrixArffWriter.write(m, output, new ArffWriteOptions().charset(latin))
+    assertTrue(new String(output.toByteArray(), latin).contains('Malmö'))
+    assertEquals('Malmö', MatrixArffReader.read(new ByteArrayInputStream(output.toByteArray()), new ArffReadOptions().charset(latin))[0, 'c'])
+    def error = assertThrows(IllegalArgumentException) { MatrixArffReader.read(new ByteArrayInputStream(output.toByteArray())) }
+    assertTrue(error.message.contains('charset'))
+    def target = new File(tempDir, 'latin-spi.arff')
+    m.write([charset: 'ISO-8859-1'], target)
+    assertEquals('Malmö', Matrix.read([charset: 'ISO-8859-1'], target)[0, 'c'])
+    [new ArffReadOptions(), new ArffWriteOptions()].each { opts ->
+      assertEquals(latin, opts.charset(latin).class.fromMap(opts.toMap()).charset)
+      assertEquals(java.nio.charset.StandardCharsets.UTF_8, opts.charset(null).charset)
+    }
+    assertTrue(Matrix.listReadOptions('arff').contains('integerType'))
+    assertTrue(Matrix.listReadOptions('arff').contains('charset'))
+    assertTrue(Matrix.listWriteOptions('arff').contains('charset'))
+  }
+
+  @Test
+  void encodingFailuresPreserveFilesAndStreams() {
+    def latin = java.nio.charset.StandardCharsets.ISO_8859_1
+    def opts = new ArffWriteOptions().charset(latin).inferNominals(false)
+    def cases = [
+        [Matrix.builder('€').data(c: ['x']).types(String).build(), opts, "Relation name '€'"],
+        [Matrix.builder('m').data('€': ['x']).types(String).build(), opts, "Attribute name '€'"],
+        [Matrix.builder('m').data(c: ['a€b']).types(String).build(), opts, "Column 'c' row 0"],
+        [Matrix.builder('m').data(c: ['a€b']).types(String).build(), new ArffWriteOptions().charset(latin), "Declaration of column 'c'"],
+        [Matrix.builder('m').data(d: [null]).types(Date).build(), new ArffWriteOptions().charset(latin)
+            .dateMode(se.alipsa.matrix.arff.ArffDateMode.WEKA).dateFormat("yyyy'€'"), "Declaration of column 'd'"]
+    ]
+    def nested = Matrix.builder('n').data('€': ['x']).types(String).build()
+    cases << [Matrix.builder('m').data(bag: [nested]).types(Matrix).build(), opts, "Attribute name 'bag.€'"]
+    nested = Matrix.builder('n').data(s: ['€']).types(String).build()
+    cases << [Matrix.builder('m').data(bag: [nested]).types(Matrix).build(), opts, "Column 'bag[0].s' row 0"]
+    nested = Matrix.builder('n').data(s: ['x']).types(String).build()
+    cases << [Matrix.builder('m').data('€': [nested]).types(Matrix).build(), opts, "Attribute name '€'"]
+    cases << [Matrix.builder('m').data(c: ['\uD800']).types(String).build(), new ArffWriteOptions().inferNominals(false), "Column 'c' row 0"]
+    cases.each { m, options, message ->
+      def target = new File(tempDir, 'encoding.arff')
+      target.text = 'original'
+      def error = assertThrows(IllegalArgumentException) { MatrixArffWriter.write(m, target, options) }
+      assertTrue(error.message.contains(message), error.message)
+      assertTrue(error.message.contains('cannot be encoded'), error.message)
+      assertTrue(error.message.contains(options.charset.name()), error.message)
+      assertEquals('original', target.text)
+      def output = new ByteArrayOutputStream()
+      assertThrows(IllegalArgumentException) { MatrixArffWriter.write(m, output, options) }
+      assertEquals(0, output.size())
+    }
+    assertTrue(MatrixArffWriter.writeString(cases[0][0], opts).contains('€'))
+  }
+
+  @Test
+  @SuppressWarnings('LocaleSetDefault')
+  void wekaMonthNamesAndNestedDatesAreCheckedWithoutCaching() {
+    def saved = Locale.default
+    def mode = se.alipsa.matrix.arff.ArffDateMode.WEKA
+    try {
+      Locale.default = Locale.forLanguageTag('de-DE')
+      def date = new GregorianCalendar(2024, Calendar.MARCH, 1).time
+      def m = Matrix.builder('m').data(d: [date]).types(Date).build()
+      def opts = new ArffWriteOptions().dateMode(mode).dateFormat('MMMM').charset(java.nio.charset.StandardCharsets.US_ASCII)
+      assertThrows(IllegalArgumentException) { MatrixArffWriter.write(m, new ByteArrayOutputStream(), opts) }
+    } finally {
+      Locale.default = saved
+    }
+    def parts = [new Date(1704164645000L), new Date(1704251045000L)].collect { date ->
+      Matrix.builder('n').data(d: [date]).types(Date).build()
+    }
+    def m = Matrix.builder('m').data(bag: parts).types(Matrix).build()
+    def output = new ByteArrayOutputStream()
+    MatrixArffWriter.write(m, output, new ArffWriteOptions().dateMode(mode).charset(java.nio.charset.StandardCharsets.ISO_8859_1))
+    def read = MatrixArffReader.read(new ByteArrayInputStream(output.toByteArray()), new ArffReadOptions().dateMode(mode)
+        .charset(java.nio.charset.StandardCharsets.ISO_8859_1))
+    assertEquals(parts[0][0, 'd'], read[0, 'bag'][0, 'd'])
+    assertEquals(parts[1][0, 'd'], read[1, 'bag'][0, 'd'])
+  }
+
+  @Test
+  void rootLocaleDateTextIsAscii() {
+    def format = new SimpleDateFormat('GyYMLwWDdFEuaHkKhmsSzZX', Locale.ROOT)
+    format.timeZone = TimeZone.getTimeZone('UTC')
+    (0..<12).each { month ->
+      (1..7).each { day ->
+        def text = format.format(new GregorianCalendar(2024, month, day).time)
+        assertTrue(text.chars().allMatch { it <= 0x7F })
+      }
+    }
+  }
+
+  @Test
+  void booleanNominalsAndInferenceThreshold() {
+    def m = Matrix.builder('m').data(b: [true, false]).types(Boolean).build()
+    [new ArffWriteOptions(), new ArffWriteOptions().nominalColumns(['b'])].each { opts ->
+      def text = MatrixArffWriter.writeString(m, opts)
+      assertTrue(text.contains('@ATTRIBUTE b {false,true}'))
+      assertEquals(['true', 'false'], MatrixArffReader.readString(text).column('b'))
+    }
+    m = Matrix.builder('m').data(c: (0..<30).collect { "v$it".toString() }).types(String).build()
+    assertTrue(MatrixArffWriter.writeString(m, new ArffWriteOptions().nominalThreshold(5)).contains('@ATTRIBUTE c STRING'))
+    m = Matrix.builder('m').data(c: ['a', 'b', 'c']).types(String).build()
+    assertTrue(MatrixArffWriter.writeString(m, new ArffWriteOptions().nominalThreshold(5)).contains('@ATTRIBUTE c {a,b,c}'))
+  }
+
+  @Test
+  void readsAndWritesInsideZipFileSystem() {
+    def zip = new File(tempDir, 'nio.zip').toPath()
+    java.nio.file.FileSystems.newFileSystem(URI.create("jar:${zip.toUri()}"), [create: 'true']).withCloseable { fs ->
+      def path = fs.getPath('/data/out.arff')
+      def m = Matrix.builder('m').data(c: [1]).types(Integer).build()
+      MatrixArffWriter.write(m, path)
+      assertEquals([1], MatrixArffReader.read(path).column('c'))
+    }
+    assertThrows(IllegalArgumentException) {
+      MatrixArffWriter.write(Matrix.builder('m').data(c: [1]).types(Integer).build(), (Path) null)
+    }
+  }
+
+  @Test
+  void sparseNestedRowMismatchesAndNominalSourceLocations() {
+    def header = '@relation r\n@attribute a numeric\n@attribute bag relational\n@attribute x numeric\n@attribute y numeric\n@end bag\n@data\n'
+    def text = header + '{0 1, 1 \'2\\n3,4\'}'
+    def m = MatrixArffReader.readString(text)
+    assert m[0, 'bag'].rows() == [[2, null], [3, 4]]
+    assertThrows(IllegalArgumentException) { MatrixArffReader.readString(text, new ArffReadOptions().failOnRowLengthMismatch(true)) }
+    def error = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(header.replace('@attribute x numeric', '@attribute x {a,a}'))
+    }
+    assertTrue(error.message.contains('line 4'))
+    assertTrue(error.message.contains('@attribute x {a,a}'))
+    assertEquals(['', 'a'], MatrixArffReader.readString("@relation r\n@attribute c {'',a}\n@data\n''\na").column('c'))
+  }
+
+  @Test
+  void numericUnicodeAndNestedDateDeclarationsFailBeforeBytesAreWritten() {
+    def latin = java.nio.charset.StandardCharsets.ISO_8859_1
+    def cases = [ArffTypeDecl.NUMERIC, ArffTypeDecl.REAL, ArffTypeDecl.INTEGER].collect { type ->
+      [Matrix.builder('m').data(c: [type == ArffTypeDecl.INTEGER ? '١٢' : '١٢.5']).types(String).build(),
+       new ArffWriteOptions().charset(latin).attributeTypesByColumn([c: type])]
+    }
+    def nested = Matrix.builder('n').data(d: [null]).types(Date).build()
+    cases << [Matrix.builder('m').data(bag: [nested]).types(Matrix).build(), new ArffWriteOptions().charset(latin)
+        .dateMode(se.alipsa.matrix.arff.ArffDateMode.WEKA).dateFormat("yyyy'€'")]
+    cases.each { m, options ->
+      def target = new File(tempDir, 'numeric-unicode.arff')
+      target.text = 'original'
+      assertThrows(IllegalArgumentException) { MatrixArffWriter.write(m, target, options) }
+      assertEquals('original', target.text)
+      def stream = new ByteArrayOutputStream()
+      assertThrows(IllegalArgumentException) { MatrixArffWriter.write(m, stream, options) }
+      assertEquals(0, stream.size())
+    }
+    def emoji = Matrix.builder('m').data(c: ['😀']).types(String).build()
+    def stream = new ByteArrayOutputStream()
+    MatrixArffWriter.write(emoji, stream)
+    assertEquals('😀', MatrixArffReader.read(new ByteArrayInputStream(stream.toByteArray()))[0, 'c'])
+    def m = Matrix.builder('m').data(c: ['日本']).types(String).build()
+    stream = new ByteArrayOutputStream()
+    MatrixArffWriter.write(m, stream, new ArffWriteOptions().charset(java.nio.charset.Charset.forName('Shift_JIS')))
+    assertEquals('日本', MatrixArffReader.read(new ByteArrayInputStream(stream.toByteArray()),
+        new ArffReadOptions().charset(java.nio.charset.Charset.forName('Shift_JIS')))[0, 'c'])
+  }
+
+  @Test
+  void streamEncoderFinishesWithoutClosingCallerStream() {
+    def m = Matrix.builder('m').data(c: ['日本']).types(String).build()
+    def output = new ByteArrayOutputStream() {
+      boolean closed
+      @Override
+      void close() {
+        closed = true
+        super.close()
+      }
+    }
+    def charset = java.nio.charset.Charset.forName('ISO-2022-JP')
+    MatrixArffWriter.write(m, output, new ArffWriteOptions().charset(charset))
+    assertFalse(output.closed)
+    assertEquals('日本', MatrixArffReader.read(new ByteArrayInputStream(output.toByteArray()),
+        new ArffReadOptions().charset(charset))[0, 'c'])
+  }
+
+  @Test
+  void sparseIntegerDefaultsReuseTypedZeroConstants() {
+    def header = '@relation sparse\n' + (0..<64).collect { "@attribute c$it integer" }.join('\n')
+    def text = header + '\n@data\n{}\n{}\n{}'
+    [(Integer): 0, (Long): 0L, (BigDecimal): BigDecimal.ZERO].each { Class type, Number zero ->
+      def m = MatrixArffReader.readString(text, new ArffReadOptions().integerType(type))
+      m.rows().each { row ->
+        row.each { value ->
+          assertEquals(type, value.class)
+          assertSame(zero, value)
+        }
+      }
+    }
+  }
 }
