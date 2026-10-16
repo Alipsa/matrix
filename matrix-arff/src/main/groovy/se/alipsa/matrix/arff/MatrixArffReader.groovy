@@ -1,8 +1,11 @@
 package se.alipsa.matrix.arff
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.Logger
 
-import java.nio.charset.StandardCharsets
+import java.nio.charset.CharacterCodingException
+import java.nio.charset.CodingErrorAction
+import java.nio.file.Files
 import java.nio.file.Path
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -21,6 +24,10 @@ import java.util.regex.Pattern
  */
 class MatrixArffReader {
 
+  private static final String EMPTY_NOMINAL = 'Nominal attribute must declare at least one value'
+  private static final String FILE_NULL = 'File cannot be null'
+  private static final String ZERO_TEXT = '0'
+  private static final Logger log = Logger.getLogger(MatrixArffReader)
   private static final Pattern DATE_TYPE_PATTERN = Pattern.compile(/(?i)^date(?:\s+(.*))?$/)
   private static final String INVALID_DATE_FORMAT = 'Invalid @ATTRIBUTE DATE format'
   private static final String DEFAULT_MATRIX_NAME = 'ArffMatrix'
@@ -36,7 +43,6 @@ class MatrixArffReader {
   private static final char CLOSE_BRACE_CHAR = '}'
   private static final char PERCENT_CHAR = '%'
   private static final char SPACE_CHAR = ' '
-  private static final String NOMINAL_DELIMITERS = ','
   private static final String ROW_DELIMITERS = ',\t '
   private static final String INVALID_QUOTED = 'Invalid quoted'
   private static final String QUOTE_MUST_BEGIN_TOKEN = ' (quote must begin a token)'
@@ -54,10 +60,10 @@ class MatrixArffReader {
 
   /** Read from an Arff file with typed options. */
   static Matrix read(File file, ArffReadOptions options) {
-    validateFile(file)
-    new FileInputStream(file).withCloseable { InputStream is ->
-      read(is, fallbackName(defaultName(file), options), options)
+    if (file == null) {
+      throw new IllegalArgumentException(FILE_NULL)
     }
+    read(file.toPath(), options)
   }
 
   /** Read from an Arff file. */
@@ -70,7 +76,10 @@ class MatrixArffReader {
     if (path == null) {
       throw new IllegalArgumentException('Path cannot be null')
     }
-    read(path.toFile(), options)
+    validatePath(path)
+    Files.newInputStream(path).withCloseable { InputStream input ->
+      read(input, fallbackName(defaultName(path), options), options)
+    }
   }
 
   /**
@@ -101,8 +110,15 @@ class MatrixArffReader {
     if (input == null) {
       throw new IllegalArgumentException('InputStream cannot be null')
     }
-    BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8))
-    parseArff(reader, fallbackName(defaultName, options), options ?: new ArffReadOptions())
+    ArffReadOptions resolved = options ?: new ArffReadOptions()
+    BufferedReader reader = new BufferedReader(new InputStreamReader(input,
+        resolved.charset.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT)))
+    try {
+      parseArff(reader, fallbackName(defaultName, resolved), resolved)
+    } catch (CharacterCodingException e) {
+      throw new IllegalArgumentException(
+          "ARFF input is not valid ${resolved.charset.name()}; set ArffReadOptions.charset(...) to the file's encoding", e)
+    }
   }
 
   /**
@@ -219,6 +235,8 @@ class MatrixArffReader {
     List<ArffAttribute> attributes = scopes[0].attributes
     List<List<Object>> rows = []
     List<BigDecimal> weights = []
+    RowLengthMismatches mismatches = new RowLengthMismatches()
+    boolean sawHeader = false
     boolean inDataSection = false
     int lineNumber = 0
 
@@ -226,6 +244,9 @@ class MatrixArffReader {
     String lastRawLine
     while ((rawLine = reader.readLine()) != null) {
       lineNumber++
+      if (lineNumber == 1 && rawLine.startsWith('\uFEFF')) {
+        rawLine = rawLine.substring(1)
+      }
       lastRawLine = rawLine
       String line = stripComment(rawLine).trim()
 
@@ -235,37 +256,80 @@ class MatrixArffReader {
 
       if (inDataSection) {
         DataLine dataLine = splitInstanceWeight(line)
-        rows.add(parseDataRow(dataLine.content, attributes, options, lineNumber, rawLine))
+        rows.add(parseDataRow(dataLine.content, attributes, options, lineNumber, rawLine, mismatches))
         weights.add(dataLine.weight)
         continue
       }
 
-      String upperLine = line.toUpperCase()
-      if (upperLine.startsWith(RELATION_KEYWORD)) {
+      String upperLine = line.toUpperCase(Locale.ROOT)
+      if (startsWithKeyword(upperLine, RELATION_KEYWORD)) {
+        sawHeader = true
         relationName = parseRelationName(line, lineNumber, rawLine)
-      } else if (upperLine.startsWith(ATTRIBUTE_KEYWORD)) {
+      } else if (startsWithKeyword(upperLine, ATTRIBUTE_KEYWORD)) {
+        sawHeader = true
         ArffAttribute attr = parseAttribute(line, options, lineNumber, rawLine)
         if (attr.type == ArffType.RELATIONAL) {
           scopes.add(new AttributeScope(attr.name))
         } else {
           addAttribute(scopes.last(), attr, lineNumber, rawLine)
         }
-      } else if (upperLine.startsWith(END_KEYWORD)) {
+      } else if (startsWithKeyword(upperLine, END_KEYWORD)) {
         closeRelationalScope(line, scopes, options, lineNumber, rawLine)
-      } else if (upperLine.startsWith(DATA_KEYWORD)) {
+      } else if (startsWithKeyword(upperLine, DATA_KEYWORD)) {
         if (scopes.size() > 1) {
           throw unterminatedRelationalError(scopes.last().name, lineNumber, rawLine)
         }
         rejectInstanceWeightAttribute(scopes[0], relationName, options)
         inDataSection = true
+      } else if (line.startsWith('@')) {
+        int split = indexOfWhitespace(line)
+        String firstToken = split < 0 ? line : line.substring(0, split)
+        throw parseError("Unknown header keyword '$firstToken'", lineNumber, rawLine)
+      } else {
+        throw parseError('Unexpected content before @DATA', lineNumber, rawLine)
       }
     }
 
+    if (mismatches.count > 0) {
+      log.warn("${mismatches.count} data rows (including nested relational rows) had a different number of values than declared " +
+          "(first at line ${mismatches.firstLine}); extra values were dropped and missing values set to null. " +
+          'Use ArffReadOptions.failOnRowLengthMismatch(true) to fail instead.')
+    }
     if (scopes.size() > 1) {
       throw unterminatedRelationalError(scopes.last().name, lineNumber, lastRawLine)
     }
+    if (!inDataSection && sawHeader) {
+      throw parseError('Invalid ARFF: missing @DATA section', lineNumber, lastRawLine)
+    }
     rejectInstanceWeightAttribute(scopes[0], relationName, options)
     buildMatrix(relationName, attributes, rows, weights, options)
+  }
+
+  private static boolean startsWithKeyword(String line, String keyword) {
+    if (!line.startsWith(keyword)) {
+      return false
+    }
+    if (line.length() == keyword.length()) {
+      return true
+    }
+    char next = line.charAt(keyword.length())
+    Character.isWhitespace(next) || ArffScanner.isQuoteChar(next) || next == OPEN_BRACE_CHAR
+  }
+
+  private static Number integerValue(String value, Class type) {
+    BigDecimal number = new BigDecimal(value)
+    if (type == Integer) {
+      return number.intValueExact()
+    }
+    if (type == Long) {
+      return number.longValueExact()
+    }
+    number
+  }
+
+  private static class RowLengthMismatches {
+    int count
+    int firstLine
   }
 
   private static IllegalArgumentException unterminatedRelationalError(String scopeName, int lineNumber, String rawLine) {
@@ -400,11 +464,7 @@ class MatrixArffReader {
 
   private static ArffAttribute parseAttribute(String line, ArffReadOptions options, int lineNumber, String rawLine) {
     String trimmed = line.trim()
-    int attrIndex = trimmed.toUpperCase().indexOf(ATTRIBUTE_KEYWORD)
-    if (attrIndex < 0) {
-      throw parseError(INVALID_ATTRIBUTE_LINE, lineNumber, rawLine)
-    }
-    String spec = trimmed.substring(attrIndex + ATTRIBUTE_KEYWORD.length()).trim()
+    String spec = trimmed.substring(ATTRIBUTE_KEYWORD.length()).trim()
     if (spec.isEmpty()) {
       throw parseError(INVALID_ATTRIBUTE_LINE, lineNumber, rawLine)
     }
@@ -425,7 +485,7 @@ class MatrixArffReader {
     } else {
       int splitIndex = -1
       for (int i = 0; i < spec.length(); i++) {
-        if (Character.isWhitespace(spec.charAt(i))) {
+        if (Character.isWhitespace(spec.charAt(i)) || spec.charAt(i) == OPEN_BRACE_CHAR) {
           splitIndex = i
           break
         }
@@ -442,14 +502,14 @@ class MatrixArffReader {
 
   private static ArffAttribute parseAttributeType(String name, String typeSpec, ArffReadOptions options, int lineNumber, String rawLine) {
     typeSpec = stripAttributeWeight(typeSpec)
-    String upperType = typeSpec.toUpperCase()
+    String upperType = typeSpec.toUpperCase(Locale.ROOT)
 
     String nominalValuesStr = extractNominalValues(typeSpec)
     if (nominalValuesStr != null) {
       if (nominalValuesStr.trim().isEmpty()) {
-        throw parseError('Nominal attribute must declare at least one value', lineNumber, rawLine)
+        throw parseError(EMPTY_NOMINAL, lineNumber, rawLine)
       }
-      List<String> nominalValues = parseNominalValues(nominalValuesStr)
+      List<String> nominalValues = parseNominalValues(nominalValuesStr, lineNumber, rawLine)
       return new ArffAttribute(name, ArffType.NOMINAL, String, nominalValues)
     }
 
@@ -461,7 +521,7 @@ class MatrixArffReader {
 
     switch (upperType) {
       case 'NUMERIC', 'REAL' -> new ArffAttribute(name, ArffType.NUMERIC, BigDecimal)
-      case 'INTEGER' -> new ArffAttribute(name, ArffType.INTEGER, Integer)
+      case 'INTEGER' -> new ArffAttribute(name, ArffType.INTEGER, options.integerType)
       case 'STRING' -> new ArffAttribute(name, ArffType.STRING, String)
       case 'RELATIONAL' -> new ArffAttribute(name, ArffType.RELATIONAL, Matrix)
       default -> {
@@ -521,18 +581,25 @@ class MatrixArffReader {
     spec
   }
 
-  private static List<String> parseNominalValues(String valuesStr) {
-    List<String> values = []
-    parseDelimitedLine(valuesStr, NOMINAL_DELIMITERS).each { ParsedToken token ->
-      values.add(token.quoted ? token.value : token.value.trim())
+  private static List<String> parseNominalValues(String valuesStr, int lineNumber, String rawLine) {
+    Set<String> values = [] as LinkedHashSet<String>
+    parseDelimitedLine(valuesStr, ROW_DELIMITERS, lineNumber, rawLine, 'nominal declaration').each { ParsedToken token ->
+      if (token.quoted || !token.value.isEmpty()) {
+        if (!values.add(token.value)) {
+          throw parseError("Duplicate nominal value '${token.value}'", lineNumber, rawLine)
+        }
+      }
     }
-    values
+    if (values.isEmpty()) {
+      throw parseError(EMPTY_NOMINAL, lineNumber, rawLine)
+    }
+    values as List<String>
   }
 
   private static List<Object> parseDataRow(String line, List<ArffAttribute> attributes, ArffReadOptions options,
-                                           int lineNumber, String rawLine) {
+                                           int lineNumber, String rawLine, RowLengthMismatches mismatches) {
     if (line.startsWith(OPEN_BRACE)) {
-      return parseSparseDataRow(line, attributes, options, lineNumber, rawLine)
+      return parseSparseDataRow(line, attributes, options, lineNumber, rawLine, mismatches)
     }
 
     List<ParsedToken> values = parseDelimitedLine(line, ROW_DELIMITERS, lineNumber, rawLine, 'data row')
@@ -544,6 +611,12 @@ class MatrixArffReader {
       )
     }
 
+    if (values.size() != attributes.size()) {
+      mismatches.count++
+      if (mismatches.firstLine == 0) {
+        mismatches.firstLine = lineNumber
+      }
+    }
     List<Object> row = []
     for (int i = 0; i < attributes.size(); i++) {
       ParsedToken token = i < values.size() ? values[i] : new ParsedToken(null, false)
@@ -551,14 +624,14 @@ class MatrixArffReader {
       if (value != null && !token.quoted) {
         value = value.trim()
       }
-      row.add(convertValue(value, attributes[i], token.quoted, options, lineNumber, rawLine))
+      row.add(convertValue(value, attributes[i], token.quoted, options, lineNumber, rawLine, mismatches))
     }
     row
   }
 
   /** Parse a sparse ARFF row in `{index value, ...}` format. */
   private static List<Object> parseSparseDataRow(String line, List<ArffAttribute> attributes, ArffReadOptions options,
-                                                 int lineNumber, String rawLine) {
+                                                 int lineNumber, String rawLine, RowLengthMismatches mismatches) {
     if (!line.endsWith(CLOSE_BRACE)) {
       throw parseError('Invalid sparse ARFF row (missing closing brace)', lineNumber, rawLine)
     }
@@ -609,7 +682,7 @@ class MatrixArffReader {
       if (value != null && !valueToken.quoted) {
         value = value.trim()
       }
-      row[attributeIndex] = convertValue(value, attributes[attributeIndex], valueToken.quoted, options, lineNumber, rawLine)
+      row[attributeIndex] = convertValue(value, attributes[attributeIndex], valueToken.quoted, options, lineNumber, rawLine, mismatches)
     }
 
     row
@@ -623,7 +696,7 @@ class MatrixArffReader {
   private static Object sparseDefaultValue(ArffAttribute attr) {
     switch (attr.type) {
       case ArffType.NUMERIC -> BigDecimal.ZERO
-      case ArffType.INTEGER -> 0
+      case ArffType.INTEGER -> integerValue(ZERO_TEXT, attr.javaType)
       case ArffType.NOMINAL -> attr.nominalValues[0]
       case ArffType.DATE -> new Date(0L)
       default -> OMITTED
@@ -696,10 +769,6 @@ class MatrixArffReader {
       throw parseError("Invalid sparse ARFF value '$valuePart'", lineNumber, rawLine)
     }
     new ParsedToken(token.value, true)
-  }
-
-  private static List<ParsedToken> parseDelimitedLine(String line, String delimiters) {
-    parseDelimitedLine(line, delimiters, 0, line, null)
   }
 
   /**
@@ -807,7 +876,7 @@ class MatrixArffReader {
   }
 
   private static Object convertValue(String value, ArffAttribute attr, boolean quoted, ArffReadOptions options,
-                                     int lineNumber, String rawLine) {
+                                     int lineNumber, String rawLine, RowLengthMismatches mismatches) {
     if (value == null) {
       return null
     }
@@ -818,7 +887,7 @@ class MatrixArffReader {
     try {
       return switch (attr.type) {
         case ArffType.NUMERIC -> new BigDecimal(value)
-        case ArffType.INTEGER -> new BigDecimal(value).intValueExact()
+        case ArffType.INTEGER -> integerValue(value, attr.javaType)
         case ArffType.STRING -> value
         case ArffType.NOMINAL -> {
           if (options.failOnUndeclaredNominalValue && !attr.containsNominalValue(value)) {
@@ -828,11 +897,13 @@ class MatrixArffReader {
           yield value
         }
         case ArffType.DATE -> parseDate(value, attr, options.dateMode)
-        case ArffType.RELATIONAL -> parseRelationalValue(value, attr, options, lineNumber, rawLine)
+        case ArffType.RELATIONAL -> parseRelationalValue(value, attr, options, lineNumber, rawLine, mismatches)
         default -> value
       }
     } catch (NumberFormatException | ArithmeticException e) {
-      throw parseError("Invalid ${attr.type} value '$value' for attribute '${attr.name}'", lineNumber, rawLine, e)
+      String hint = attr.type == ArffType.INTEGER
+          ? ' (use ArffReadOptions.integerType(Long) or integerType(BigDecimal) to read such values)' : ''
+      throw parseError("Invalid ${attr.type} value '$value' for attribute '${attr.name}'$hint", lineNumber, rawLine, e)
     } catch (ParseException e) {
       throw parseError("Invalid DATE value '$value' for attribute '${attr.name}'", lineNumber, rawLine, e)
     }
@@ -843,7 +914,7 @@ class MatrixArffReader {
    * weighted, exactly like a @DATA section for the sub-relation.
    */
   private static Matrix parseRelationalValue(String value, ArffAttribute attr, ArffReadOptions options,
-                                             int lineNumber, String rawLine) {
+                                             int lineNumber, String rawLine, RowLengthMismatches mismatches) {
     List<List<Object>> rows = []
     List<BigDecimal> weights = []
     value.readLines().each { String nestedLine ->
@@ -852,7 +923,7 @@ class MatrixArffReader {
         return
       }
       DataLine dataLine = splitInstanceWeight(content)
-      rows.add(parseDataRow(dataLine.content, attr.relationalAttributes, options, lineNumber, rawLine))
+      rows.add(parseDataRow(dataLine.content, attr.relationalAttributes, options, lineNumber, rawLine, mismatches))
       weights.add(dataLine.weight)
     }
     buildMatrix(attr.name, attr.relationalAttributes, rows, weights, options)
@@ -871,20 +942,20 @@ class MatrixArffReader {
     closeIndex < 0 ? null : typeSpec.substring(openIndex + 1, closeIndex)
   }
 
-  private static void validateFile(File file) {
+  private static void validatePath(Path file) {
     if (file == null) {
-      throw new IllegalArgumentException('File cannot be null')
+      throw new IllegalArgumentException(FILE_NULL)
     }
-    if (!file.exists()) {
-      throw new IllegalArgumentException("File does not exist: ${file.absolutePath}")
+    if (!Files.exists(file)) {
+      throw new IllegalArgumentException("File does not exist: ${file.toAbsolutePath()}")
     }
-    if (file.isDirectory()) {
-      throw new IllegalArgumentException("Expected a file but got a directory: ${file.absolutePath}")
+    if (Files.isDirectory(file)) {
+      throw new IllegalArgumentException("Expected a file but got a directory: ${file.toAbsolutePath()}")
     }
   }
 
-  private static String defaultName(File file) {
-    String name = file.name
+  private static String defaultName(Path file) {
+    String name = file.fileName?.toString() ?: DEFAULT_MATRIX_NAME
     if (name.contains(DOT)) {
       name = name.substring(0, name.lastIndexOf(DOT))
     }

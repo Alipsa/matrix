@@ -1,5 +1,32 @@
 # Matrix-arff release history
 
+## v0.3.1, (unreleased)
+
+- Fix headers being ignored under locales with special casing rules, such as Turkish.
+- Validate the full write schema, cells and target encoding before opening a file; invalid options or contents leave
+  existing files untouched. Writer I/O errors now reach the caller instead of being silently swallowed **(changed)**.
+- Reject duplicate Matrix column names on write, including in relational values **(changed)**.
+- Missing `@DATA`, unknown header keywords and stray content before `@DATA` are errors in every mode **(changed)**.
+  Empty/comment-only input remains supported. Keywords require whitespace, a quote or `{` after the keyword
+  (`@relationship` is no longer treated as `@relation`) **(changed)**. Ignore an initial UTF-8 BOM.
+- Validate cells against declared types: reject values outside nominal mappings, non-numeric NUMERIC/REAL/INTEGER
+  cells, fractional INTEGER values, and DATE strings that do not completely match the column format (including in
+  WEKA mode). Numeric strings such as `'1.5'` and matching DATE strings remain supported **(changed)**.
+- Numeric strings must contain only ASCII characters without surrounding whitespace. Empty/blank strings and `'?'`
+  are rejected; use `null` to write a missing numeric value (`?`) **(changed)**.
+- Add `ArffReadOptions.integerType`: `Integer` (default), `Long` for large integral values, or `BigDecimal` to also
+  accept fractions. Sparse defaults use the selected type; SPI accepts Class values or case-insensitive type names.
+- Add read/write `charset` options (UTF-8 by default). Malformed input bytes now fail instead of being replaced with
+  U+FFFD; unencodable output and unpaired UTF-16 surrogates are rejected before writing bytes **(changed)**.
+- Nominal declarations accept whitespace as well as commas between values; quote values containing spaces.
+  Trailing/doubled commas no longer declare an empty value (use `''`); duplicate values are errors **(changed)**.
+  Accept `@attribute c{a,b}` without a separating space **(changed)**.
+- Warn once per read about dense row-length mismatches in lenient mode, including nested relational rows.
+- Write Boolean columns as `{false,true}` nominal attributes, including explicit nominal columns without mappings;
+  read-back values are strings **(changed)**.
+- Stop nominal inference as soon as the threshold is exceeded; avoid match-list allocations for single scanner lookups.
+- Use NIO streams for Path inputs/outputs, including zip filesystems, and reject null output paths explicitly.
+
 ## v0.3.0, 2026-09-22
 Weka compatibility release. Files written by matrix-arff now interoperate with Weka across the documented supported
 behavior and limitations.

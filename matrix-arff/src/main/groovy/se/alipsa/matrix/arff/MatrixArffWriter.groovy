@@ -1,8 +1,13 @@
 package se.alipsa.matrix.arff
 
+import groovy.transform.Immutable
+import groovy.transform.PackageScope
+
 import se.alipsa.matrix.core.Matrix
 
-import java.nio.charset.StandardCharsets
+import java.nio.charset.Charset
+import java.nio.charset.CodingErrorAction
+import java.nio.file.Files
 import java.nio.file.Path
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
@@ -15,6 +20,8 @@ import java.time.LocalDateTime
  */
 class MatrixArffWriter {
 
+  private static final String LINE_SEPARATOR = System.lineSeparator()
+  private static final List<String> BOOLEAN_NOMINAL_VALUES = ['false', 'true'].asImmutable()
   private static final String MATRIX_NULL_MESSAGE = 'Matrix cannot be null'
   private static final String DEFAULT_MATRIX_BASE_NAME = 'matrix'
   private static final String COMMA = ','
@@ -23,6 +30,7 @@ class MatrixArffWriter {
   private static final String CLOSE_BRACE = '}'
   private static final String BACKSLASH = '\\'
   private static final String UNDERSCORE = '_'
+  private static final String DOT = '.'
   private static final String DOUBLE_DOT = '..'
   private static final String NESTED_INDENT = '  '
 
@@ -58,44 +66,52 @@ class MatrixArffWriter {
 
   /** Write to a File using typed ARFF write options. */
   static void write(Matrix matrix, File file, ArffWriteOptions options) {
-    validateMatrix(matrix)
-    // validate before the file is created so an invalid configuration leaves no empty or partial file behind
-    validateWriteOptions(matrix, options ?: new ArffWriteOptions())
-    File output = ensureFileOutput(matrix, file)
-    OutputStream outputStream = new FileOutputStream(output)
-    OutputStreamWriter writer = null
-    try {
-      writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)
-      write(matrix, writer, options)
-      writer.flush()
-    } finally {
-      if (writer != null) {
-        writer.close()
-      } else {
-        outputStream.close()
-      }
+    if (file == null) {
+      throw new IllegalArgumentException('File or directory cannot be null')
     }
+    write(matrix, file.toPath(), options)
   }
 
   /** Write to a Path using typed ARFF write options. */
   static void write(Matrix matrix, Path path, ArffWriteOptions options) {
-    write(matrix, path.toFile(), options)
+    if (path == null) {
+      throw new IllegalArgumentException('Path cannot be null')
+    }
+    ArffWriteOptions resolved = options ?: new ArffWriteOptions()
+    WriteSchema schema = resolveSchema(matrix, resolved)
+    validateEncodability(matrix, schema, resolved.charset)
+    Path target = Files.isDirectory(path) ? path.resolve(safeFileName(matrix.matrixName) + '.arff') : path
+    ensureParentDirectories(target)
+    Files.newOutputStream(target).withCloseable { OutputStream output ->
+      encodedWriter(output, resolved.charset).withCloseable { Writer writer ->
+        printMatrix(matrix, schema, writer)
+      }
+    }
   }
 
-  /** Write to an OutputStream using typed ARFF write options. */
+  /** Write to an OutputStream using typed ARFF write options; the caller retains ownership of the stream. */
   static void write(Matrix matrix, OutputStream output, ArffWriteOptions options) {
-    validateMatrix(matrix)
-    OutputStreamWriter writer = new OutputStreamWriter(output, StandardCharsets.UTF_8)
-    write(matrix, writer, options)
-    writer.flush()
+    ArffWriteOptions resolved = options ?: new ArffWriteOptions()
+    WriteSchema schema = resolveSchema(matrix, resolved)
+    validateEncodability(matrix, schema, resolved.charset)
+    encodedWriter(output, resolved.charset).withCloseable { Writer writer ->
+      printMatrix(matrix, schema, writer)
+    }
   }
 
-  /** Write to a Writer using typed ARFF write options. */
+  /**
+   * Write using typed options. The caller retains ownership of the writer.
+   * If writer is a PrintWriter, it is flushed and its error state checked before and after writing.
+   */
   static void write(Matrix matrix, Writer writer, ArffWriteOptions options) {
-    validateMatrix(matrix)
-    PrintWriter pw = writer instanceof PrintWriter ? (PrintWriter) writer : new PrintWriter(writer)
-    writeMatrix(matrix, pw, options ?: new ArffWriteOptions())
-    pw.flush()
+    if (writer instanceof PrintWriter && writer.checkError()) {
+      throw new IllegalArgumentException('The supplied PrintWriter is already in an error state from an earlier write')
+    }
+    printMatrix(matrix, resolveSchema(matrix, options ?: new ArffWriteOptions()), writer)
+    writer.flush()
+    if (writer instanceof PrintWriter && writer.checkError()) {
+      throw new IOException('Failed to write ARFF output (PrintWriter reported an error)')
+    }
   }
 
   /** Write Matrix to a String in ARFF format. */
@@ -118,7 +134,18 @@ class MatrixArffWriter {
     writer.toString()
   }
 
-  private static void writeMatrix(Matrix matrix, PrintWriter pw, ArffWriteOptions options) {
+  @Immutable(knownImmutableClasses = [ArffAttributeInfo])
+  private static class WriteSchema {
+    String relationName
+    List<String> columnNames
+    List<Integer> columnIndexes
+    List<ArffAttributeInfo> attributeInfos
+    String weightColumn
+    Integer weightColumnIndex
+  }
+
+  private static WriteSchema resolveSchema(Matrix matrix, ArffWriteOptions options) {
+    validateMatrix(matrix)
     validateWriteOptions(matrix, options)
 
     // Resolve the whole schema before printing so a validation failure never leaves a partial document behind
@@ -130,32 +157,155 @@ class MatrixArffWriter {
       resolveAttributeInfo(matrix, colName, options)
     }
 
-    String relationName = matrix.matrixName ?: DEFAULT_MATRIX_BASE_NAME
-    pw.println("@RELATION ${escapeIdentifier(relationName)}")
-    pw.println()
+    columnNames.eachWithIndex { String name, int index -> validateCells(matrix, name, attributeInfos[index]) }
+    new WriteSchema(matrix.matrixName ?: DEFAULT_MATRIX_BASE_NAME, columnNames, columnIndexes,
+        attributeInfos, weightColumn, weightColumnIndex)
+  }
 
-    for (int i = 0; i < columnNames.size(); i++) {
-      writeAttributeDeclaration(pw, columnNames[i], attributeInfos[i], '')
+  private static void printMatrix(Matrix matrix, WriteSchema schema, Writer writer) {
+    writeLine(writer, "@RELATION ${escapeIdentifier(schema.relationName)}")
+    writeLine(writer, '')
+    schema.columnNames.eachWithIndex { String name, int index ->
+      writeAttributeDeclaration(writer, name, schema.attributeInfos[index], '')
     }
-
-    pw.println()
-    pw.println('@DATA')
-
-    int rowCount = matrix.rowCount()
-    for (int row = 0; row < rowCount; row++) {
-      pw.println(formatRow(matrix, row, columnIndexes, attributeInfos, weightColumnIndex, weightColumn))
+    writeLine(writer, '')
+    writeLine(writer, '@DATA')
+    for (int row = 0; row < matrix.rowCount(); row++) {
+      writeLine(writer, formatRow(matrix, row, schema.columnIndexes, schema.attributeInfos,
+          schema.weightColumnIndex, schema.weightColumn))
     }
   }
 
-  private static void writeAttributeDeclaration(PrintWriter pw, String colName, ArffAttributeInfo info, String indent) {
+  /** Finish even stateful encoders without closing a caller-owned byte stream. */
+  private static Writer encodedWriter(OutputStream output, Charset charset) {
+    OutputStream nonClosing = new FilterOutputStream(output) {
+      @Override
+      void write(byte[] bytes, int offset, int length) {
+        out.write(bytes, offset, length)
+      }
+
+      @Override
+      void close() {
+        flush()
+      }
+    }
+    new OutputStreamWriter(nonClosing, charset.newEncoder()
+        .onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT))
+  }
+
+  private static void writeLine(Writer writer, String line) {
+    writer.write(line)
+    writer.write(LINE_SEPARATOR)
+  }
+
+  private static void writeAttributeDeclaration(Writer writer, String colName, ArffAttributeInfo info, String indent) {
     String identifier = escapeIdentifier(colName)
-    pw.println("${indent}@ATTRIBUTE $identifier ${info.typeDeclaration}")
+    writeLine(writer, "${indent}@ATTRIBUTE $identifier ${info.typeDeclaration}")
     if (info.type == ArffTypeDecl.RELATIONAL) {
       String nestedIndent = indent + NESTED_INDENT
       for (int i = 0; i < info.relationalColumnNames.size(); i++) {
-        writeAttributeDeclaration(pw, info.relationalColumnNames[i], info.relationalInfos[i], nestedIndent)
+        writeAttributeDeclaration(writer, info.relationalColumnNames[i], info.relationalInfos[i], nestedIndent)
       }
-      pw.println("${indent}@END $identifier")
+      writeLine(writer, "${indent}@END $identifier")
+    }
+  }
+
+  private static void validateEncodability(Matrix matrix, WriteSchema schema, Charset charset) {
+    ArffEncoding encoding = new ArffEncoding(charset)
+    encoding.check(schema.relationName, "Relation name '${schema.relationName}'")
+    checkDeclarations(schema.columnNames, schema.attributeInfos, '', encoding)
+    checkCellEncoding(matrix, schema.columnIndexes, schema.attributeInfos, '', encoding)
+  }
+
+  private static void checkDeclarations(List<String> names, List<ArffAttributeInfo> infos,
+                                        String prefix, ArffEncoding encoding) {
+    names.eachWithIndex { String name, int index ->
+      ArffAttributeInfo info = infos[index]
+      String path = prefix + name
+      encoding.check(name, "Attribute name '$path'")
+      encoding.check(info.typeDeclaration, "Declaration of column '$path'")
+      if (info.type == ArffTypeDecl.RELATIONAL) {
+        checkDeclarations(info.relationalColumnNames, info.relationalInfos, path + DOT, encoding)
+      }
+    }
+  }
+
+  private static void checkCellEncoding(Matrix matrix, List<Integer> indexes, List<ArffAttributeInfo> infos,
+                                        String prefix, ArffEncoding encoding) {
+    infos.eachWithIndex { ArffAttributeInfo info, int index ->
+      boolean date = info.type == ArffTypeDecl.DATE
+      if (info.type != ArffTypeDecl.STRING && !date && info.type != ArffTypeDecl.RELATIONAL) {
+        return
+      }
+      String path = prefix + matrix.columnNames()[indexes[index]]
+      int rows = matrix.rowCount()
+      for (int row = 0; row < rows; row++) {
+        Object value = matrix[row, indexes[index]]
+        if (value == null) {
+          continue
+        }
+        if (info.type == ArffTypeDecl.RELATIONAL) {
+          checkCellEncoding(value as Matrix, info.relationalColumnIndexes, info.relationalInfos,
+              "$path[$row].", encoding)
+        } else if (!date || value instanceof CharSequence) {
+          encoding.checkCell(value.toString(), path, row)
+        } else if (info.dateMode == ArffDateMode.WEKA) {
+          encoding.checkCell(formatDate(value, info), path, row)
+        }
+      }
+    }
+  }
+
+  private static void validateCells(Matrix matrix, String colName, ArffAttributeInfo info) {
+    if (info.type == ArffTypeDecl.STRING || info.type == ArffTypeDecl.RELATIONAL) {
+      // STRING accepts every value; relational contents were validated while resolving their shared schema.
+      return
+    }
+    int columnIndex = matrix.columnIndex(colName)
+    int rowCount = matrix.rowCount()
+    Set<String> allowed = info.type == ArffTypeDecl.NOMINAL ? info.nominalValues as Set<String> : null
+    for (int row = 0; row < rowCount; row++) {
+      Object value = matrix[row, columnIndex]
+      if (value == null) {
+        continue
+      }
+      boolean valid = switch (info.type) {
+        case ArffTypeDecl.NOMINAL -> allowed.contains(value.toString())
+        case ArffTypeDecl.NUMERIC, ArffTypeDecl.REAL, ArffTypeDecl.INTEGER -> validNumericCell(value, info.type)
+        case ArffTypeDecl.DATE -> value instanceof Date || isDateType(value.class) || (value instanceof CharSequence &&
+            ArffDateFormats.parsesCompletely(info.dateFormatter, value.toString()))
+        default -> true
+      }
+      if (!valid) {
+        throw new IllegalArgumentException("Column '$colName' row $row cannot be written as ${info.type}: $value; " +
+            'use STRING or convert the column first (use null for missing numeric values)')
+      }
+    }
+  }
+
+  private static boolean validNumericCell(Object value, ArffTypeDecl type) {
+    if (isNonFinite(value)) {
+      return true
+    }
+    if (!(value instanceof Number) && !(value instanceof CharSequence)) {
+      return false
+    }
+    if (value instanceof CharSequence) {
+      CharSequence text = value
+      for (int i = 0; i < text.length(); i++) {
+        if (text.charAt(i) > 0x7F) {
+          return false
+        }
+      }
+    } else if (type != ArffTypeDecl.INTEGER || value instanceof Integer || value instanceof Long ||
+        value instanceof Short || value instanceof Byte || value instanceof BigInteger) {
+      return true
+    }
+    try {
+      BigDecimal number = new BigDecimal(value.toString())
+      type != ArffTypeDecl.INTEGER || number.stripTrailingZeros().scale() <= 0
+    } catch (NumberFormatException ignored) {
+      false
     }
   }
 
@@ -218,6 +368,7 @@ class MatrixArffWriter {
     if (nested.isEmpty()) {
       throw new IllegalArgumentException("Column '$colName' cannot be written as RELATIONAL because it has no non-null values")
     }
+    nested.each { Matrix part -> validateMatrix(part) }
     List<String> allNames = nested[0].columnNames()
     List<Class> allTypes = nested[0].types()
     for (Matrix part : nested) {
@@ -247,6 +398,9 @@ class MatrixArffWriter {
       resolveInferredAttributeInfo(
           nested, nestedName, options, options.dateFormat ?: ArffDateFormats.DEFAULT_PATTERN)
     }
+    nested.each { Matrix part ->
+      nestedNames.eachWithIndex { String name, int index -> validateCells(part, name, nestedInfos[index]) }
+    }
     new ArffAttributeInfo(nestedNames, nestedIndexes, nestedInfos, nestedWeightColumnIndex, nestedWeightColumn)
   }
 
@@ -266,13 +420,12 @@ class MatrixArffWriter {
     if (isDateType(colType)) {
       return createDateInfo(dateFormat, options.dateMode)
     }
+    if (isBooleanType(colType)) {
+      return createNominalInfo(colName, BOOLEAN_NOMINAL_VALUES, false)
+    }
     if (options.inferNominals && (colType == String || colType == Object)) {
-      Set<String> uniqueValues = [] as LinkedHashSet<String>
-      int rowCount = 0
-      for (Matrix part : parts) {
-        uniqueValues.addAll(collectUniqueStringValues(part, colName))
-        rowCount += part.rowCount()
-      }
+      Set<String> uniqueValues = collectUniqueStringValues(parts, colName, options.nominalThreshold)
+      int rowCount = parts.sum { Matrix part -> part.rowCount() } as int
       if (shouldBeNominal(uniqueValues, rowCount, options.nominalThreshold)) {
         return createNominalInfo(colName, uniqueValues as List<String>, false)
       }
@@ -318,11 +471,14 @@ class MatrixArffWriter {
     if (options.nominalMappings.containsKey(colName)) {
       return options.nominalMappings[colName]
     }
+    if (isBooleanType(colType)) {
+      return BOOLEAN_NOMINAL_VALUES
+    }
     if (colType != String && colType != Object) {
       throw new IllegalArgumentException(
           "Column '$colName' cannot be written as NOMINAL without nominalMappings because its type is ${colType?.simpleName}")
     }
-    collectUniqueStringValues(matrix, colName) as List<String>
+    collectUniqueStringValues([matrix], colName, Integer.MAX_VALUE) as List<String>
   }
 
   private static ArffAttributeInfo createNominalInfo(String colName, List<String> nominalValues, boolean explicitValues) {
@@ -441,6 +597,10 @@ class MatrixArffWriter {
     }
   }
 
+  private static boolean isBooleanType(Class type) {
+    type == Boolean || type == boolean.class
+  }
+
   private static boolean isNumericType(Class type) {
     type in [BigDecimal, Double, Float, Long, BigInteger, double.class, float.class, long.class, Number]
   }
@@ -453,13 +613,18 @@ class MatrixArffWriter {
     type in [Date, java.sql.Date, Timestamp, LocalDate, LocalDateTime, Instant]
   }
 
-  private static Set<String> collectUniqueStringValues(Matrix matrix, String colName) {
+  private static Set<String> collectUniqueStringValues(List<Matrix> parts, String colName, int limit) {
     Set<String> values = [] as LinkedHashSet<String>
-    int rowCount = matrix.rowCount()
-    for (int row = 0; row < rowCount; row++) {
-      Object value = matrix[row, colName]
-      if (value != null) {
-        values << value.toString()
+    for (Matrix part : parts) {
+      int rowCount = part.rowCount()
+      for (int row = 0; row < rowCount; row++) {
+        Object value = part[row, colName]
+        if (value != null) {
+          values.add(value.toString())
+          if (values.size() > limit) {
+            return values
+          }
+        }
       }
     }
     values
@@ -547,24 +712,22 @@ class MatrixArffWriter {
     if (matrix == null) {
       throw new IllegalArgumentException(MATRIX_NULL_MESSAGE)
     }
+    List<String> names = matrix.columnNames()
+    Set<String> duplicates = names.findAll { String name -> names.count(name) > 1 } as Set<String>
+    if (!duplicates.isEmpty()) {
+      throw new IllegalArgumentException("ARFF attribute names must be unique but the Matrix has duplicate column names: $duplicates")
+    }
     if (matrix.columnCount() == 0) {
       throw new IllegalArgumentException('Matrix must have at least one column')
     }
   }
 
-  private static File ensureFileOutput(Matrix matrix, File output) {
-    if (output == null) {
-      throw new IllegalArgumentException('File or directory cannot be null')
+  /** Create parent directories when this path has a parent; single-name relative paths need no action. */
+  @PackageScope
+  static void ensureParentDirectories(Path path) {
+    if (path.parent != null) {
+      Files.createDirectories(path.parent)
     }
-    if (output.isDirectory()) {
-      output = new File(output, safeFileName(matrix.matrixName) + '.arff')
-    }
-    if (output.parentFile != null && !output.parentFile.exists()) {
-      if (!output.parentFile.mkdirs() && !output.parentFile.exists()) {
-        throw new IllegalArgumentException("Failed to create directory: ${output.parentFile.absolutePath}")
-      }
-    }
-    output
   }
 
   private static String safeFileName(String name) {
@@ -575,7 +738,7 @@ class MatrixArffWriter {
     baseName = baseName.replace(BACKSLASH, UNDERSCORE).replace('/', UNDERSCORE)
     baseName = baseName.replace(DOUBLE_DOT, UNDERSCORE)
     baseName = baseName.replaceAll(/[^A-Za-z0-9._-]/, UNDERSCORE)
-    if (baseName.isEmpty() || baseName == '.' || baseName == DOUBLE_DOT) {
+    if (baseName.isEmpty() || baseName == DOT || baseName == DOUBLE_DOT) {
       return DEFAULT_MATRIX_BASE_NAME
     }
     baseName

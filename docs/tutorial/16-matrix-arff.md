@@ -206,13 +206,78 @@ Important interoperability limitations:
 - `\a`, `\b`, `\f`, `\v` and octal escapes are not decoded exactly like Weka's `StreamTokenizer`; every escape Weka's
   writer emits is supported
 - empty comma fields read as missing, while Weka rejects them
-- INTEGER values must fit an `Integer`; Weka stores every numeric type as `double`
+- INTEGER values use `Integer` by default; select `integerType(Long)` for large integers or
+  `integerType(BigDecimal)` for fractional input. Weka stores every numeric type as `double`
 - a sparse-omitted STRING takes dictionary value 0, which can be the first explicit value from another row. Use an
   explicit `?` for missing data and consider a deliberate dummy dictionary value
 - sparse-omitted STRING values inside relational cells are resolved per nested `Matrix`; Weka appears to share the
   dictionary across all cells of the relational attribute
 - undeclared nominal values are rejected only when strict or explicit nominal validation is enabled
 - weights are retained only when `instanceWeightColumn` is configured; Weka attribute weights are parsed and discarded
+
+## Charset and INTEGER compatibility
+
+| Option | Applies to | Default | Accepted values |
+|--------|------------|---------|-----------------|
+| `charset` | Read/write File, Path, URL input and byte streams | UTF-8 | A `Charset`, or its name in SPI maps; null resets to UTF-8 |
+| `integerType` | Read INTEGER attributes, including nested and sparse values | `Integer` | `Integer`, `Long`, `BigDecimal`; SPI also accepts case-insensitive simple or fully-qualified names; null resets to `Integer` |
+
+Byte input is decoded strictly. Select the source encoding explicitly when it is not UTF-8; malformed bytes produce
+an error mentioning `charset`. A caller-supplied Reader/Writer or String entry point owns its encoding and skips the
+byte-encoding checks. Files and streams validate every emitted declaration and relevant cell before writing bytes.
+A genuine I/O error during printing (for example a full disk) can still leave a partial file and is reported to the
+caller. A supplied `PrintWriter` is flushed and checked before and after writing; an existing error state is rejected.
+
+To exchange a Latin-1 file with large INTEGER values, create the Matrix, write it, and read it with matching options:
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.arff.ArffReadOptions
+import se.alipsa.matrix.arff.ArffWriteOptions
+import se.alipsa.matrix.arff.ArffTypeDecl
+import se.alipsa.matrix.arff.MatrixArffReader
+import se.alipsa.matrix.arff.MatrixArffWriter
+import java.nio.charset.StandardCharsets
+
+Matrix data = Matrix.builder('cities')
+    .data(id: [3000000000L], city: ['Malmö'])
+    .types(Long, String).build()
+File file = new File('cities.arff')
+MatrixArffWriter.write(data, file, new ArffWriteOptions()
+    .charset(StandardCharsets.ISO_8859_1)
+    .attributeTypesByColumn([id: ArffTypeDecl.INTEGER]))
+Matrix restored = MatrixArffReader.read(file, new ArffReadOptions()
+    .charset(StandardCharsets.ISO_8859_1).integerType(Long))
+assert restored[0, 'id'] == 3000000000L
+assert restored[0, 'city'] == 'Malmö'
+
+// The same options through the Matrix SPI (map first):
+Matrix fromSpi = Matrix.read([charset: 'ISO-8859-1', integerType: 'Long'], file)
+data.write([charset: 'ISO-8859-1', attributeTypesByColumn: [id: 'INTEGER']], file)
+```
+
+`integerType(BigDecimal)` also accepts fractional INTEGER input. With the default `Integer`, values outside the
+`int` range or with a fractional part fail; values written outside that range require `Long` or `BigDecimal` to read
+back. NaN and infinite numeric cells continue to write as `?`.
+
+## Validation and compatibility changes in 0.3.1
+
+- Header matching is locale-independent. An initial BOM is ignored. Missing `@DATA`, unknown header keywords and
+  stray pre-data lines fail even in lenient mode; empty/comment-only input still yields an empty Matrix.
+  Keywords accept whitespace, quotes or `{` as boundaries, so `@relationship` is rejected.
+- Nominal declarations split on whitespace and commas: `{a b}` declares two values, `{a,b,}` declares two,
+  `{'',a}` preserves an empty value, and `{a,a}` fails with line context. `@attribute c{a,b}` is accepted.
+- Writer validation rejects duplicate column names, out-of-mapping nominal cells, invalid numeric cells, fractional
+  INTEGER cells and DATE strings that do not fully match the selected format, including WEKA mode. Parseable numeric
+  and date strings are still accepted. Numeric strings must use ASCII without surrounding whitespace: `''`, blank
+  strings, `'?'`, `' 1 '` and non-ASCII digits are errors. Use `null` for missing numeric values.
+- Boolean columns default to nominal `{false,true}` and read back as `'false'`/`'true'`; explicit type and
+  `stringColumns` overrides still apply. Explicit Boolean nominal columns need no mappings.
+- Lenient dense row mismatches still pad/drop values and now produce one warning per read, including nested rows.
+  Set `failOnRowLengthMismatch(true)` to fail instead.
+- File validation failures preserve existing contents; I/O errors propagate. Encoding validation includes nested names,
+  declarations of all-null DATE columns, and nested cell values. Unpaired surrogates are rejected on byte output.
+- Path overloads support NIO providers such as zip filesystems and null output paths fail with `IllegalArgumentException`.
 
 ## Options-First Write API
 
@@ -400,7 +465,7 @@ The ARFF format supports several attribute types, which are automatically conver
 |-----------|-------------|-----------|
 | `NUMERIC` | Floating-point numbers | `BigDecimal` |
 | `REAL` | Floating-point numbers | `BigDecimal` |
-| `INTEGER` | Whole numbers | `Integer` |
+| `INTEGER` | Whole numbers (fractional input with `integerType(BigDecimal)`) | `Integer` (default), `Long`, or `BigDecimal` |
 | `STRING` | Text strings | `String` |
 | `DATE` | Date/time values | `Date` |
 | `RELATIONAL` | Nested ARFF rows | `Matrix` |

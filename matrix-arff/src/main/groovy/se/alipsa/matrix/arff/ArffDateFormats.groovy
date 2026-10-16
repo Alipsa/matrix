@@ -56,6 +56,13 @@ class ArffDateFormats {
     parsed
   }
 
+  /** Whether the entire string matches this column's date formatter, in every date mode. */
+  @groovy.transform.PackageScope
+  static boolean parsesCompletely(SimpleDateFormat format, String value) {
+    ParsePosition position = new ParsePosition(0)
+    format.parse(value, position) != null && position.index == value.length()
+  }
+
   /** The zone in which a {@code LocalDate}/{@code LocalDateTime} is placed on the time line before formatting. */
   static ZoneId zone(ArffDateMode mode) {
     mode == ArffDateMode.WEKA ? ZoneId.systemDefault() : ZoneOffset.UTC

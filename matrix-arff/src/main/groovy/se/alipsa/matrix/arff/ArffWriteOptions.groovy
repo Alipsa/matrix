@@ -3,6 +3,9 @@ package se.alipsa.matrix.arff
 import se.alipsa.matrix.core.spi.OptionDescriptor
 import se.alipsa.matrix.core.spi.OptionMaps
 
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
+
 /**
  * Typed options for ARFF write operations via the SPI.
  */
@@ -17,6 +20,7 @@ class ArffWriteOptions {
   private static final String ATTRIBUTE_TYPES_BY_COLUMN = 'attributeTypesByColumn'
   private static final String DATE_FORMATS_BY_COLUMN = 'dateFormatsByColumn'
   private static final String INSTANCE_WEIGHT_COLUMN = 'instanceWeightColumn'
+  private static final String CHARSET = 'charset'
   private static final String DATE_MODE = 'dateMode'
 
   private Map<String, List<String>> nominalMappings = [:].asImmutable()
@@ -28,6 +32,7 @@ class ArffWriteOptions {
   private String dateFormat = null
   private Map<String, String> dateFormatsByColumn = [:]
   private String instanceWeightColumn = null
+  private Charset charset = StandardCharsets.UTF_8
   private ArffDateMode dateMode = ArffDateMode.UTC
 
   Map<String, List<String>> getNominalMappings() {
@@ -135,6 +140,17 @@ class ArffWriteOptions {
     this
   }
 
+  /** Character encoding for byte streams; UTF-8 by default. */
+  Charset getCharset() {
+    charset
+  }
+
+  /** Set the stream charset; null resets to UTF-8. Writer/String entry points do not use this option. */
+  ArffWriteOptions charset(Charset value) {
+    charset = value ?: StandardCharsets.UTF_8
+    this
+  }
+
   static ArffWriteOptions fromMap(Map<String, ?> options) {
     ArffWriteOptions result = new ArffWriteOptions()
     Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
@@ -170,11 +186,17 @@ class ArffWriteOptions {
       result.dateMode(ArffOptionValues.enumValue(normalized.datemode, ArffDateMode, DATE_MODE))
     }
 
+    if (normalized.containsKey(CHARSET)) {
+      result.charset(ArffOptionValues.charsetValue(normalized[CHARSET]))
+    }
     result
   }
 
   Map<String, ?> toMap() {
     Map<String, Object> result = [:]
+    if (charset != StandardCharsets.UTF_8) {
+      result[CHARSET] = charset
+    }
     if (!nominalMappings.isEmpty()) {
       result.nominalMappings = getNominalMappings()
     }
@@ -214,6 +236,7 @@ class ArffWriteOptions {
 
   static List<OptionDescriptor> descriptors() {
     [
+        new OptionDescriptor(CHARSET, Charset, StandardCharsets.UTF_8, 'Byte-stream charset (Charset or name); malformed/unmappable text is rejected'),
         new OptionDescriptor(NOMINAL_MAPPINGS, Map, null, 'Map of column names to explicit nominal values'),
         new OptionDescriptor(INFER_NOMINALS, Boolean, true, 'Whether String/Object columns should be auto-detected as nominal using nominalThreshold and, for 10+ rows, a 10% row-count heuristic'),
         new OptionDescriptor(NOMINAL_THRESHOLD, Integer, DEFAULT_NOMINAL_THRESHOLD, 'Maximum distinct values allowed before nominal inference falls back to STRING'),
