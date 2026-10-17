@@ -1,11 +1,8 @@
 package se.alipsa.matrix.parquet
 
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.Path
+import groovy.transform.PackageScope
+
 import org.apache.parquet.example.data.Group
-import org.apache.parquet.hadoop.ParquetFileReader
-import org.apache.parquet.hadoop.ParquetReader
-import org.apache.parquet.hadoop.example.GroupReadSupport
 import org.apache.parquet.schema.GroupType
 import org.apache.parquet.schema.LogicalTypeAnnotation
 import org.apache.parquet.schema.PrimitiveType
@@ -15,16 +12,18 @@ import org.apache.parquet.schema.Type
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
 
+import java.nio.ByteBuffer
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.sql.Time
+import java.sql.Timestamp
 import java.time.DateTimeException
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
-import java.util.concurrent.ConcurrentHashMap
+import java.time.ZoneOffset
 
 /**
  * Reads Apache Parquet files into {@link Matrix} objects.
@@ -86,6 +85,9 @@ import java.util.concurrent.ConcurrentHashMap
  * @see Matrix
  */
 class MatrixParquetReader {
+  private static final String OPEN_BRACKET = '['
+  private static final String EXTENSION = '.parquet'
+
 
   private static final Logger log = Logger.getLogger(MatrixParquetReader)
 
@@ -105,7 +107,7 @@ class MatrixParquetReader {
   private static final ThreadLocal<ZoneId> ZONE_ID_HOLDER = new ThreadLocal<>()
 
   /** Cache for Class.forName() results to avoid repeated reflection calls */
-  private static final Map<String, Class<?>> CLASS_CACHE = new ConcurrentHashMap<>()
+  private static final ThreadLocal<Boolean> BINARY_AS_STRING = new ThreadLocal<>()
 
   private static final String ERR_PATH_NULL = 'Path cannot be null'
   private static final String ERR_FILE_PATH_NULL = 'File path cannot be null'
@@ -152,6 +154,12 @@ class MatrixParquetReader {
     new ReaderBuilder()
   }
 
+  /** Creates a reader from a validated snapshot of typed options. */
+  static ReaderBuilder builder(ParquetReadOptions options) {
+    if (options == null) { throw new IllegalArgumentException('options cannot be null') }
+    new ReaderBuilder(options)
+  }
+
   /**
    * Fluent builder for configuring and executing Parquet read operations.
    *
@@ -159,9 +167,75 @@ class MatrixParquetReader {
    */
   static class ReaderBuilder {
 
-    private final ParquetReadOptions options = new ParquetReadOptions()
+    private final ParquetReadOptions options
 
-    private ReaderBuilder() {}
+    private ReaderBuilder() { this(new ParquetReadOptions()) }
+
+    private ReaderBuilder(ParquetReadOptions value) {
+      options = ParquetReadOptions.fromMap(value.toMap())
+      options.hubToken = value.hubToken
+    }
+
+    /** Sets columns; see ParquetReadOptions for defaults and validation. */
+    ReaderBuilder columns(List<String> value) { options.columns = value; this }
+
+    /** Sets filter; see ParquetReadOptions for defaults and validation. */
+    ReaderBuilder filter(ParquetPredicate value) { options.filter = value; this }
+
+    /** Sets binaryAsString; see ParquetReadOptions for defaults and validation. */
+    ReaderBuilder binaryAsString(Boolean value) { options.binaryAsString = value; this }
+
+    /** Sets useColumnIndexFilter; see ParquetReadOptions for defaults and validation. */
+    ReaderBuilder useColumnIndexFilter(boolean value) { options.useColumnIndexFilter = value; this }
+
+    /** Sets limit; see ParquetReadOptions for defaults and validation. */
+    ReaderBuilder limit(long value) { options.limit = value; this }
+
+    /** Sets rowGroups; see ParquetReadOptions for defaults and validation. */
+    ReaderBuilder rowGroups(List<Integer> value) { options.rowGroups = value; this }
+
+    /** Sets maxBatchRows; see ParquetReadOptions for defaults and validation. */
+    ReaderBuilder maxBatchRows(int value) { options.maxBatchRows = value; this }
+
+    /** Transport: DOWNLOAD, AUTO or RANGE; default 'DOWNLOAD'. */
+    ReaderBuilder remoteReadMode(String value) { options.remoteReadMode = value; this }
+
+    /** HTTP connection timeout; default 10000. */
+    ReaderBuilder connectTimeoutMillis(int value) { options.connectTimeoutMillis = value; this }
+
+    /** HTTP read timeout; default 60000. */
+    ReaderBuilder readTimeoutMillis(int value) { options.readTimeoutMillis = value; this }
+
+    /** Maximum HTTP range cache bytes; default 8388608. */
+    ReaderBuilder rangeCacheBytes(int value) { options.rangeCacheBytes = value; this }
+
+    /** Optional local source path column; default null. */
+    ReaderBuilder sourceFileColumn(String value) { options.sourceFileColumn = value; this }
+
+    /** Bounded dataset decoder workers; default 1. */
+    ReaderBuilder parallelism(int value) { options.parallelism = value; this }
+
+    /** Reads shards in caller order after checking every schema. */
+    Matrix read(List<File> files) {
+      batches(files).withCloseable { iterator -> collectBatches(iterator) }
+    }
+
+    /** Opens ordered shard batches; prefetch is bounded by parallelism. */
+    MatrixBatchIterator batches(List<File> files) { new DatasetBatches(files, options) }
+
+    /** Reads explicit file globs in normalized path order. */
+    Matrix readGlob(String pattern) { read(globFiles(pattern)) }
+
+    /** Selects original footer groups per shard, keyed by canonical local file path. */
+    ReaderBuilder rowGroupsByFile(Map<String, List<Integer>> value) { options.rowGroupsByFile = value; this }
+
+    /** Opens closeable batches; close explicitly when stopping before exhaustion. */
+    MatrixBatchIterator batches(File file) {
+      if (file?.isDirectory()) { return batches(directoryFiles(file)) }
+      validateFile(file)
+      new ParquetBatches(new org.apache.parquet.io.LocalInputFile(file.toPath()), options, defaultMatrixName(file))
+    }
+
 
     /**
      * Sets the name for the resulting Matrix.
@@ -203,16 +277,9 @@ class MatrixParquetReader {
      * @return a Matrix populated with the file contents
      */
     Matrix read(File file) {
-      if (options.zoneId != null && options.matrixName != null) {
-        return MatrixParquetReader.read(file, options.matrixName, options.zoneId)
-      }
-      if (options.zoneId != null) {
-        return MatrixParquetReader.read(file, options.zoneId)
-      }
-      if (options.matrixName != null) {
-        return MatrixParquetReader.read(file, options.matrixName)
-      }
-      MatrixParquetReader.read(file)
+      if (file?.isDirectory()) { return read(directoryFiles(file)) }
+      validateFile(file)
+      readInput(new org.apache.parquet.io.LocalInputFile(file.toPath()), options, defaultMatrixName(file))
     }
 
     /**
@@ -235,10 +302,7 @@ class MatrixParquetReader {
      * @return a Matrix populated with the byte array contents
      */
     Matrix read(byte[] content) {
-      if (content == null) {
-        throw new IllegalArgumentException(ERR_CONTENT_NULL)
-      }
-      read(new ByteArrayInputStream(content))
+      readInput(new InMemoryInputFile(content), options, null)
     }
 
     /**
@@ -248,16 +312,12 @@ class MatrixParquetReader {
      * @return a Matrix populated with the stream contents
      */
     Matrix read(InputStream is) {
-      if (options.zoneId != null && options.matrixName != null) {
-        return MatrixParquetReader.read(is, options.matrixName, options.zoneId)
-      }
-      if (options.zoneId != null) {
-        return MatrixParquetReader.read(is, options.zoneId)
-      }
-      if (options.matrixName != null) {
-        return MatrixParquetReader.read(is, options.matrixName)
-      }
-      MatrixParquetReader.read(is)
+      if (is == null) { throw new IllegalArgumentException('InputStream cannot be null') }
+      File temp = File.createTempFile('matrix-parquet-', EXTENSION)
+      try {
+        Files.copy(is, temp.toPath(), StandardCopyOption.REPLACE_EXISTING)
+        readInput(new org.apache.parquet.io.LocalInputFile(temp.toPath()), options, null)
+      } finally { Files.deleteIfExists(temp.toPath()) }
     }
 
     /**
@@ -267,19 +327,19 @@ class MatrixParquetReader {
      * @return a Matrix populated with the URL contents
      */
     Matrix read(URL url) {
-      if (options.zoneId != null && options.matrixName != null) {
-        return MatrixParquetReader.read(url, options.matrixName, options.zoneId)
-      }
-      if (options.zoneId != null) {
-        return MatrixParquetReader.read(url, options.zoneId)
-      }
-      if (options.matrixName != null) {
-        url.openStream().withCloseable { InputStream is ->
-          MatrixParquetReader.read(is, options.matrixName)
+      if (url == null) { throw new IllegalArgumentException(ERR_URL_NULL) }
+      options.validate()
+      if (options.remoteReadMode != 'DOWNLOAD') {
+        HttpRangeInputFile input
+        try { input = new HttpRangeInputFile(url, options) } catch (IOException failure) {
+          if (options.remoteReadMode == 'RANGE') { throw failure }
         }
-      } else {
-        MatrixParquetReader.read(url)
+        if (input != null) { return readInput(input, options, null) }
       }
+      if (url.protocol in ['http', 'https']) {
+        return HttpTransport.download(url, options).withCloseable { InputStream stream -> read(stream) }
+      }
+      url.openStream().withCloseable { InputStream stream -> read(stream) }
     }
 
     /**
@@ -305,6 +365,10 @@ class MatrixParquetReader {
       if (urlString == null) {
         throw new IllegalArgumentException(ERR_URL_STRING_NULL)
       }
+      if (urlString.startsWith('hf://')) {
+        options.hubToken = System.getenv('HF_TOKEN')
+        return read(HubUrl.resolve(urlString))
+      }
       read(new URI(urlString).toURL())
     }
   }
@@ -316,16 +380,6 @@ class MatrixParquetReader {
   private static ZoneId getZoneId() {
     ZoneId zoneId = ZONE_ID_HOLDER.get()
     zoneId != null ? zoneId : ZoneId.systemDefault()
-  }
-
-  /**
-   * Gets a cached Class object for the given class name.
-   * Uses Thread.currentThread().contextClassLoader.loadClass() and caches the result for subsequent calls.
-   */
-  private static Class<?> getCachedClass(String className) {
-    CLASS_CACHE.computeIfAbsent(className) { name ->
-      Thread.currentThread().contextClassLoader.loadClass(name)
-    }
   }
 
   /**
@@ -436,7 +490,7 @@ class MatrixParquetReader {
     if (content == null) {
       throw new IllegalArgumentException(ERR_CONTENT_NULL)
     }
-    read(new ByteArrayInputStream(content))
+    readInput(new InMemoryInputFile(content), new ParquetReadOptions(), null)
   }
 
   /**
@@ -453,7 +507,7 @@ class MatrixParquetReader {
     if (content == null) {
       throw new IllegalArgumentException(ERR_CONTENT_NULL)
     }
-    read(new ByteArrayInputStream(content), matrixName)
+    readInput(new InMemoryInputFile(content), new ParquetReadOptions().matrixName(matrixName), null)
   }
 
   /**
@@ -470,7 +524,7 @@ class MatrixParquetReader {
     if (content == null) {
       throw new IllegalArgumentException(ERR_CONTENT_NULL)
     }
-    read(new ByteArrayInputStream(content), zoneId)
+    readInput(new InMemoryInputFile(content), new ParquetReadOptions().zoneId(zoneId), null)
   }
 
   /**
@@ -488,7 +542,7 @@ class MatrixParquetReader {
     if (content == null) {
       throw new IllegalArgumentException(ERR_CONTENT_NULL)
     }
-    read(new ByteArrayInputStream(content), matrixName, zoneId)
+    readInput(new InMemoryInputFile(content), new ParquetReadOptions().matrixName(matrixName).zoneId(zoneId), null)
   }
 
   /**
@@ -545,7 +599,7 @@ class MatrixParquetReader {
     if (urlString == null) {
       throw new IllegalArgumentException(ERR_URL_STRING_NULL)
     }
-    read(new URI(urlString).toURL())
+    builder().readUrl(urlString)
   }
 
   /**
@@ -759,6 +813,7 @@ class MatrixParquetReader {
    * @throws IllegalArgumentException if file is null, does not exist, or is a directory
    */
   static Matrix read(File file) {
+    if (file?.isDirectory()) { return builder().read(file) }
     read(file, file == null ? null : defaultMatrixName(file), false, null)
   }
 
@@ -776,58 +831,72 @@ class MatrixParquetReader {
 
   private static Matrix read(File file, String fallbackMatrixName, boolean preferSchemaName) {
     validateFile(file)
-    log.debug("Reading Parquet file: ${file.absolutePath}")
-    def path = new Path(file.toURI())
-    def conf = new Configuration()
-    // Open Parquet file metadata
-    def footer = ParquetFileReader.readFooter(conf, path)
-    def keyValueMetaData = footer.getFileMetaData().getKeyValueMetaData()
-    def typeString = keyValueMetaData.get(METADATA_COLUMN_TYPES)
-    def indexString = keyValueMetaData.get(METADATA_INDEX_COLUMNS)
+    readInput(new org.apache.parquet.io.LocalInputFile(file.toPath()), new ParquetReadOptions(), preferSchemaName ? null : fallbackMatrixName)
+  }
 
-    List<Class> fieldTypes
-    if (typeString != null) {
-      fieldTypes = parseTypeString(typeString)
+  /** Reads a list of shards in the supplied order, with strict schema compatibility. */
+  static Matrix read(List<File> files) { builder().read(files) }
+
+  /** Reads an explicit glob; ordinary file strings are not interpreted as patterns. */
+  static Matrix readGlob(String pattern) { builder().readGlob(pattern) }
+
+  private static List<File> directoryFiles(File directory) {
+    (directory.listFiles() ?: new File[0]).findAll { it.isFile() && it.name.endsWith(EXTENSION) }
+        .sort { it.canonicalPath }.toList()
+  }
+
+  private static List<File> globFiles(String pattern) {
+    java.nio.file.Path path = java.nio.file.Path.of(pattern).toAbsolutePath().normalize()
+    String text = path as String
+    int wildcard = text.findIndexOf { it in ['*', '?', OPEN_BRACKET, '{'] }
+    if (wildcard < 0) { return [path.toFile()] }
+    int slash = text.lastIndexOf(File.separator, wildcard)
+    java.nio.file.Path root = java.nio.file.Path.of(text.substring(0, Math.max(1, slash)))
+    def matcher = java.nio.file.FileSystems.default.getPathMatcher("glob:$text")
+    Files.walk(root).withCloseable { paths ->
+      paths.filter { Files.isRegularFile(it) && matcher.matches(it) }.sorted().map { it.toFile() }.toList()
     }
+  }
 
-    ParquetReader.builder(new GroupReadSupport(), path).build().withCloseable { reader ->
-      String schemaName = footer.getFileMetaData().getSchema().name
-      String matrixName = fallbackMatrixName
-      if (preferSchemaName && schemaName != null && !schemaName.trim().isEmpty()) {
-        matrixName = schemaName
-      }
+  private static Matrix collectBatches(MatrixBatchIterator iterator) {
+    Matrix prototype = iterator.emptyMatrix()
+    List<List> columns = []
+    prototype.columnNames().each { columns.add([]) }
+    while (iterator.hasNext()) {
+      Matrix batch = iterator.next()
+      batch.columnNames().eachWithIndex { String name, int index -> columns[index].addAll(batch.column(name)) }
+    }
+    Matrix.builder(prototype.matrixName).columnNames(prototype.columnNames()).types(prototype.types()).columns(columns).build()
+  }
 
-      Group row = reader.read()
-      GroupType schema = row != null ? row.getType() : footer.getFileMetaData().getSchema()
-      List<String> fieldNames = schema.fields*.name
-      if (fieldTypes == null) {
-        fieldTypes = extractFieldTypes(schema)
-      }
-      if (row == null) {
-        Matrix m = Matrix.builder(matrixName)
-            .columnNames(fieldNames)
-            .types(fieldTypes)
-            .build()
-        return restoreIndex(m, indexString)
-      }
+  @PackageScope
+  static <T> T withReadZone(ZoneId zone, Closure<T> action) {
+    ZoneId previous = ZONE_ID_HOLDER.get()
+    if (zone != null) { ZONE_ID_HOLDER.set(zone) }
+    try { action.call() } finally {
+      if (previous == null) { ZONE_ID_HOLDER.remove() } else { ZONE_ID_HOLDER.set(previous) }
+    }
+  }
 
-      def builder = Matrix.builder(matrixName)
-      .columnNames(fieldNames)
-      .types(fieldTypes)
-
-      while (row != null) {
-        def rowData = []
-        fieldNames.eachWithIndex { name, i ->
-          def type = fieldTypes[i]
-          def field = schema.getType(name)
-          def value = readValue(row, name, field, type)
-          rowData << value
+  @PackageScope
+  static Matrix readInput(org.apache.parquet.io.InputFile input, ParquetReadOptions options, String name) {
+    log.debug("Reading Parquet input: $name")
+    ZoneId previous = ZONE_ID_HOLDER.get()
+    if (options.zoneId != null) { ZONE_ID_HOLDER.set(options.zoneId) }
+    try {
+      new ParquetBatches(input, options, name).withCloseable { batches ->
+        Matrix empty = batches.emptyMatrix()
+        List<List> columns = empty.columnNames().collect { [] }
+        while (batches.hasNext()) {
+          Matrix batch = batches.next()
+          batch.columnNames().eachWithIndex { String column, int index -> columns[index].addAll(batch.column(column)) }
         }
-        builder.addRow(rowData as Object[])
-        row = reader.read()
+        Matrix result = Matrix.builder(empty.matrixName).columnNames(empty.columnNames()).types(empty.types()).columns(columns).build()
+        if (empty.hasIndex()) { result.createIndex(empty.indexedColumns() as String[]) }
+        result
       }
-      Matrix m = builder.build()
-      restoreIndex(m, indexString)
+    } finally {
+      if (previous == null) { ZONE_ID_HOLDER.remove() } else { ZONE_ID_HOLDER.set(previous) }
     }
   }
 
@@ -838,16 +907,18 @@ class MatrixParquetReader {
    * @param indexString JSON array or legacy comma-separated index column names, or null if no index
    * @return the matrix with index restored (or unchanged if no index metadata)
    */
-  private static Matrix restoreIndex(Matrix matrix, String indexString) {
+  @PackageScope
+  static Matrix restoreIndex(Matrix matrix, String indexString) {
     if (indexString != null && !indexString.trim().isEmpty()) {
-      matrix.createIndex(parseIndexColumns(indexString))
+      String[] indexes = parseIndexColumns(indexString)
+      if (indexes.every { matrix.columnNames().contains(it) }) { matrix.createIndex(indexes) }
     }
     matrix
   }
 
   private static String[] parseIndexColumns(String indexString) {
     String value = indexString.trim()
-    if (value.startsWith('[')) {
+    if (value.startsWith(OPEN_BRACKET)) {
       try {
         return parseJsonStringArray(value) as String[]
       } catch (IllegalArgumentException ignored) {
@@ -864,7 +935,7 @@ class MatrixParquetReader {
   private static List<String> parseJsonStringArray(String json) {
     List<String> result = []
     int pos = skipWhitespace(json, 0)
-    if (pos >= json.length() || json.charAt(pos) != '[' as char) {
+    if (pos >= json.length() || json.charAt(pos) != OPEN_BRACKET as char) {
       throw new IllegalArgumentException("Invalid index metadata JSON: $json")
     }
     pos = skipWhitespace(json, pos + 1)
@@ -955,7 +1026,7 @@ class MatrixParquetReader {
     if (is == null) {
       throw new IllegalArgumentException('InputStream cannot be null')
     }
-    java.nio.file.Path tempFile = Files.createTempFile('matrix-parquet-', '.parquet')
+    java.nio.file.Path tempFile = Files.createTempFile('matrix-parquet-', EXTENSION)
     try {
       Files.copy(is, tempFile, StandardCopyOption.REPLACE_EXISTING)
       File file = tempFile.toFile()
@@ -972,11 +1043,7 @@ class MatrixParquetReader {
     }
   }
 
-  private static List<Class> parseTypeString(String typeString) {
-    typeString.split(COMMA).collect { className ->
-      getCachedClass(className.trim())
-    }
-  }
+
 
   private static Class getJavaType(PrimitiveType.PrimitiveTypeName typeName) {
     switch (typeName) {
@@ -985,11 +1052,13 @@ class MatrixParquetReader {
       case PrimitiveTypeName.FLOAT -> Float
       case PrimitiveTypeName.DOUBLE -> Double
       case PrimitiveTypeName.BOOLEAN -> Boolean
+      case PrimitiveTypeName.BINARY, PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY -> byte[]
       default -> String
     }
   }
 
-  private static List<Class> extractFieldTypes(GroupType schema) {
+  @PackageScope
+  static List<Class> extractFieldTypes(GroupType schema) {
     schema.fields.collect { field ->
       def logical = field.getLogicalTypeAnnotation()
       if (logical instanceof LogicalTypeAnnotation.ListLogicalTypeAnnotation) {
@@ -1010,6 +1079,10 @@ class MatrixParquetReader {
             BigDecimal
           } else if (logical instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
             Time
+          } else if (logical instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation) {
+            String
+          } else if (logical instanceof LogicalTypeAnnotation.UUIDLogicalTypeAnnotation) {
+            UUID
           } else {
             getJavaType(primitive)
           }
@@ -1020,7 +1093,8 @@ class MatrixParquetReader {
     }
   }
 
-  private static Object readValue(Group group, String fieldName, Type fieldType, Class expectedType) {
+  @PackageScope
+  static Object readValue(Group group, String fieldName, Type fieldType, Class expectedType) {
     if (group.getFieldRepetitionCount(fieldName) == 0) {
       return null
     }
@@ -1041,63 +1115,78 @@ class MatrixParquetReader {
   }
 
   private static Object readPrimitive(Group group, String fieldName, PrimitiveType fieldType, Class expectedType) {
-    def logical = fieldType.logicalTypeAnnotation
-    switch (fieldType.primitiveTypeName) {
-      case PrimitiveTypeName.INT32 -> {
-        if (logical == LogicalTypeAnnotation.dateType()) {
-          LocalDate.ofEpochDay(group.getInteger(fieldName, 0))
-        } else if (logical instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
-          readTime(fieldName, group.getInteger(fieldName, 0), logical as LogicalTypeAnnotation.TimeLogicalTypeAnnotation)
-        } else if (expectedType == java.sql.Date) {
-          java.sql.Date.valueOf(LocalDate.ofEpochDay(group.getInteger(fieldName, 0)))
-        } else {
-          group.getInteger(fieldName, 0)
-        }
-      }
-      case PrimitiveTypeName.INT64 -> {
-        if (logical instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
-          readTime(fieldName, group.getLong(fieldName, 0), logical as LogicalTypeAnnotation.TimeLogicalTypeAnnotation)
-        } else if (logical instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
-          Instant instant = timestampInstant(group.getLong(fieldName, 0), logical.unit)
-          if (expectedType == java.sql.Timestamp) {
-            java.sql.Timestamp.from(instant)
-          } else if (expectedType == Date) {
-            Date.from(instant)
-          } else {
-            LocalDateTime.ofInstant(instant, getZoneId())
-          }
-        } else {
-          def longValue = group.getLong(fieldName, 0)
-          if (expectedType == BigInteger) {
-            BigInteger.valueOf(longValue)
-          } else if (expectedType == Date) {
-            new Date(longValue)
-          } else {
-            longValue
-          }
-        }
-      }
+    Object raw = switch (fieldType.primitiveTypeName) {
+      case PrimitiveTypeName.INT32 -> group.getInteger(fieldName, 0)
+      case PrimitiveTypeName.INT64 -> group.getLong(fieldName, 0)
       case PrimitiveTypeName.FLOAT -> group.getFloat(fieldName, 0)
       case PrimitiveTypeName.DOUBLE -> group.getDouble(fieldName, 0)
       case PrimitiveTypeName.BOOLEAN -> group.getBoolean(fieldName, 0)
-      case PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY, PrimitiveTypeName.BINARY -> {
-        if (logical instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
-          def scale = logical.scale
-          def binary = group.getBinary(fieldName, 0)
-          def unscaled = new BigInteger(binary.getBytes())
-          if (expectedType == BigInteger) {
-            unscaled
-          } else {
-            new BigDecimal(unscaled, scale)
-          }
-        } else if (expectedType == BigDecimal) {
-          new BigDecimal(group.getBinary(fieldName, 0).toStringUsingUTF8())
-        } else {
-          group.getBinary(fieldName, 0).toStringUsingUTF8()
-        }
-      }
-      default -> group.getString(fieldName, 0)
+      case PrimitiveTypeName.BINARY, PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY -> group.getBinary(fieldName, 0)
+      default -> throw new IllegalArgumentException("Unsupported ${fieldType.primitiveTypeName} field $fieldName")
     }
+    decodePrimitive(raw, fieldType, expectedType, BINARY_AS_STRING.get() == Boolean.TRUE)
+  }
+
+  @PackageScope
+  static Object decodePrimitive(Object raw, PrimitiveType field, Class expected, boolean binaryAsString) {
+    if (field.primitiveTypeName == PrimitiveTypeName.INT96) {
+      throw new IllegalArgumentException("Unsupported INT96 field '${field.name}'; convert legacy timestamps explicitly")
+    }
+    def logical = field.logicalTypeAnnotation
+    if (logical instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
+      BigInteger unscaled = raw instanceof org.apache.parquet.io.api.Binary ? new BigInteger(raw.bytes) : BigInteger.valueOf(((Number) raw).longValue())
+      return expected == BigInteger ? unscaled : new BigDecimal(unscaled, logical.scale)
+    }
+    if (logical instanceof LogicalTypeAnnotation.DateLogicalTypeAnnotation) {
+      LocalDate date = LocalDate.ofEpochDay(((Number) raw).longValue())
+      return expected in [java.sql.Date, Date] ? java.sql.Date.valueOf(date) : date
+    }
+    if (logical instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
+      Instant instant = timestampInstant(((Number) raw).longValue(), logical.unit)
+      if (expected == Instant) { return instant }
+      if (expected == Timestamp) { return Timestamp.from(instant) }
+      if (expected == Date) { return Date.from(instant) }
+      return LocalDateTime.ofInstant(instant, logical.isAdjustedToUTC() ? getZoneId() : ZoneOffset.UTC)
+    }
+    if (logical instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
+      long value = ((Number) raw).longValue()
+      if (expected == LocalTime || (expected == null && !logical.isAdjustedToUTC())) {
+        long multiplier = logical.unit == LogicalTypeAnnotation.TimeUnit.MILLIS ? NANOS_PER_MILLI :
+            logical.unit == LogicalTypeAnnotation.TimeUnit.MICROS ? NANOS_PER_MICRO : 1L
+        return LocalTime.ofNanoOfDay(Math.multiplyExact(value, multiplier))
+      }
+      return readTime(field.name, value, logical)
+    }
+    if (logical instanceof LogicalTypeAnnotation.UUIDLogicalTypeAnnotation) {
+      ByteBuffer buffer = ByteBuffer.wrap(((org.apache.parquet.io.api.Binary) raw).bytes)
+      return new UUID(buffer.getLong(), buffer.getLong())
+    }
+    if (logical instanceof LogicalTypeAnnotation.Float16LogicalTypeAnnotation) {
+      throw new IllegalArgumentException("Unsupported FLOAT16 field '${field.name}'")
+    }
+    if (raw instanceof org.apache.parquet.io.api.Binary) {
+      if (expected == BigDecimal) { return new BigDecimal(raw.toStringUsingUTF8()) }
+      if (logical instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation || expected == String ||
+          (logical == null && field.primitiveTypeName == PrimitiveTypeName.BINARY && binaryAsString && expected != byte[])) {
+        return raw.toStringUsingUTF8()
+      }
+      return raw.bytes
+    }
+    narrowInteger(raw, field.name, expected)
+  }
+
+  private static Object narrowInteger(Object raw, String fieldName, Class expected) {
+    if (expected == Byte) {
+      long value = ((Number) raw).longValue()
+      if (value < Byte.MIN_VALUE || value > Byte.MAX_VALUE) { throw new IllegalArgumentException("Byte field '$fieldName' is out of range") }
+      return ((Number) raw).byteValue()
+    }
+    if (expected == Short) {
+      long value = ((Number) raw).longValue()
+      if (value < Short.MIN_VALUE || value > Short.MAX_VALUE) { throw new IllegalArgumentException("Short field '$fieldName' is out of range") }
+      return ((Number) raw).shortValue()
+    }
+    raw
   }
 
   private static Time readTime(String fieldName, long value,
@@ -1129,9 +1218,7 @@ class MatrixParquetReader {
       time.setTime(time.time + millisecondRemainder)
       time
     } catch (DateTimeException exception) {
-      // Unreachable in practice: the one-day range guard above rejects out-of-range values
-      // before LocalTime.ofNanoOfDay can throw, so the contextual error already comes from
-      // the guard. Kept defensively in case a future unit change bypasses it.
+      // Guard defensively in case a future unit bypasses the one-day range check.
       throw new IllegalArgumentException("Invalid TIME value $value for field '$fieldName'", exception)
     }
   }

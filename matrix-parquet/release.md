@@ -1,5 +1,56 @@
 # Matrix-parquet Release History
 
+## v0.8.0 (unreleased)
+
+Add CDC/page-index interoperability fixtures; a column-oriented row-group reader; typed predicates,
+projection, limits and closeable batches; strict sharded datasets with bounded parallel decoding;
+HTTP range reads; Hub dataset URI resolution; and shared writer tuning. Local files and byte arrays
+use InputFile directly. New files carry `matrix.parquet.version=2`.
+
+Complete defaults, supported types and end-to-end examples are in [the module guide](readme.md).
+
+| Behavior | 0.8.0 result | Compatibility/opt-out |
+|---|---|---|
+| New Matrix strings | STRING-annotated BINARY recursively | No opt-out; standard annotation fixes interoperability |
+| Legacy Matrix plain BINARY text | Remains String, including nested text/map keys | Automatic; metadata carrying the new format marker overrides legacy inference |
+| 0.7.x byte[] columns | Fail with a contextual unrecoverable-legacy-binary error | The pinned 0.7.x writer fails with InvalidSchemaException for byte[]; legacy `[B` text payloads cannot recover bytes; regenerate from source |
+| External raw BINARY | byte[] | `binaryAsString(true)` restores prior UTF-8 behavior |
+| Unadjusted timestamps | Local wall-clock time preserved | No bug-preserving flag; applications needing the former shift can explicitly convert the local value through UTC into the desired zone |
+| Integer-backed DECIMAL | BigDecimal with declared scale | No bug-preserving flag; explicit `unscaledValue()` obtains prior raw numeric value |
+| UUID annotation | UUID | No text-decoding compatibility flag; explicit UUID/string/byte conversion at application boundary |
+| FLOAT16 / INT96 unsupported cases | Contextual unsupported-type error | No UTF-8 fallback; convert these types explicitly before reading |
+| Byte / Short fallback | Signed INT32 with INT(8/16), restored as Byte/Short | Legacy unannotated text stays String; explicitly convert to String before writing to retain text output |
+| LocalTime fallback | TIME(NANOS), restored as LocalTime using new-format metadata | Legacy text stays String; explicit String conversion retains text output |
+| Instant fallback | TIMESTAMP(MICROS, adjusted=true), restored as Instant using new-format metadata | Legacy text stays String; reject sub-microsecond precision loss and int64-micros overflow; explicitly convert to String for text output |
+| UUID writer fallback | FIXED[16] + UUID, restored as UUID | Legacy text stays String; explicit String conversion retains text output |
+| Character fallback | STRING, returned as String | Normalize emitted metadata to String; Character identity is not preserved |
+| Enum fallback | STRING using enum name(), returned as String | Normalize metadata to String; convert explicitly for former overridden toString() output |
+| ZonedDateTime / OffsetDateTime fallback | Explicit unsupported-type error | Convert to Instant to retain instant, or String to retain zone/offset text; no implicit zone loss |
+| Object column, single supported policy type | That type's encoding and canonical metadata | Reads back typed as the inferred canonical class instead of Object; no explicit types required |
+| Abstract/interface declared supertype (Number, CharSequence, Comparable, Serializable, Temporal) | Validate assignability, infer one supported policy type and emit its canonical name | Reads back as the resolved class instead of the declared supertype; normalize heterogeneous values explicitly |
+| Concrete declared type with incompatible runtime values | Validation error before writing | Box primitives then require every non-null value to be an instance; no silent schema/metadata mismatch |
+| BigDecimal, declared or inferred through a supertype | Exact FIXED_LEN_BYTE_ARRAY DECIMAL with resolved precision/scale | Remove DOUBLE fallback; infer by default, or require explicit decimal settings when inference is disabled; no lossy compatibility mode |
+| All-null Number/Temporal declaration | Validation error before writing | New write failure: retype explicitly to a supported concrete type; no nominal String metadata |
+| Concrete Date column mixing Date/Timestamp or sql.Date/Timestamp | Validation error before writing | Runtime encoding policies differ; normalize every value to one supported temporal class before writing |
+| All-null Object column | STRING/BINARY with canonical String metadata | Retain current text schema behavior; reads back as String-typed column |
+| Mixed/unsupported Object column or other custom types | Contextual validation error before writing | Name the first offending row/class; explicitly normalize values or map to String |
+
+Unknown metadata class names are never loaded and fall back to physical/logical schema inference.
+Incompatible metadata declarations also fall back rather than creating falsely typed columns.
+Legacy Matrix text compatibility applies recursively; new raw binary metadata remains authoritative.
+The checked-in original 0.7.x string fixture predates these writer changes. Legacy byte[] recovery
+claims were narrowed after an end-to-end check found InvalidSchemaException in this checkout.
+
+External INT96/FLOAT16 raise contextual unsupported-type errors. External TIME still returns
+java.sql.Time at millisecond precision; exact predicate filtering preserves original precision.
+Mixed Date/Timestamp policies are now rejected before writing, preventing the prior 1000× unit
+corruption. New Object/supertype values are resolved consistently for schema and metadata.
+Unknown SPI options are now rejected. Dataset reads omit Matrix indices, require matching type
+metadata, and reject empty selections and duplicate paths.
+
+Native CDC writing remains deferred to upstream parquet-java #3818; the Python rewrite preserves
+custom metadata. Hadoop stays as a runtime dependency because codec initialization still loads it.
+
 ## v0.7.0, 2026-09-22
 - SPI `inferPrecisionAndScale` parsing is now strict: Boolean values and trimmed, case-insensitive `true`/`false` strings are accepted; former truthy inputs are rejected.
 - Breaking change: explicit DECIMAL scale conversion now defaults to `RoundingMode.UNNECESSARY`, rejecting lossy conversion with a contextual `IllegalArgumentException`. Set `roundingMode: 'HALF_UP'` (or another named `RoundingMode`) when rounding is intentional.

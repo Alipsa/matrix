@@ -1,0 +1,186 @@
+{
+  "pyarrow": "21.0.0",
+  "rows": 4096,
+  "expected": {
+    "first_id": 0,
+    "last_id": 4095,
+    "price_123": "1.23",
+    "local": "2024-03-31T01:30:00",
+    "payload_0_hex": "0000ff",
+    "tags_1": [
+      "\u03b1",
+      null,
+      "\u03b2"
+    ]
+  },
+  "files": {
+    "cdc-0-index-0.parquet": {
+      "options": {
+        "compression": "snappy",
+        "use_dictionary": false,
+        "data_page_version": "1.0",
+        "write_page_index": false,
+        "row_group_size": 2048,
+        "data_page_size": 4096,
+        "write_batch_size": 128,
+        "dictionary_pagesize_limit": 1024,
+        "use_content_defined_chunking": false
+      },
+      "sha256": "12a973a08998d92a31ea1de7136eeb8d3003a8fe7297a2705f1295231ee4fdc4",
+      "schema": "id: int64\ntext: string\npayload: binary\nprice: decimal128(12, 2)\nlocal: timestamp[us]\ndate: date32[day]\nnulls: string\nmedia: struct<bytes: binary, path: string>\n  child 0, bytes: binary\n  child 1, path: string\ntags: list<item: string>\n  child 0, item: string"
+    },
+    "cdc-0-index-0-alternate.parquet": {
+      "options": {
+        "compression": "zstd",
+        "use_dictionary": [
+          "text",
+          "tags.list.element"
+        ],
+        "data_page_version": "2.0",
+        "write_page_index": false,
+        "row_group_size": 2048,
+        "data_page_size": 4096,
+        "write_batch_size": 128,
+        "dictionary_pagesize_limit": 1024,
+        "use_content_defined_chunking": false
+      },
+      "sha256": "1a956d7b7478b23e2178aa15d74222d85691f67785e6659cc559b3d91738292a",
+      "schema": "id: int64\ntext: string\npayload: binary\nprice: decimal128(12, 2)\nlocal: timestamp[us]\ndate: date32[day]\nnulls: string\nmedia: struct<bytes: binary, path: string>\n  child 0, bytes: binary\n  child 1, path: string\ntags: list<item: string>\n  child 0, item: string"
+    },
+    "cdc-0-index-1.parquet": {
+      "options": {
+        "compression": "snappy",
+        "use_dictionary": [
+          "text",
+          "tags.list.element"
+        ],
+        "data_page_version": "2.0",
+        "write_page_index": true,
+        "row_group_size": 2048,
+        "data_page_size": 4096,
+        "write_batch_size": 128,
+        "dictionary_pagesize_limit": 1024,
+        "use_content_defined_chunking": false
+      },
+      "sha256": "de20b7e5087bfa0d91c8d44618415e1f0b9612c09b75d6872cd07d215eb70d8d",
+      "schema": "id: int64\ntext: string\npayload: binary\nprice: decimal128(12, 2)\nlocal: timestamp[us]\ndate: date32[day]\nnulls: string\nmedia: struct<bytes: binary, path: string>\n  child 0, bytes: binary\n  child 1, path: string\ntags: list<item: string>\n  child 0, item: string"
+    },
+    "cdc-0-index-1-alternate.parquet": {
+      "options": {
+        "compression": "zstd",
+        "use_dictionary": false,
+        "data_page_version": "1.0",
+        "write_page_index": true,
+        "row_group_size": 2048,
+        "data_page_size": 4096,
+        "write_batch_size": 128,
+        "dictionary_pagesize_limit": 1024,
+        "use_content_defined_chunking": false
+      },
+      "sha256": "c8cf3a35454a8525e2ef6b9b707fe9e2e8eeab744f5d236ccc5f039a21e6d421",
+      "schema": "id: int64\ntext: string\npayload: binary\nprice: decimal128(12, 2)\nlocal: timestamp[us]\ndate: date32[day]\nnulls: string\nmedia: struct<bytes: binary, path: string>\n  child 0, bytes: binary\n  child 1, path: string\ntags: list<item: string>\n  child 0, item: string"
+    },
+    "cdc-1-index-0.parquet": {
+      "options": {
+        "compression": "zstd",
+        "use_dictionary": false,
+        "data_page_version": "2.0",
+        "write_page_index": false,
+        "row_group_size": 2048,
+        "data_page_size": 4096,
+        "write_batch_size": 128,
+        "dictionary_pagesize_limit": 1024,
+        "use_content_defined_chunking": {
+          "min_chunk_size": 4096,
+          "max_chunk_size": 16384,
+          "norm_level": 0
+        }
+      },
+      "sha256": "0bb3c02391af5fd082b060d836f00b00ed67b17d238b9715f730e5a45878f79e",
+      "schema": "id: int64\ntext: string\npayload: binary\nprice: decimal128(12, 2)\nlocal: timestamp[us]\ndate: date32[day]\nnulls: string\nmedia: struct<bytes: binary, path: string>\n  child 0, bytes: binary\n  child 1, path: string\ntags: list<item: string>\n  child 0, item: string"
+    },
+    "cdc-1-index-0-alternate.parquet": {
+      "options": {
+        "compression": "snappy",
+        "use_dictionary": [
+          "text",
+          "tags.list.element"
+        ],
+        "data_page_version": "1.0",
+        "write_page_index": false,
+        "row_group_size": 2048,
+        "data_page_size": 4096,
+        "write_batch_size": 128,
+        "dictionary_pagesize_limit": 1024,
+        "use_content_defined_chunking": {
+          "min_chunk_size": 4096,
+          "max_chunk_size": 16384,
+          "norm_level": 0
+        }
+      },
+      "sha256": "2c52062818bcf4a8a5ddf329c6401fcaaa2214b4bc5eb7464c78faebb3ee9ba2",
+      "schema": "id: int64\ntext: string\npayload: binary\nprice: decimal128(12, 2)\nlocal: timestamp[us]\ndate: date32[day]\nnulls: string\nmedia: struct<bytes: binary, path: string>\n  child 0, bytes: binary\n  child 1, path: string\ntags: list<item: string>\n  child 0, item: string"
+    },
+    "cdc-1-index-1.parquet": {
+      "options": {
+        "compression": "zstd",
+        "use_dictionary": [
+          "text",
+          "tags.list.element"
+        ],
+        "data_page_version": "1.0",
+        "write_page_index": true,
+        "row_group_size": 2048,
+        "data_page_size": 4096,
+        "write_batch_size": 128,
+        "dictionary_pagesize_limit": 1024,
+        "use_content_defined_chunking": {
+          "min_chunk_size": 4096,
+          "max_chunk_size": 16384,
+          "norm_level": 0
+        }
+      },
+      "sha256": "7b08f89d286d43928e4445bb0aa114a2211d1963c7670db5f9a68fa72f7e7bb4",
+      "schema": "id: int64\ntext: string\npayload: binary\nprice: decimal128(12, 2)\nlocal: timestamp[us]\ndate: date32[day]\nnulls: string\nmedia: struct<bytes: binary, path: string>\n  child 0, bytes: binary\n  child 1, path: string\ntags: list<item: string>\n  child 0, item: string"
+    },
+    "cdc-1-index-1-alternate.parquet": {
+      "options": {
+        "compression": "snappy",
+        "use_dictionary": false,
+        "data_page_version": "2.0",
+        "write_page_index": true,
+        "row_group_size": 2048,
+        "data_page_size": 4096,
+        "write_batch_size": 128,
+        "dictionary_pagesize_limit": 1024,
+        "use_content_defined_chunking": {
+          "min_chunk_size": 4096,
+          "max_chunk_size": 16384,
+          "norm_level": 0
+        }
+      },
+      "sha256": "9061dc6cac1f451ec43aed6ed0fb7392b2d5669b9a5f27ac3aa22a9a187092e3",
+      "schema": "id: int64\ntext: string\npayload: binary\nprice: decimal128(12, 2)\nlocal: timestamp[us]\ndate: date32[day]\nnulls: string\nmedia: struct<bytes: binary, path: string>\n  child 0, bytes: binary\n  child 1, path: string\ntags: list<item: string>\n  child 0, item: string"
+    },
+    "legacy-binary-metadata.parquet": {
+      "provenance": "synthetic legacy [B metadata, not claimed as original recoverable bytes",
+      "sha256": "f46e7f0cc774068aba6cc44575209f92d8efb01ef2c008a403777c532943e8d1",
+      "expected": "unrecoverable-legacy-binary error"
+    },
+    "matrix-0.7-strings.parquet": {
+      "provenance": "original writer at b2095159664b34ce426685c387adf0bccdb33e01",
+      "sha256": "249bb46f28df655b1634a83a92ac3a2942812906136d41677db7291f867f2f75",
+      "schema": "text: binary\nnested: map<binary, binary ('nested')>\n  child 0, nested: struct<key: binary not null, value: binary> not null\n      child 0, key: binary not null\n      child 1, value: binary\n-- schema metadata --\nmatrix.columnTypes: 'java.lang.String,java.util.Map'\nwriter.model.name: 'example'"
+    },
+    "matrix-0.7-date-units.parquet": {
+      "provenance": "original writer at b2095159664b34ce426685c387adf0bccdb33e01",
+      "sha256": "7cd86c9165de30d5d5e27f8476db3e37a40eef590c4a2675f173bf2bcbd05af5",
+      "schema": "value: timestamp[ms, tz=UTC]\n-- schema metadata --\nmatrix.columnTypes: 'java.util.Date'\nwriter.model.name: 'example'"
+    },
+    "matrix-0.7-metadata.parquet": {
+      "provenance": "original writer at b2095159664b34ce426685c387adf0bccdb33e01",
+      "sha256": "09dbb3d63b05d58b494b7c3cf92dfb3233cb77daf7ff49a174ff3ffe2230f59d",
+      "schema": "amount: decimal128(3, 2)\nlocal: timestamp[us, tz=UTC]\n-- schema metadata --\nmatrix.columnTypes: 'java.math.BigDecimal,java.time.LocalDateTime'\nwriter.model.name: 'example'"
+    }
+  }
+}

@@ -13,11 +13,13 @@ import org.apache.parquet.schema.Type
 import java.beans.Introspector
 import java.beans.PropertyDescriptor
 import java.math.RoundingMode
+import java.nio.ByteBuffer
 import java.sql.Time
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 import java.util.concurrent.ConcurrentHashMap
 
@@ -120,7 +122,7 @@ final class ParquetValueWriter {
   static void writePrimitiveValue(Group group, String fieldName, PrimitiveType field, Object value,
       RoundingMode roundingMode) {
     switch (value.class) {
-      case Integer, int -> group.append(fieldName, (int) value)
+      case Byte, Short, Integer, int -> group.append(fieldName, (int) value)
       case Long, long -> group.append(fieldName, ((Number) value).longValue())
       case BigInteger -> group.add(fieldName, Binary.fromConstantByteArray(((BigInteger) value).toByteArray()))
       case Float, float -> group.append(fieldName, ((Number) value).floatValue())
@@ -132,8 +134,23 @@ final class ParquetValueWriter {
       case Time -> group.append(fieldName, timeToMillis((Time) value))
       case LocalDateTime -> group.append(fieldName, instantToMicros(((LocalDateTime) value).atZone(getZoneId()).toInstant()))
       case Timestamp -> group.append(fieldName, instantToMicros(((Timestamp) value).toInstant()))
+      case byte[] -> group.add(fieldName, Binary.fromConstantByteArray((byte[]) value))
+      case LocalTime -> group.append(fieldName, ((LocalTime) value).toNanoOfDay())
+      case Instant -> {
+        Instant instant = (Instant) value
+        if (instant.nano % NANOS_PER_MICRO != 0) {
+          throw new IllegalArgumentException("Instant field '$fieldName' loses sub-microsecond precision")
+        }
+        group.append(fieldName, instantToMicros(instant))
+      }
+      case UUID -> {
+        UUID uuid = (UUID) value
+        group.add(fieldName, Binary.fromConstantByteArray(ByteBuffer.allocate(16).putLong(uuid.mostSignificantBits).putLong(uuid.leastSignificantBits).array()))
+      }
+      case String, Character, CharSequence -> group.append(fieldName, value.toString())
+      case Enum -> group.append(fieldName, ((Enum) value).name())
       case Date -> group.append(fieldName, ((Date) value).time)
-      default -> group.append(fieldName, value.toString())
+      default -> throw new IllegalArgumentException("Unsupported ${value.getClass().name} for field $fieldName")
     }
   }
 
@@ -143,7 +160,7 @@ final class ParquetValueWriter {
   }
 
   private static long instantToMicros(Instant instant) {
-    instant.epochSecond * MICROS_PER_SECOND + (long) (instant.nano / NANOS_PER_MICRO)
+    Math.addExact(Math.multiplyExact(instant.epochSecond, MICROS_PER_SECOND), (long) (instant.nano / NANOS_PER_MICRO))
   }
 
   private static void writeBigDecimalValue(Group group, String fieldName, PrimitiveType field, BigDecimal value,
@@ -154,7 +171,7 @@ final class ParquetValueWriter {
       writeFixedLenBigDecimal(group, fieldName, field, value,
           (LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) logical, roundingMode)
     } else {
-      group.append(fieldName, value.doubleValue())
+      throw new IllegalArgumentException("Missing DECIMAL annotation for $fieldName")
     }
   }
 

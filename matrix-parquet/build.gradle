@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.7.1-SNAPSHOT'
+version = '0.8.0-SNAPSHOT'
 description = "Groovy library for importing and exporting parquet files to and from a Matrix"
 
 JavaCompile javaCompile = compileJava {
@@ -124,3 +124,48 @@ nexusReleasePlugin {
     password = project.ext.properties.sonatypePassword
     mavenPublication = publishing.publications.maven
 }
+
+// Generate the default-size CDC case outside the repository only for the slow lane.
+boolean runCdcSlowTests = providers.gradleProperty('runSlowTests').orNull == 'true'
+File parquetProjectDirectory = projectDir
+tasks.register('generateDefaultCdcFixture') {
+    onlyIf { runCdcSlowTests }
+    doLast {
+        String python = System.getenv('PARQUET_PYTHON') ?: 'python3'
+        try {
+            def probe = new ProcessBuilder(python, '-c', 'import pyarrow; assert pyarrow.__version__ == "21.0.0"').inheritIO().start()
+            if (probe.waitFor() != 0) {
+                logger.lifecycle('SKIP default CDC fixture: pinned PyArrow 21.0.0 is unavailable')
+                return
+            }
+        } catch (IOException ignored) {
+            logger.lifecycle('SKIP default CDC fixture: Python is unavailable')
+            return
+        }
+        def generation = new ProcessBuilder(python, 'src/test/python/generate_optimized.py',
+            'build/default-cdc', '--default-cdc').directory(parquetProjectDirectory).inheritIO().start()
+        if (generation.waitFor() != 0) { throw new GradleException('CDC fixture generation failed') }
+    }
+}
+tasks.named('test') { dependsOn 'generateDefaultCdcFixture' }
+
+// Diagnostic spike: report runtime classes still required by upstream codec/writer code.
+tasks.register('codecWithoutHadoop', Test) {
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath.filter { !it.name.startsWith('hadoop-') }
+    useJUnitPlatform()
+    include '**/ParquetCodecProbeTest.class'
+    systemProperty 'parquet.codecSpike', 'true'
+    testLogging.showStandardStreams = true
+}
+
+tasks.register('compileConsumerApi', JavaCompile) {
+    dependsOn classes
+    source = fileTree('src/consumerTest/java') { include '**/*.java' }
+    classpath = sourceSets.test.compileClasspath.filter {
+        !it.name.startsWith('parquet-') && !it.name.startsWith('hadoop-')
+    } + sourceSets.main.output
+    destinationDirectory = layout.buildDirectory.dir('consumer-api')
+    options.release = 21
+}
+tasks.named('check') { dependsOn 'compileConsumerApi' }

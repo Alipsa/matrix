@@ -3,6 +3,7 @@ name: Combined release tools
 on:
   pull_request:
     paths:
+      - 'matrix-parquet/**'
       - 'releaseAll.sh'
       - 'scripts/release-all/**'
       - 'matrix-bom/verifyBomApi.sh'
@@ -73,3 +74,26 @@ jobs:
         run: |
           BOM_VERIFY_REPO="$GITHUB_WORKSPACE/build/releaseAll/bom-verify" bash matrix-bom/verifyBomApi.sh
           groovy scripts/release-all/test-manifest-verifier.groovy . build/releaseAll/bom-verify
+
+  parquet-interop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: python -m pip install pyarrow==21.0.0 huggingface_hub==2.2.0
+      - run: python matrix-parquet/src/test/python/generate_optimized.py
+      - run: python matrix-parquet/src/test/python/generate_hub_urls.py
+      - run: git diff --exit-code -- matrix-parquet/src/test/resources/optimized
+      - run: ./gradlew :matrix-parquet:codenarcMain :matrix-parquet:codenarcTest :matrix-parquet:spotlessCheck :matrix-parquet:test :matrix-parquet:compileConsumerApi -PrunSlowTests=true
+        env:
+          PARQUET_PYTHON: python
+      - run: python matrix-parquet/src/test/python/verify_matrix_output.py
+      - run: ./gradlew :matrix-parquet:test --tests ParquetInteropTest --rerun-tasks
