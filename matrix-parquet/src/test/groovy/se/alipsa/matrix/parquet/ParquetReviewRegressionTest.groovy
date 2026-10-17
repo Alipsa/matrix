@@ -102,6 +102,48 @@ class ParquetReviewRegressionTest {
   }
 
   @Test
+  void danglingSymbolicLinksCreateTheirTargetsAndSurviveFailedWrites() {
+    org.junit.jupiter.api.Assumptions.assumeTrue(
+        java.nio.file.Files.getFileStore(directory.toPath()).supportsFileAttributeView('posix'))
+    [false, true].each { absolute ->
+      File output = new File(directory, "target-${absolute}.parquet")
+      def link = new File(directory, "dangling-${absolute}.parquet").toPath()
+      def destination = absolute ? output.toPath().toAbsolutePath() : output.toPath().fileName
+      java.nio.file.Files.createSymbolicLink(link, destination)
+      def chain = new File(directory, "chain-${absolute}.parquet").toPath()
+      java.nio.file.Files.createSymbolicLink(chain, link.fileName)
+      assertFalse(output.exists())
+      assertThrows(IllegalArgumentException) {
+        MatrixParquetWriter.builder(Matrix.builder().columns(d: [2.255G]).build())
+            .decimalMeta([d: [5, 2] as int[]]).write(chain.toFile())
+      }
+      assertFalse(output.exists())
+      assertTrue(java.nio.file.Files.isSymbolicLink(link))
+      assertTrue(java.nio.file.Files.isSymbolicLink(chain))
+      MatrixParquetWriter.write(Matrix.builder().columns(d: [2.50G]).build(), chain.toFile())
+      assertEquals(destination, java.nio.file.Files.readSymbolicLink(link))
+      assertEquals(link.fileName, java.nio.file.Files.readSymbolicLink(chain))
+      assertEquals(2.50G, MatrixParquetReader.read(output)[0, 'd'])
+    }
+    assertFalse(directory.list().any { it.startsWith('.matrix-parquet-') })
+  }
+
+  @Test
+  void cyclicSymbolicLinksFailWithoutReplacingLinks() {
+    org.junit.jupiter.api.Assumptions.assumeTrue(
+        java.nio.file.Files.getFileStore(directory.toPath()).supportsFileAttributeView('posix'))
+    def first = new File(directory, 'first.parquet').toPath()
+    def second = new File(directory, 'second.parquet').toPath()
+    java.nio.file.Files.createSymbolicLink(first, second.fileName)
+    java.nio.file.Files.createSymbolicLink(second, first.fileName)
+    assertThrows(java.nio.file.FileSystemLoopException) {
+      MatrixParquetWriter.write(Matrix.builder().columns(id: [1]).build(), first.toFile())
+    }
+    assertTrue(java.nio.file.Files.isSymbolicLink(first))
+    assertTrue(java.nio.file.Files.isSymbolicLink(second))
+  }
+
+  @Test
   void nullMapOptionsPreserveDefaultsAndRejectNullBloomEntries() {
     def read = ParquetReadOptions.fromMap([useColumnIndexFilter: null, binaryAsString: null])
     assertTrue(read.useColumnIndexFilter)

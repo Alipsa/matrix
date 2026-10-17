@@ -180,7 +180,9 @@ Files are written to a temporary sibling and atomically replace the destination 
 close. Failed writes preserve an existing destination; filesystems without atomic replacement
 support fail safely with `AtomicMoveNotSupportedException`. New files use normal process/umask
 permissions; existing POSIX permissions are retained. Existing symbolic links are resolved before
-writing, so the link is preserved and its target is replaced.
+writing, including dangling links, so the link is preserved and its target is created or replaced.
+Abrupt JVM termination can leave `.matrix-parquet-<uuid>.tmp` siblings beside the resolved output;
+these are unpublished temporary output and can be removed once no writer is using them.
 
 JSON and ENUM annotations decode as UTF-8 String; BSON remains binary.
 Strings are STRING-annotated recursively; byte[] stays raw BINARY. Byte/Short use signed width

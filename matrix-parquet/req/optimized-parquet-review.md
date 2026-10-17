@@ -98,3 +98,25 @@ PARQUET_PYTHON=/tmp/matrix-parquet-fixtures/bin/python \
 The Parquet suite reported **135 tests, 130 passed, zero failed, five intentional skips**,
 including successful POSIX permission/symlink tests, Python interoperability and consumer API
 compilation. The full repository task passed; unaffected tasks may be up-to-date.
+
+## 11. Dangling symlinks and interrupted-write documentation
+
+- 11.1 [x] Resolve symbolic links even when their destination does not exist, including relative
+  and absolute targets and link chains. Reject cycles before creating temporary output. Test
+  successful target creation and failed writes preserving dangling links and absent targets.
+- 11.2 [x] Explain that abrupt JVM termination may leave `.matrix-parquet-<uuid>.tmp` siblings
+  beside the resolved output and that unused leftovers can be removed.
+
+Verification passed in order:
+
+```bash
+./gradlew :matrix-parquet:codenarcMain :matrix-parquet:codenarcTest --console=plain
+./gradlew :matrix-parquet:spotlessCheck --console=plain
+PARQUET_PYTHON=/tmp/matrix-parquet-fixtures/bin/python \
+  ./gradlew :matrix-parquet:test :matrix-parquet:compileConsumerApi -PrunSlowTests=true --console=plain
+./gradlew test -Pheadless=true --console=plain
+```
+
+The Parquet suite reported **137 tests, 132 passed, zero failed, five intentional skips**.
+The POSIX dangling-link and cycle tests ran successfully, as did Python interoperability,
+consumer API compilation and the full repository suite; unaffected tasks may be up-to-date.

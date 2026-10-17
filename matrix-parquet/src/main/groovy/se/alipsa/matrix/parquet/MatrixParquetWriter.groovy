@@ -565,8 +565,7 @@ class MatrixParquetWriter {
   private static File writeInternal(Matrix matrix, File file, WriteSchema resolved,
       CompressionCodecName compressionCodec = CompressionCodecName.SNAPPY, RoundingMode roundingMode = RoundingMode.UNNECESSARY, ParquetWriteOptions options = new ParquetWriteOptions()) {
     MessageType schema = resolved.schema
-    java.nio.file.Path target = file.toPath().toAbsolutePath()
-    if (java.nio.file.Files.exists(target)) { target = target.toRealPath() }
+    java.nio.file.Path target = resolveOutputTarget(file.toPath().toAbsolutePath())
     java.nio.file.Path temporary = target.resolveSibling(".matrix-parquet-${UUID.randomUUID()}.tmp")
     java.nio.file.Files.createFile(temporary)
     try {
@@ -584,6 +583,18 @@ class MatrixParquetWriter {
           java.nio.file.StandardCopyOption.REPLACE_EXISTING)
       file
     } finally { java.nio.file.Files.deleteIfExists(temporary) }
+  }
+
+  private static java.nio.file.Path resolveOutputTarget(java.nio.file.Path path) {
+    java.nio.file.Path target = path
+    Set<java.nio.file.Path> visited = [] as Set
+    while (java.nio.file.Files.isSymbolicLink(target)) {
+      if (!visited.add(target.toAbsolutePath().normalize())) {
+        throw new java.nio.file.FileSystemLoopException(path.toString())
+      }
+      target = target.resolveSibling(java.nio.file.Files.readSymbolicLink(target))
+    }
+    java.nio.file.Files.exists(target) ? target.toRealPath() : target
   }
 
   private static final String FORMAT_VERSION = '2'
