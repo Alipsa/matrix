@@ -142,6 +142,12 @@ final class HttpRangeInputFile implements InputFile {
       }
       @Override
       int read(ByteBuffer target) {
+        if (target.isReadOnly()) { throw new java.nio.ReadOnlyBufferException() }
+        if (target.hasArray()) {
+          int result = read(target.array(), target.arrayOffset() + target.position(), target.remaining())
+          if (result > 0) { target.position(target.position() + result) }
+          return result
+        }
         byte[] bytes = new byte[Math.min(target.remaining(), MAX_REQUEST_BYTES)]
         int result = read(bytes, 0, bytes.length)
         if (result > 0) { target.put(bytes, 0, result) }

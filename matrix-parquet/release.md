@@ -52,7 +52,11 @@ metadata, and reject empty selections and duplicate paths.
 Review fixes also cover empty Arrow dictionaries; consistent static URL/Hub and directory overloads;
 local source columns; daemon dataset workers; null option-map defaults; path-segment validation;
 projection around legacy `[B` columns; one validated type-policy scan per column; and atomic output
-replacement on success. HTTP bulk requests reuse resolved targets and a separately bounded cache.
+replacement on success. New files use normal process/umask permissions; existing POSIX permissions
+are retained, and writes through existing symbolic links update the resolved target while preserving
+the link. Local file writes require same-directory atomic replacement support; unsupported network
+or FUSE filesystems raise `AtomicMoveNotSupportedException` and leave existing output unchanged.
+HTTP bulk requests reuse resolved targets and a separately bounded cache.
 
 Native CDC writing remains deferred to upstream parquet-java #3818; the Python rewrite preserves
 custom metadata. Hadoop stays as a runtime dependency because codec initialization still loads it.

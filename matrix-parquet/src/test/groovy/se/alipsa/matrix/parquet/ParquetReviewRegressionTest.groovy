@@ -69,6 +69,39 @@ class ParquetReviewRegressionTest {
   }
 
   @Test
+  void newFilePermissionsMatchOrdinaryFiles() {
+    org.junit.jupiter.api.Assumptions.assumeTrue(
+        java.nio.file.Files.getFileStore(directory.toPath()).supportsFileAttributeView('posix'))
+    def ordinary = java.nio.file.Files.createFile(new File(directory, 'ordinary').toPath())
+    File output = new File(directory, 'new.parquet')
+    MatrixParquetWriter.write(Matrix.builder().columns(id: [1]).build(), output)
+    assertEquals(java.nio.file.Files.getPosixFilePermissions(ordinary),
+        java.nio.file.Files.getPosixFilePermissions(output.toPath()))
+  }
+
+  @Test
+  void writingThroughSymbolicLinkPreservesLinkAndUpdatesRealFile() {
+    org.junit.jupiter.api.Assumptions.assumeTrue(
+        java.nio.file.Files.getFileStore(directory.toPath()).supportsFileAttributeView('posix'))
+    File output = new File(directory, 'real.parquet')
+    MatrixParquetWriter.write(Matrix.builder().columns(d: [1.25G]).build(), output)
+    def link = new File(directory, 'link.parquet').toPath()
+    java.nio.file.Files.createSymbolicLink(link, output.toPath().fileName)
+    byte[] original = output.bytes
+    assertThrows(IllegalArgumentException) {
+      MatrixParquetWriter.builder(Matrix.builder().columns(d: [2.255G]).build())
+          .decimalMeta([d: [5, 2] as int[]]).write(link.toFile())
+    }
+    assertTrue(java.nio.file.Files.isSymbolicLink(link))
+    assertArrayEquals(original, output.bytes)
+    MatrixParquetWriter.write(Matrix.builder().columns(d: [2.50G]).build(), link.toFile())
+    assertTrue(java.nio.file.Files.isSymbolicLink(link))
+    assertEquals(output.toPath().fileName, java.nio.file.Files.readSymbolicLink(link))
+    assertEquals(2.50G, MatrixParquetReader.read(output)[0, 'd'])
+    assertEquals(['link.parquet', 'real.parquet'], directory.list().toList().sort())
+  }
+
+  @Test
   void nullMapOptionsPreserveDefaultsAndRejectNullBloomEntries() {
     def read = ParquetReadOptions.fromMap([useColumnIndexFilter: null, binaryAsString: null])
     assertTrue(read.useColumnIndexFilter)

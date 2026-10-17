@@ -178,7 +178,9 @@ not enable a filter by themselves. Column settings use physical primitive paths 
 
 Files are written to a temporary sibling and atomically replace the destination after successful
 close. Failed writes preserve an existing destination; filesystems without atomic replacement
-support fail safely. Existing POSIX permissions are retained.
+support fail safely with `AtomicMoveNotSupportedException`. New files use normal process/umask
+permissions; existing POSIX permissions are retained. Existing symbolic links are resolved before
+writing, so the link is preserved and its target is replaced.
 
 JSON and ENUM annotations decode as UTF-8 String; BSON remains binary.
 Strings are STRING-annotated recursively; byte[] stays raw BINARY. Byte/Short use signed width

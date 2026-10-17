@@ -566,7 +566,9 @@ class MatrixParquetWriter {
       CompressionCodecName compressionCodec = CompressionCodecName.SNAPPY, RoundingMode roundingMode = RoundingMode.UNNECESSARY, ParquetWriteOptions options = new ParquetWriteOptions()) {
     MessageType schema = resolved.schema
     java.nio.file.Path target = file.toPath().toAbsolutePath()
-    java.nio.file.Path temporary = java.nio.file.Files.createTempFile(target.parent, '.matrix-parquet-', '.tmp')
+    if (java.nio.file.Files.exists(target)) { target = target.toRealPath() }
+    java.nio.file.Path temporary = target.resolveSibling(".matrix-parquet-${UUID.randomUUID()}.tmp")
+    java.nio.file.Files.createFile(temporary)
     try {
       if (java.nio.file.Files.exists(target) && java.nio.file.Files.getFileStore(target).supportsFileAttributeView('posix')) {
         java.nio.file.Files.setPosixFilePermissions(temporary, java.nio.file.Files.getPosixFilePermissions(target))

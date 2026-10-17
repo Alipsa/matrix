@@ -69,3 +69,32 @@ still permits the same single 1 MiB bulk request. The test checks byte-array and
 readFully paths. Successful bodies remain eligible for JDK keep-alive pooling; socket-level
 connection reuse and live Hub latency were not measured. Existing selective-transfer, page-index
 and bloom-filter byte-reduction tests also pass.
+
+## 10. Follow-up output and range-buffer review
+
+- 10.1 [x] Create temporary siblings with ordinary file creation permissions, so new output
+  follows the process umask. Compare new Parquet permissions with an ordinary sibling file on
+  POSIX, while retaining the existing-destination permission regression.
+- 10.2 [x] Resolve existing output paths before creating the sibling and replacing the target.
+  Test that relative symbolic links survive both failed and successful writes, and that the
+  resolved file retains its contents on failure and receives the new rows on success.
+- 10.3 [x] Document the same-directory atomic replacement requirement and
+  `AtomicMoveNotSupportedException` in the release notes and module guide. Keep safe failure
+  rather than introduce a replacement fallback with weaker failure guarantees.
+- 10.4 [x] Read directly into array-backed ByteBuffers using their array offset and current
+  position. Retain the bounded scratch buffer for direct buffers. Exercise sliced buffers with
+  nonzero positions, sentinel bytes outside the slice, direct buffers, EOF and empty reads in
+  the existing HTTP request-count regression.
+
+Follow-up verification passed, in the required order:
+
+```bash
+./gradlew :matrix-parquet:codenarcMain :matrix-parquet:codenarcTest :matrix-parquet:spotlessCheck --console=plain
+PARQUET_PYTHON=/tmp/matrix-parquet-fixtures/bin/python \
+  ./gradlew :matrix-parquet:test :matrix-parquet:compileConsumerApi -PrunSlowTests=true --console=plain
+./gradlew test -Pheadless=true --console=plain
+```
+
+The Parquet suite reported **135 tests, 130 passed, zero failed, five intentional skips**,
+including successful POSIX permission/symlink tests, Python interoperability and consumer API
+compilation. The full repository task passed; unaffected tasks may be up-to-date.
