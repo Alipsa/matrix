@@ -158,3 +158,29 @@ For files with no Matrix metadata at all, Parquet `DECIMAL` columns are inferred
 
 ---
 [Back to index](cookbook.md)
+
+
+## Optimized Parquet, projection and bounded reads (0.8.0)
+
+```groovy
+import se.alipsa.matrix.parquet.MatrixParquetReader
+import se.alipsa.matrix.parquet.Predicates
+
+def subset = MatrixParquetReader.builder().columns(['id', 'text'])
+    .filter(Predicates.ge('id', 1000L)).limit(100)
+    .read(new File('downloaded-optimized.parquet'))
+
+MatrixParquetReader.builder().maxBatchRows(500).batches(new File('downloaded-optimized.parquet'))
+    .withCloseable { batches ->
+      while (batches.hasNext()) {
+        def batch = batches.next()
+        // Process this Matrix before requesting another batch.
+      }
+    }
+```
+
+CDC pages decode as standard Parquet; page indexes help eligible predicates skip pages. These APIs
+include exact logical-schema predicate conversion and retain selected types for empty results.
+See the [complete module guide](../../matrix-parquet/readme.md) for all parameter defaults,
+HTTP/Hub access, sharded datasets, writer tuning, fixture reproduction and the external CDC rewrite.
+Read the [0.8.0 migration table](../../matrix-parquet/release.md) before upgrading existing calls.

@@ -114,7 +114,7 @@ class MatrixParquetTest {
     def empData = Matrix.builder('empData').columns(
         emp_id: 1..5,
         emp_name: ['Rick', 'Dan', 'Michelle', 'Ryan', 'Gary'],
-        salary: [623.3, 515.2, 611, 729.0, 843.25],
+        salary: [623.3, 515.2, 611.0, 729.0, 843.25],
         score: toBigDecimals(['1.2345', 0.6321, 0.7190, 0.8452, 0.9198]),
         start_date: toLocalDates('2012-01-01', '2013-09-23', '2014-11-15', '2014-05-11', '2015-03-27'))
         .types([int, String, BigDecimal, BigDecimal, LocalDate]).build()
@@ -444,7 +444,7 @@ class MatrixParquetTest {
     def dirEx = assertThrows(IllegalArgumentException) {
       MatrixParquetReader.read(dir)
     }
-    assertTrue(dirEx.message.contains('directory'))
+    assertTrue(dirEx.message.contains('nonempty'))
   }
 
   @Test
@@ -739,8 +739,8 @@ class MatrixParquetTest {
         value: toBigDecimals([12.34, 56.78])
     ).types([BigDecimal]).build()
 
-    byte[] parquetBytes = MatrixParquetWriter.writeBytes(data, false)
-    assert parquetBytes != null
+    assertThrows(IllegalArgumentException) { MatrixParquetWriter.writeBytes(data, false) }
+    byte[] parquetBytes = MatrixParquetWriter.writeBytes(data, [value: [4, 2] as int[]])
     assert parquetBytes.length > 0
   }
 
@@ -824,7 +824,7 @@ class MatrixParquetTest {
   void testWriterBuilderWithPrecisionAndScale() {
     def data = Matrix.builder('empData').columns(
         emp_id: 1..5,
-        salary: [623.3, 515.2, 611, 729.0, 843.25],
+        salary: [623.3, 515.2, 611.0, 729.0, 843.25],
         score: toBigDecimals(['1.2345', 0.6321, 0.7190, 0.8452, 0.9198])
     ).types([int, BigDecimal, BigDecimal]).build()
 
@@ -899,10 +899,11 @@ class MatrixParquetTest {
         value: toBigDecimals([12.34, 56.78])
     ).types([BigDecimal]).build()
 
-    byte[] bytes = MatrixParquetWriter.builder(data)
-        .inferPrecisionAndScale(false)
-        .writeBytes()
-    assert bytes != null
+    assertThrows(IllegalArgumentException) {
+      MatrixParquetWriter.builder(data).inferPrecisionAndScale(false).writeBytes()
+    }
+    byte[] bytes = MatrixParquetWriter.builder(data).inferPrecisionAndScale(false)
+        .precision(8).scale(2).writeBytes()
     assert bytes.length > 0
   }
 

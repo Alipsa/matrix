@@ -1,340 +1,244 @@
-# Matrix-Parquet
+# Matrix Parquet
 
-This module enables import and export of [Apache Parquet](https://parquet.apache.org/) files to and from Matrix objects using `MatrixParquetWriter` and `MatrixParquetReader`.
+Read and write Apache Parquet from Groovy/Java Matrix applications on JDK 21. This development
+version targets **0.8.0** and uses parquet-java 1.18.1. Include `matrix-core` and Groovy alongside
+`matrix-parquet` in your application. To test this checkout, run `./gradlew :matrix-parquet:test`.
 
-## At a Glance
+## Optimized Parquet and selective reads
 
-| Goal | Entry point |
-|------|-------------|
-| Read a file | `MatrixParquetReader.builder().read(file)` |
-| Write a file | `MatrixParquetWriter.builder(matrix).write(file)` |
-| Read via SPI | `Matrix.read(file)` |
-| Write via SPI | `matrix.write(file)` |
-| Discover read options | `Matrix.listReadOptions('parquet')` / `ParquetReadOptions.describe()` |
-| Discover write options | `Matrix.listWriteOptions('parquet')` / `ParquetWriteOptions.describe()` |
-
-## API Surface
-
-**Direct API (recommended)**
-- `MatrixParquetReader.builder()` — fluent reader with `.matrixName()`, `.zoneId()`, `.read(File/Path/URL/InputStream/byte[])` 
-- `MatrixParquetWriter.builder(matrix)` — fluent writer with `.precision()`, `.scale()`, `.decimalMeta()`, `.roundingMode()`, `.compressionCodec()`, `.zoneId()`, `.inferPrecisionAndScale()`, `.write(File/Path/OutputStream)`, `.writeBytes()`
-
-**SPI (generic Matrix API)**
-- `Matrix.read(options, file)` — options map with keys `matrixName`, `zoneId`
-- `matrix.write(options, file)` — options map with keys `inferPrecisionAndScale`, `precision`, `scale`, `decimalMeta`, `roundingMode`, `compressionCodec`, `zoneId`
-
-**Typed options classes**
-- `ParquetReadOptions` — typed options for reading; use `ParquetReadOptions.describe()` for runtime discovery
-- `ParquetWriteOptions` — typed options for writing; use `ParquetWriteOptions.describe()` for runtime discovery
-
-## Default Behavior
-
-**Reading**
-- Matrix name for file reads: `matrixName` option wins; otherwise the file basename without extension (e.g. `data.parquet` → matrix named `data`)
-- Matrix name for stream/byte-array/URL reads: `matrixName` option wins; otherwise the Parquet schema/message name when available
-- Timezone: system default; override with `zoneId` option
-
-**Writing**
-- Parquet message type name: `matrix.matrixName` when present, otherwise `MatrixSchema`
-- BigDecimal: precision and scale are inferred from the data by default (`inferPrecisionAndScale = true`)
-- Explicit DECIMAL scale conversion: `roundingMode = UNNECESSARY` by default, so a discarded non-zero fraction fails instead of being silently rounded
-- Compression: `SNAPPY` by default; override with the `compressionCodec` option (e.g. `GZIP`, `ZSTD`, `UNCOMPRESSED`)
-- Timezone: system default; override with `zoneId` option
-- When the target is an existing directory, the Matrix name is converted to one safe filename inside it. Path separators and unsafe characters are replaced, trailing dots/spaces are removed, blank or dots-only names become `matrix.parquet`, and an existing `.parquet` suffix is preserved. Pass an explicit file (including a non-existent file path) to retain the exact filename.
-- Nested Map columns: stored as MAP when value types are homogeneous, as STRUCT when heterogeneous
-- Index columns: written to `matrix.indexColumns` metadata as a JSON string array so column names containing commas round-trip; readers also accept the legacy comma-delimited metadata form
-
-## Installation
-
-Add the following to your Gradle build script:
-```groovy
-implementation 'org.apache.groovy:groovy:5.0.6'
-implementation 'se.alipsa.matrix:matrix-core:3.9.0'
-implementation 'se.alipsa.matrix:matrix-parquet:0.7.0'
-```
-
-## Basic Usage
-
-### Using Matrix.read() / matrix.write()
-
-If `matrix-parquet` is on the classpath, `.parquet` files are also available through the generic Matrix SPI API:
+Hugging Face ordinary and optimized downloads are standard Parquet. Content-defined chunking
+(CDC) changes writer page boundaries for deduplication; it requires no special reader. Page
+indexes are independent and let compatible predicates skip pages. The checked-in PyArrow 21
+fixtures exercise all four CDC/index combinations with SNAPPY/ZSTD and V1/V2 pages.
 
 ```groovy
-import se.alipsa.matrix.core.Matrix
-
-Matrix data = Matrix.read(new File('data.parquet'))
-Matrix stockholm = Matrix.read([matrixName: 'events', zoneId: 'Europe/Stockholm'], new File('events.parquet'))
-
-data.write([inferPrecisionAndScale: true], new File('copy.parquet'))
-data.write([precision: 38, scale: 18, zoneId: 'Europe/Stockholm'], new File('money.parquet'))
-data.write([decimalMeta: [amount: [8, 2]]], new File('money-meta.parquet'))
-
-println Matrix.listReadOptions('parquet')
-println Matrix.listWriteOptions('parquet')
-```
-
-### Reading a Parquet file
-```groovy
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.parquet.MatrixParquetReader
-
-File file = new File("data.parquet")
-Matrix matrix = MatrixParquetReader.read(file)
-
-// Or with a custom matrix name
-Matrix matrix = MatrixParquetReader.read(file, "myData")
-
-// Read from a Path
-Matrix matrix = MatrixParquetReader.read(file.toPath())
-
-// Read from an InputStream
-new FileInputStream(file).withCloseable { is ->
-  Matrix matrix = MatrixParquetReader.read(is)
-}
-
-// Read from a URL (e.g. file:// or https://)
-URL url = file.toURI().toURL()
-Matrix matrix = MatrixParquetReader.read(url)
-
-// Read from a file path string
-Matrix matrix = MatrixParquetReader.readFile("/path/to/data.parquet")
-```
-
-### Writing a Matrix to a Parquet file
-```groovy
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.parquet.MatrixParquetWriter
-import se.alipsa.matrix.datasets.Dataset
-
-Matrix data = Dataset.cars().withMatrixName('cars')
-File file = new File("cars.parquet")
-MatrixParquetWriter.write(data, file)
-
-// Or write to a directory (filename derived from matrix name)
-File dir = new File("output/")
-MatrixParquetWriter.write(data, dir)  // Creates output/cars.parquet
-```
-
-### Builder API (recommended)
-
-The builder API provides a fluent, discoverable interface for reading and writing:
-
-```groovy
+import java.time.LocalDate
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.parquet.MatrixParquetReader
 import se.alipsa.matrix.parquet.MatrixParquetWriter
+import se.alipsa.matrix.parquet.Predicates
 
-// Writing
-MatrixParquetWriter.builder(matrix)
-    .precision(38)
-    .scale(18)
-    .zoneId('Europe/Stockholm')
-    .write(new File('output.parquet'))
+File file = new File('events.parquet')
+Matrix events = Matrix.builder('events').columns(
+    id: [1L, 2L, 3L], date: [LocalDate.of(2026, 1, 1)] * 3,
+    text: ['first', 'second', 'third']).build()
+MatrixParquetWriter.builder(events).pageSize(65536).write(file)
 
-// Writing to byte array
-byte[] bytes = MatrixParquetWriter.builder(matrix)
-    .inferPrecisionAndScale(true)
-    .writeBytes()
-
-// Writing to OutputStream
-outputStream.withCloseable { os ->
-  MatrixParquetWriter.builder(matrix).write(os)
-}
-
-// Reading
-Matrix data = MatrixParquetReader.builder()
-    .matrixName('myData')
-    .zoneId('Europe/Stockholm')
-    .read(new File('data.parquet'))
-
-// Reading from byte array, InputStream, URL, or Path also supported
-Matrix data = MatrixParquetReader.builder()
-    .read(parquetBytes)
+Matrix selected = MatrixParquetReader.builder().columns(['text', 'id'])
+    .filter(Predicates.ge('id', 2L)).limit(10).read(file)
+assert selected.column('id') == [2L, 3L]
 ```
 
-## Supported Data Types
+Projection accepts top-level fields in output order. Filter-only columns are read internally.
+`Predicates.eq/ne/lt/le/gt/ge` have Number, String, Boolean, LocalDate, LocalDateTime, Instant,
+LocalTime and byte[] overloads. Use `isNull`, `isNotNull`, `and`, `or` and `not` for composition.
+Values must match the file's logical schema. Integer overflow, fractional integer values,
+lossy decimal rescaling, and timestamp/time precision loss are rejected before reading pages.
+Repeated/nested predicates are rejected. Missing indexes fall back to scans; corrupt data fails.
 
-| Java/Groovy Type   | Parquet Type                   | Notes                                             |
-|--------------------|--------------------------------|---------------------------------------------------|
-| Integer            | INT32                          |                                                   |
-| Long               | INT64                          |                                                   |
-| BigInteger         | BINARY (DECIMAL, scale=0)      | Precision auto-inferred from data; no `Long` range limit |
-| Float              | FLOAT                          |                                                   |
-| Double             | DOUBLE                         |                                                   |
-| BigDecimal         | FIXED_LEN_BYTE_ARRAY (DECIMAL) | See [BigDecimal Precision](#bigdecimal-precision) |
-| Boolean            | BOOLEAN                        |                                                   |
-| LocalDate          | INT32 (DATE)                   |                                                   |
-| java.sql.Date      | INT32 (DATE)                   |                                                   |
-| java.sql.Time      | INT32 (TIME_MILLIS)            | Millisecond precision; external TIME(MICROS/NANOS) is downgraded to milliseconds |
-| LocalDateTime      | INT64 (TIMESTAMP_MICROS)       | Microsecond precision                             |
-| java.sql.Timestamp | INT64 (TIMESTAMP_MICROS)       | Microsecond precision                             |
-| java.util.Date     | INT64                          | Epoch milliseconds                                |
-| List               | LIST                           | See [Nested Structures](#nested-structures)       |
-| Map                | MAP or STRUCT                  | See [Nested Structures](#nested-structures)       |
-| Other              | BINARY (STRING)                | Stored as toString()                              |
+String ordering uses unsigned UTF-8 bytes, matching Parquet. Unannotated BINARY predicates take
+byte[] even when legacy metadata or `binaryAsString` makes output text. Comparisons with null are false; null tests are explicit. `not` is Boolean negation, including
+for null rows. NaN comparisons are false except `ne`; numeric infinities retain their ordering.
+Safe physical comparisons use row-group, dictionary, bloom and page-index pruning. Binary
+DECIMAL comparisons and expressions without safe pushdown use exact residual evaluation.
+LocalDateTime predicates on adjusted timestamps use `zoneId`; Instant predicates on naive
+local timestamps are rejected. External TIME fields retain the existing `java.sql.Time`
+millisecond output contract; filtering evaluates the original time precision.
 
-## BigDecimal Precision
-
-BigDecimal values require special handling to preserve precision. There are three approaches:
-
-### 1. Automatic Precision Inference (Default)
-```groovy
-// Automatically infers precision and scale from the data
-MatrixParquetWriter.write(data, file)
-// Or explicitly:
-MatrixParquetWriter.write(data, file, true)
-```
-
-### 2. Uniform Precision for All BigDecimal Columns
-```groovy
-// Use precision=38, scale=18 for all BigDecimal columns
-MatrixParquetWriter.write(data, file, 38, 18)
-```
-
-Explicit precision/scale writes reject a value that would lose a non-zero fraction by default. To opt in to a deliberate rounding policy, use the builder or the typed options map:
+## Batches and shards
 
 ```groovy
-import java.math.RoundingMode
+import se.alipsa.matrix.parquet.MatrixParquetReader
 
-// Direct API
-MatrixParquetWriter.write(data, file, 8, 2, RoundingMode.HALF_UP)
+MatrixParquetReader.builder().limit(1000).maxBatchRows(250)
+    .batches(new File('events.parquet')).withCloseable { batches ->
+      while (batches.hasNext()) {
+        def batch = batches.next()
+        assert batch.rowCount() <= 250
+      }
+    }
 
-// Builder API
-MatrixParquetWriter.builder(data)
-    .precision(8)
-    .scale(2)
-    .roundingMode(RoundingMode.HALF_UP)
-    .write(file)
-
-data.write([precision: 8, scale: 2, roundingMode: 'HALF_UP'], file)
+// Explicit lists retain caller order; directories and explicit globs sort normalized paths.
+def dataset = MatrixParquetReader.builder().parallelism(2).sourceFileColumn('_source')
+    .read([new File('train-00001.parquet'), new File('train-00000.parquet')])
+def fromDirectory = MatrixParquetReader.read(new File('train'))
+def fromGlob = MatrixParquetReader.readGlob('train/train-*.parquet')
 ```
 
-`roundingMode` accepts any `RoundingMode` enum name, case-insensitively. Use `UNNECESSARY` (the default) for lossless conversion; a rounded result must still fit the declared precision.
+A batch normally contains one selected row group. `maxBatchRows` splits large groups; individual
+cells and compressed row-group pages still need heap. Close iterators on early exit; exhaustion
+and errors close them automatically. Limits count accepted rows across batches/files. Footer
+IDs remain valid when filters prune their groups; such groups produce no batch. There is no
+ordinal row seeking API.
 
-### 3. Per-Column Precision Specification
-```groovy
-// Specify precision and scale for specific columns
-MatrixParquetWriter.write(data, file, [
-    salary: [10, 2],   // precision=10, scale=2
-    rate: [8, 4]       // precision=8, scale=4
-])
-```
+Datasets validate every footer before returning rows and require identical logical fields,
+order, decimal precision/scale, timestamp units/UTC flags and Matrix type metadata. Duplicate
+canonical files and empty selections fail. Directory reads include direct `.parquet` children;
+globs are explicit and can select deeper paths. Compatible Matrix indices are restored when every shard has the same index metadata and
+projection retains its columns. A source column
+contains canonical absolute paths and must not collide with a physical column. Parallel workers
+use independent streams and converters, reuse each parsed footer, prefetch at most one batch per
+worker, and preserve file/group order. `rowGroups` is for one file; use
+`rowGroupsByFile: [(file.canonicalPath): [1, 0]]` for explicit dataset group selections.
 
-**Note:** If the specified precision is too small for a value, an `IllegalArgumentException` will be thrown with a descriptive message indicating the required vs. allowed precision.
-
-## Nested Structures
-
-The module supports nested Groovy collections:
-
-```groovy
-def data = Matrix.builder('products').data(
-    id: [1, 2],
-    tags: [['electronics', 'sale'], ['furniture']],           // List
-    attributes: [[color: 'red', size: 'L'], [color: 'blue']], // Map as STRUCT
-    reviews: [[[rating: 5, user: 'A']], [[rating: 4, user: 'B']]] // List of Maps
-).types([Integer, List, Map, List]).build()
-
-MatrixParquetWriter.write(data, file)
-Matrix restored = MatrixParquetReader.read(file)
-```
-
-### Nested Structure Limitations
-- Maps with heterogeneous value types are stored as STRUCT (preserves key names as field names)
-- Maps with homogeneous value types are stored as MAP (standard Parquet map)
-- Deeply nested structures are supported but may impact performance
-- Bean/POJO objects are converted to Maps using reflection
-
-## Timezone Handling
-
-By default, `LocalDateTime` values are converted to/from UTC using the system default timezone. To use a specific timezone:
+## HTTP and Hub URIs
 
 ```groovy
-import java.time.ZoneId
+import se.alipsa.matrix.parquet.MatrixParquetReader
+import se.alipsa.matrix.parquet.Predicates
 
-// Writing with a specific timezone
-MatrixParquetWriter.write(data, file, ZoneId.of("America/New_York"))
-
-// Reading with a specific timezone
-Matrix matrix = MatrixParquetReader.read(file, ZoneId.of("America/New_York"))
-
-// Reading with name and timezone
-Matrix matrix = MatrixParquetReader.read(file, "myData", ZoneId.of("Europe/London"))
+def remote = MatrixParquetReader.builder().remoteReadMode('AUTO').columns(['id'])
+    .filter(Predicates.ge('id', 1000L)).limit(100)
+    .readUrl('https://huggingface.co/datasets/owner/repo/resolve/main/train.parquet')
+def hub = MatrixParquetReader.builder().remoteReadMode('AUTO').limit(20)
+    .readUrl('hf://datasets/owner/repo@refs/convert/parquet/train/0000.parquet')
 ```
 
-**Important:** For consistent round-trip behavior, use the same timezone for writing and reading. If files are shared across systems with different default timezones, explicitly specify the timezone.
+Replace owner/repo/path with a real dataset. DOWNLOAD preserves full-download behavior. AUTO
+verifies `206 Content-Range` support then uses ranges, or downloads when the initial probe is
+unsupported. RANGE requires range support. Once decoding starts, transport/object-change errors
+propagate. Range caching is bounded by `rangeCacheBytes`; individual requests are capped separately at
+8 MiB. Bulk reads request the needed span rather than splitting it into 64 KiB requests. Small
+reads prefetch at most 64 KiB. Validated redirect targets are reused, and fully consumed range
+responses permit HTTP keep-alive reuse. ETag/Last-Modified validators and total length detect
+changes when available; same-length changes without validators cannot be detected reliably.
+Redirects are bounded and HTTPS downgrades rejected. Connection failures before response headers
+are retried once; malformed responses and body failures propagate. Streams are spooled to
+temporary files; byte arrays use a seekable memory input.
 
-`java.sql.Time` is different: it is always treated as a local time of day in the JVM default timezone, independently of `zoneId`, and preserves milliseconds. External `TIME(MICROS)` and `TIME(NANOS)` values are read as `Time` with their sub-millisecond fraction truncated; the Parquet `isAdjustedToUTC` flag does not cause a zone shift.
+Hub dataset URI parsing is pinned to huggingface_hub v2.2.0. Revisions follow the repository:
+`hf://datasets/owner/repo@revision/path`. Encode ordinary revision slashes as `%2F`; special
+`refs/convert/<name>` and `refs/pr/N` forms may remain unescaped. `@` inside a file path is literal.
+Dot and parent path/revision segments are rejected. HF URI paths are literal (already-percent-encoded path text is escaped again). `HF_TOKEN` is
+optional and read only for explicit hf:// calls; authorization is attached only to HTTPS
+`huggingface.co` on its default/443 port and never to CDN redirect origins. This is HTTP range
+access, with no Xet download/deduplication client.
 
-## Compression
+## Read options
 
-Parquet files are compressed with `SNAPPY` by default. Override per write:
+Use fluent builder methods, `MatrixParquetReader.builder(typedOptions)`, or SPI maps:
+`Matrix.read([columns: ['id'], limit: 10L], file)`. Unknown options are rejected. Null map values preserve defaults, including nullable AUTO options.
+`ParquetReadOptions.describe()` lists these options at runtime.
+
+| Option | Default | Meaning |
+|---|---|---|
+| matrixName | null | Explicit name; otherwise filename for local files, schema name for memory/streams/URLs |
+| zoneId | system zone (null) | Adjusted timestamp conversion; ZoneId or zone name |
+| columns | null/all | Nonempty unique ordered top-level output names |
+| filter | null | Immutable Matrix-owned ParquetPredicate |
+| binaryAsString | null/AUTO | Legacy Matrix unannotated binary is text; external/new binary is bytes; true reads external unannotated binary as UTF-8 recursively, false reads raw bytes; annotations and explicit new binary metadata take precedence |
+| useColumnIndexFilter | true | Permit page pruning; false is useful for result/I/O comparisons |
+| limit | null/unlimited | Nonnegative matching-row bound; zero retains schema |
+| rowGroups | null/all | Unique, zero-based original footer IDs, caller order |
+| rowGroupsByFile | empty/all | Dataset-only canonical file path to ordered group ID list |
+| maxBatchRows | null | Positive accepted-row batch cap; default one row group |
+| sourceFileColumn | null | Optional canonical local file/shard path column, added after projection; unsupported for memory/stream/URL sources |
+| parallelism | 1 | Positive maximum dataset workers across files and row groups |
+| remoteReadMode | DOWNLOAD | DOWNLOAD, AUTO or RANGE |
+| connectTimeoutMillis | 10000 | Positive HTTP connection timeout |
+| readTimeoutMillis | 60000 | Positive HTTP read timeout |
+| rangeCacheBytes | 8388608 | Positive per-stream cache ceiling; independent request cap is 8 MiB |
+
+## Writer options and exact types
 
 ```groovy
-import org.apache.parquet.hadoop.metadata.CompressionCodecName
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.parquet.MatrixParquetWriter
 
-// Builder API
-MatrixParquetWriter.builder(data)
-    .compressionCodec(CompressionCodecName.GZIP)
-    .write(file)
-
-// String form (also accepted)
-MatrixParquetWriter.builder(data)
-    .compressionCodec('ZSTD')
-    .write(file)
-
-// SPI options map
-data.write([compressionCodec: 'UNCOMPRESSED'], file)
+def values = Matrix.builder('prices').columns(id: [1L, 2L], price: [1.25G, 2.50G]).build()
+MatrixParquetWriter.builder(values).writerVersion('V2').compressionCodec('ZSTD')
+    .rowGroupSize(16L * 1024 * 1024).pageSize(65536)
+    .bloomFilterEnabled([id: true]).bloomFilterNDV([id: 1000L])
+    .decimalMeta([price: [8, 2] as int[]]).write(new File('prices.parquet'))
 ```
 
-Supported codec names: `UNCOMPRESSED`, `SNAPPY`, `GZIP`, `ZSTD`, `LZ4_RAW` (any value of `org.apache.parquet.hadoop.metadata.CompressionCodecName`). Compression is transparent on read — `MatrixParquetReader` auto-detects the codec from the file footer, no reader-side configuration is needed.
+File, Path, byte-array and OutputStream writes share writer tuning. Size settings are targets,
+not hard memory limits. V2 changes value encoders as well as page layout; V1 remains the default
+for compatibility with older consumers. Bloom NDVs affect memory/false-positive tradeoffs and do
+not enable a filter by themselves. Column settings use physical primitive paths (for example
+`tags.list.element`); unknown/nonprimitive paths fail. Disabled bloom columns remain disabled.
 
-## Known Limitations
+| Option | Default | Meaning |
+|---|---|---|
+| compressionCodec | SNAPPY | Codec name/CompressionCodecName; tested SNAPPY, ZSTD, GZIP, UNCOMPRESSED |
+| inferPrecisionAndScale | true | Infer exact decimal settings when no explicit settings apply |
+| precision / scale | null / null | Uniform positive precision and nonnegative scale, provided together |
+| decimalMeta | empty | Logical field path to `[precision, scale]`; overrides uniform settings |
+| roundingMode | UNNECESSARY | Reject lossy decimal rescaling; opt in to e.g. HALF_UP deliberately |
+| zoneId | system zone (null) | LocalDateTime to adjusted timestamp conversion |
+| rowGroupSize | 134217728 | Positive target row-group bytes |
+| pageSize | 1048576 | Positive target data-page bytes |
+| dictionaryEncoding | true | Dictionary encoding with upstream fallback |
+| writerVersion | V1 | V1 or V2 writer encodings and page layout |
+| columnIndexTruncateLength | 64 | Positive binary page-bound truncation bytes |
+| statisticsTruncateLength | 2147483647 | Positive row-group binary statistics truncation bytes |
+| bloomFilterEnabled | empty, disabled | Primitive path to Boolean override |
+| bloomFilterNDV | empty | Primitive path to positive expected distinct-value count |
+| sizeStatisticsEnabled | true | Collect size statistics |
 
-### Memory Usage
-Matrix is an **in-memory data structure**. The entire Parquet file is loaded into memory when reading. Ensure you have sufficient RAM available for:
-- The raw data size
-- Java object overhead (typically 2-3x the raw data size)
-- Working memory for processing
+Files are written to a temporary sibling and atomically replace the destination after successful
+close. Failed writes preserve an existing destination; filesystems without atomic replacement
+support fail safely with `AtomicMoveNotSupportedException`. New files use normal process/umask
+permissions; existing POSIX permissions are retained. Existing symbolic links are resolved before
+writing, including dangling links, so the link is preserved and its target is created or replaced.
+Abrupt JVM termination can leave `.matrix-parquet-<uuid>.tmp` siblings beside the resolved output;
+these are unpublished temporary output and can be removed once no writer is using them.
 
-For very large datasets that don't fit in memory, consider:
-- Processing files in chunks externally before loading
-- Using dedicated big data tools (Spark, Hadoop) for initial filtering
-- Increasing JVM heap size (`-Xmx`)
+JSON and ENUM annotations decode as UTF-8 String; BSON remains binary.
+Strings are STRING-annotated recursively; byte[] stays raw BINARY. Byte/Short use signed width
+annotations, UUID uses FIXED[16], LocalTime uses TIME(NANOS), and Instant uses adjusted
+TIMESTAMP(MICROS). Instants with sub-microsecond precision or int64-microsecond overflow fail;
+Instant.MIN/MAX are unsupported. Character and enums become String (`name()` for enums).
+ZonedDateTime/OffsetDateTime/custom objects require explicit conversion to Instant/String/Map.
+Date/Timestamp subclasses must share a single encoding policy; mixed units fail before output.
 
-### JDK Compatibility
-This module requires **JDK 21** and is limited to JDK 21 maximum due to Hadoop 3.4.x compatibility constraints. JDK 22+ is not supported.
+Object and abstract/interface declarations scan every non-null value, check assignability and
+infer one encoding; canonical metadata replaces the supertype. Concrete declarations require
+instance-compatible values and a single runtime encoding policy. Mixed numeric classes need
+explicit normalization. All-null Object becomes String; all-null Number/Temporal requires an
+explicit supported concrete type. Containers use canonical List/Map metadata. All supported
+metadata names are allowlisted; unknown external class names fall back to schema inference.
 
-### Timestamp Precision
-- `LocalDateTime` and `Timestamp` are stored with **microsecond** precision
-- `Time` is stored with **millisecond** precision
-- Nanosecond precision is not preserved
+Every resolved BigDecimal uses exact DECIMAL FIXED storage. Settings precedence is per-field,
+uniform, then inference. Nested logical paths use `.element`, `.key`, `.value`, and struct field
+names (for example `nested.element.amount`). With inference disabled every decimal needs settings.
+All-null BigDecimal infers `(1, 0)`. There is no DOUBLE fallback. Explicit decimal conversion obeys
+roundingMode. See [migration notes](release.md) for changed 0.7.x behavior.
 
-### Type Metadata
-Column type information is stored in Parquet file metadata. When reading files not created by `MatrixParquetWriter`:
-- Types are inferred from Parquet schema logical type annotations
-- Some type information may be lost (e.g., `java.sql.Timestamp` vs `LocalDateTime`)
-- `BigInteger` columns read without Matrix metadata (e.g. external files) are inferred as `BigDecimal` with scale 0, since both the Parquet schema and the inference logic only see a generic `DECIMAL` logical annotation
-- `BigInteger` values nested inside `List`/`Map` columns always get a declared precision of 38 regardless of their actual digit count (top-level column precision inference does not extend into nested structures), and round-trip back as numerically-equal `BigDecimal` values rather than `BigInteger` (nested elements carry no expected-type metadata, unlike top-level columns). This does not cause data loss or truncation, but external Parquet readers that validate `DECIMAL` precision against declared metadata rather than actual byte length may reject or misinterpret values with more than 38 digits
+## CDC output, tests and benchmarks
 
-## Technical Notes
+Native CDC writing is deferred: [parquet-java #3818](https://github.com/apache/parquet-java/pull/3818)
+was open/unmerged when checked on 2026-10-17. Tuning pages/row groups is not CDC. For CDC output,
+rewrite with PyArrow and preserve metadata:
 
-### Thread Safety
-Both `MatrixParquetWriter` and `MatrixParquetReader` use thread-safe caching for:
-- PropertyDescriptor lookups (for struct handling)
-- Class.forName() results (for type parsing)
+```bash
+python3 -m venv /tmp/matrix-parquet-fixtures
+/tmp/matrix-parquet-fixtures/bin/python -m pip install pyarrow==21.0.0
+/tmp/matrix-parquet-fixtures/bin/python - <<'PY'
+import pyarrow.parquet as pq
+table = pq.read_table('prices.parquet')
+pq.write_table(table, 'prices-cdc.parquet', compression='zstd',
+               use_content_defined_chunking=True, write_page_index=True)
+assert pq.read_table('prices-cdc.parquet').equals(table, check_metadata=True)
+PY
+```
 
-The timezone parameter uses thread-local storage, making concurrent writes/reads with different timezones safe.
+This loads the whole Arrow table and adds a rewrite pass. Python is not a runtime dependency.
+Hadoop filesystem configuration is avoided for local reads/writes; upstream codec initialization
+still requires Hadoop classes, so the dependency and JDK 21 limit remain.
 
-### Performance Tips
-1. Use `inferPrecisionAndScale=true` (default) for automatic BigDecimal handling
-2. For large matrices with struct columns, the first write may be slower due to reflection caching
-3. Subsequent operations on the same struct types benefit from cached metadata
+```bash
+./gradlew :matrix-parquet:codenarcMain :matrix-parquet:codenarcTest
+./gradlew :matrix-parquet:spotlessCheck
+./gradlew :matrix-parquet:test :matrix-parquet:compileConsumerApi
+PARQUET_PYTHON=/tmp/matrix-parquet-fixtures/bin/python ./gradlew :matrix-parquet:test -PrunSlowTests=true
+/tmp/matrix-parquet-fixtures/bin/python matrix-parquet/src/test/python/verify_matrix_output.py
+./gradlew :matrix-parquet:test --tests ParquetInteropTest --rerun-tasks
+./gradlew test
+```
 
-## 3rd Party Libraries
-
-| Library | Purpose | License |
-|---------|---------|---------|
-| org.apache.parquet:parquet-column | Parquet columnar format | Apache 2.0 |
-| org.apache.parquet:parquet-hadoop | Hadoop integration | Apache 2.0 |
-| org.apache.hadoop:hadoop-common | Hadoop utilities | Apache 2.0 |
-| org.apache.hadoop:hadoop-mapreduce-client-core | MapReduce client | Apache 2.0 |
+Fixture reproduction: run `matrix-parquet/src/test/python/generate_optimized.py` from the repository root with
+pinned PyArrow. Checked-in Parquet fixtures total less than 4 MiB (each less than 1 MiB).
+Default-size CDC is generated in `build/default-cdc` only in the slow lane; missing Python/Arrow
+produces an explicit skip. CI provisions pinned Arrow and checks fixture reproducibility.
+See [measurements and reproduction](benchmarks/optimized-parquet.md) for the opt-in benchmark.

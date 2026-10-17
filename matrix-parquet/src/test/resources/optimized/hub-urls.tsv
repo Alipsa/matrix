@@ -1,0 +1,13 @@
+# huggingface_hub=2.2.0
+hf://datasets/owner/repo/train.parquet	https://huggingface.co/datasets/owner/repo/resolve/main/train.parquet
+hf://datasets/owner/repo@v1/train.parquet	https://huggingface.co/datasets/owner/repo/resolve/v1/train.parquet
+hf://datasets/owner/repo@feature%2Fbranch/train.parquet	https://huggingface.co/datasets/owner/repo/resolve/feature%2Fbranch/train.parquet
+hf://datasets/owner/repo@refs/convert/parquet/train.parquet	https://huggingface.co/datasets/owner/repo/resolve/refs/convert/parquet/train.parquet
+hf://datasets/owner/repo@refs%2Fconvert%2Fparquet/train.parquet	https://huggingface.co/datasets/owner/repo/resolve/refs/convert/parquet/train.parquet
+hf://datasets/owner/repo@refs/pr/10/train.parquet	https://huggingface.co/datasets/owner/repo/resolve/refs/pr/10/train.parquet
+hf://datasets/owner/repo@refs/convert/parquet-v2/train.parquet	https://huggingface.co/datasets/owner/repo/resolve/refs/convert/parquet-v2/train.parquet
+hf://datasets/owner/repo/sub/file@1.parquet	https://huggingface.co/datasets/owner/repo/resolve/main/sub/file%401.parquet
+hf://datasets/owner/repo@v%2B1/café x.parquet	https://huggingface.co/datasets/owner/repo/resolve/v%2B1/caf%C3%A9%20x.parquet
+hf://datasets/owner/repo/file%20x.parquet	https://huggingface.co/datasets/owner/repo/resolve/main/file%2520x.parquet
+hf://datasets/owner/repo@v*/file*.parquet	https://huggingface.co/datasets/owner/repo/resolve/v%2A/file%2A.parquet
+hf://datasets/owner/repo@feature%252Fbranch/a%2Fb.parquet	https://huggingface.co/datasets/owner/repo/resolve/feature%252Fbranch/a%252Fb.parquet

@@ -12,12 +12,63 @@ import java.time.ZoneId
  * Typed options for Parquet write operations via the SPI.
  */
 class ParquetWriteOptions {
+  private static final String KEY_DICTIONARY_ENCODING = 'dictionaryEncoding'
+  private static final String KEY_WRITER_VERSION = 'writerVersion'
+  private static final String KEY_SIZE_STATISTICS_ENABLED = 'sizeStatisticsEnabled'
+
+  private static final String KEY_V1 = 'V1'
+
 
   private static final String KEY_PRECISION = 'precision'
   private static final String KEY_SCALE = 'scale'
   private static final String KEY_INFER_PRECISION_AND_SCALE = 'inferPrecisionAndScale'
   private static final String KEY_ROUNDING_MODE = 'roundingMode'
   private static final String ERR_ROUNDING_MODE_NULL = 'roundingMode cannot be null'
+
+  long rowGroupSize = 134217728L
+
+  /** Sets rowGroupSize (default 134217728L); target sizes are not hard memory limits. */
+  ParquetWriteOptions rowGroupSize(long value) { this.rowGroupSize = value; this }
+
+  int pageSize = 1048576
+
+  /** Sets pageSize (default 1048576); target sizes are not hard memory limits. */
+  ParquetWriteOptions pageSize(int value) { this.pageSize = value; this }
+
+  boolean dictionaryEncoding = true
+
+  /** Enable dictionary encoding with plain-page fallback (default true). */
+  ParquetWriteOptions dictionaryEncoding(boolean value) { this.dictionaryEncoding = value; this }
+
+  String writerVersion = KEY_V1
+
+  /** Choose V1 or V2 value encodings and page layout (default V1). */
+  ParquetWriteOptions writerVersion(String value) { this.writerVersion = value; this }
+
+  int columnIndexTruncateLength = 64
+
+  /** Maximum binary bound bytes in page indexes (default 64). */
+  ParquetWriteOptions columnIndexTruncateLength(int value) { this.columnIndexTruncateLength = value; this }
+
+  int statisticsTruncateLength = Integer.MAX_VALUE
+
+  /** Maximum binary bound bytes in row-group statistics (default 2147483647). */
+  ParquetWriteOptions statisticsTruncateLength(int value) { this.statisticsTruncateLength = value; this }
+
+  Map<String, Boolean> bloomFilterEnabled = [:]
+
+  /** Per-primitive-column bloom overrides (default empty, disabled). */
+  ParquetWriteOptions bloomFilterEnabled(Map<String, Boolean> value) { this.bloomFilterEnabled = value; this }
+
+  Map<String, Long> bloomFilterNDV = [:]
+
+  /** Positive expected distinct counts for bloom sizing (default empty). */
+  ParquetWriteOptions bloomFilterNDV(Map<String, Long> value) { this.bloomFilterNDV = value; this }
+
+  boolean sizeStatisticsEnabled = true
+
+  /** Collect column size statistics (default true). */
+  ParquetWriteOptions sizeStatisticsEnabled(boolean value) { this.sizeStatisticsEnabled = value; this }
 
   boolean inferPrecisionAndScale = true
   Integer precision = null
@@ -120,6 +171,14 @@ class ParquetWriteOptions {
   }
 
   void validate() {
+    if (rowGroupSize <= 0 || pageSize <= 0 || columnIndexTruncateLength <= 0 || statisticsTruncateLength <= 0) {
+      throw new IllegalArgumentException('Writer sizes/truncate lengths must be positive')
+    }
+    if (!(writerVersion in [KEY_V1, 'V2'])) { throw new IllegalArgumentException('writerVersion must be V1 or V2') }
+    if (bloomFilterEnabled == null || bloomFilterNDV == null) { throw new IllegalArgumentException('Bloom option maps cannot be null') }
+    if (bloomFilterEnabled.values().any { it == null }) { throw new IllegalArgumentException('Bloom overrides must be non-null Booleans') }
+    if (bloomFilterNDV.values().any { it == null || it <= 0 }) { throw new IllegalArgumentException('Bloom NDVs must be positive') }
+
     if ((precision == null) != (scale == null)) {
       throw new IllegalArgumentException('precision and scale must be provided together')
     }
@@ -157,12 +216,19 @@ class ParquetWriteOptions {
     if (zoneId != null) {
       result.zoneId = zoneId
     }
+    result.putAll([rowGroupSize: rowGroupSize, pageSize: pageSize, dictionaryEncoding: dictionaryEncoding, writerVersion: writerVersion, columnIndexTruncateLength: columnIndexTruncateLength, statisticsTruncateLength: statisticsTruncateLength, bloomFilterEnabled: bloomFilterEnabled, bloomFilterNDV: bloomFilterNDV, sizeStatisticsEnabled: sizeStatisticsEnabled])
     result
   }
 
+  @SuppressWarnings('AbcMetric') // Explicit typed option normalization.
   static ParquetWriteOptions fromMap(Map<String, ?> options) {
     ParquetWriteOptions result = new ParquetWriteOptions()
     Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
+    Set<String> known = descriptors()*.name*.toLowerCase(Locale.ROOT).toSet()
+    Set<String> unknown = new HashSet<>(normalized.keySet())
+    unknown.removeAll(known)
+    if (!unknown.empty) { throw new IllegalArgumentException("Unknown Parquet options: $unknown") }
+    normalized = normalized.findAll { String key, Object value -> value != null }
     if (normalized.containsKey('inferprecisionandscale')) {
       Object inferPrecisionAndScale = normalized.inferprecisionandscale
       if (inferPrecisionAndScale != null) {
@@ -216,6 +282,15 @@ class ParquetWriteOptions {
         result.roundingMode(String.valueOf(value))
       }
     }
+    if (normalized.containsKey('rowgroupsize')) { result.rowGroupSize = ((Number) normalized.rowgroupsize).longValue() }
+    if (normalized.containsKey('pagesize')) { result.pageSize = ((Number) normalized.pagesize).intValue() }
+    if (normalized.containsKey('dictionaryencoding')) { result.dictionaryEncoding = OptionMaps.booleanValueOrNull(normalized.dictionaryencoding, KEY_DICTIONARY_ENCODING) }
+    if (normalized.containsKey('writerversion')) { result.writerVersion = String.valueOf(normalized.writerversion) }
+    if (normalized.containsKey('columnindextruncatelength')) { result.columnIndexTruncateLength = ((Number) normalized.columnindextruncatelength).intValue() }
+    if (normalized.containsKey('statisticstruncatelength')) { result.statisticsTruncateLength = ((Number) normalized.statisticstruncatelength).intValue() }
+    if (normalized.containsKey('bloomfilterenabled')) { result.bloomFilterEnabled = (Map<String, Boolean>) normalized.bloomfilterenabled }
+    if (normalized.containsKey('bloomfilterndv')) { result.bloomFilterNDV = (Map<String, Long>) normalized.bloomfilterndv }
+    if (normalized.containsKey('sizestatisticsenabled')) { result.sizeStatisticsEnabled = OptionMaps.booleanValueOrNull(normalized.sizestatisticsenabled, KEY_SIZE_STATISTICS_ENABLED) }
     result.validate()
     result
   }
@@ -281,6 +356,7 @@ class ParquetWriteOptions {
   }
 
   static List<OptionDescriptor> descriptors() {
+    ParquetWriteOptions defaults = new ParquetWriteOptions()
     [
         new OptionDescriptor(KEY_INFER_PRECISION_AND_SCALE, Boolean, Boolean.TRUE.toString(), 'Infer precision and scale for BigDecimal columns'),
         new OptionDescriptor(KEY_PRECISION, Integer, null, 'Uniform precision for all BigDecimal columns'),
@@ -288,7 +364,16 @@ class ParquetWriteOptions {
         new OptionDescriptor('decimalMeta', Map, null, 'Map of column names to [precision, scale] arrays'),
         new OptionDescriptor('zoneId', ZoneId, null, 'Time zone to use when writing timestamp values'),
         new OptionDescriptor('compressionCodec', CompressionCodecName, CompressionCodecName.SNAPPY.name(), 'Compression codec for the Parquet file (e.g. SNAPPY, GZIP, ZSTD, UNCOMPRESSED)'),
-        new OptionDescriptor(KEY_ROUNDING_MODE, RoundingMode, RoundingMode.UNNECESSARY.name(), 'Rounding mode for explicit DECIMAL scale conversion')
+        new OptionDescriptor(KEY_ROUNDING_MODE, RoundingMode, RoundingMode.UNNECESSARY.name(), 'Rounding mode for explicit DECIMAL scale conversion'),
+        new OptionDescriptor('rowGroupSize', Long, defaults.rowGroupSize, 'Target row-group bytes'),
+        new OptionDescriptor('pageSize', Integer, defaults.pageSize, 'Target data-page bytes'),
+        new OptionDescriptor(KEY_DICTIONARY_ENCODING, Boolean, defaults.dictionaryEncoding, 'Enable dictionary encoding'),
+        new OptionDescriptor(KEY_WRITER_VERSION, String, defaults.writerVersion, 'V1 or V2 encodings and page layout'),
+        new OptionDescriptor('columnIndexTruncateLength', Integer, defaults.columnIndexTruncateLength, 'Truncated binary page bounds bytes'),
+        new OptionDescriptor('statisticsTruncateLength', Integer, defaults.statisticsTruncateLength, 'Truncated row-group binary statistics bytes'),
+        new OptionDescriptor('bloomFilterEnabled', Map, null, 'Per-column bloom-filter enabled overrides'),
+        new OptionDescriptor('bloomFilterNDV', Map, null, 'Per-column positive expected distinct values'),
+        new OptionDescriptor(KEY_SIZE_STATISTICS_ENABLED, Boolean, defaults.sizeStatisticsEnabled, 'Collect column size statistics')
     ]
   }
 }

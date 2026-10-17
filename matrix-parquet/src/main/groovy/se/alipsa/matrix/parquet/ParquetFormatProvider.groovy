@@ -33,49 +33,17 @@ class ParquetFormatProvider extends AbstractFormatProvider {
 
   @Override
   Matrix read(File file, Map<String, ?> options) {
-    ParquetReadOptions readOptions = ParquetReadOptions.fromMap(options)
-    if (readOptions.matrixName != null && readOptions.zoneId != null) {
-      return MatrixParquetReader.read(file, readOptions.matrixName, readOptions.zoneId)
-    }
-    if (readOptions.matrixName != null) {
-      return MatrixParquetReader.read(file, readOptions.matrixName)
-    }
-    if (readOptions.zoneId != null) {
-      return MatrixParquetReader.read(file, readOptions.zoneId)
-    }
-    MatrixParquetReader.read(file)
+    MatrixParquetReader.builder(ParquetReadOptions.fromMap(options)).read(file)
   }
 
   @Override
   Matrix read(URL url, Map<String, ?> options) {
-    ParquetReadOptions readOptions = ParquetReadOptions.fromMap(options)
-    if (readOptions.matrixName != null && readOptions.zoneId != null) {
-      return MatrixParquetReader.read(url, readOptions.matrixName, readOptions.zoneId)
-    }
-    if (readOptions.matrixName != null) {
-      url.openStream().withCloseable { InputStream is ->
-        MatrixParquetReader.read(is, readOptions.matrixName)
-      }
-    } else if (readOptions.zoneId != null) {
-      MatrixParquetReader.read(url, readOptions.zoneId)
-    } else {
-      MatrixParquetReader.read(url)
-    }
+    MatrixParquetReader.builder(ParquetReadOptions.fromMap(options)).read(url)
   }
 
   @Override
-  Matrix read(InputStream is, Map<String, ?> options) {
-    ParquetReadOptions readOptions = ParquetReadOptions.fromMap(options)
-    if (readOptions.matrixName != null && readOptions.zoneId != null) {
-      return MatrixParquetReader.read(is, readOptions.matrixName, readOptions.zoneId)
-    }
-    if (readOptions.matrixName != null) {
-      return MatrixParquetReader.read(is, readOptions.matrixName)
-    }
-    if (readOptions.zoneId != null) {
-      return MatrixParquetReader.read(is, readOptions.zoneId)
-    }
-    MatrixParquetReader.read(is)
+  Matrix read(InputStream stream, Map<String, ?> options) {
+    MatrixParquetReader.builder(ParquetReadOptions.fromMap(options)).read(stream)
   }
 
   @Override
