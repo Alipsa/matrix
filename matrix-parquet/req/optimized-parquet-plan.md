@@ -780,3 +780,7 @@ Benchmark commands (init-file setup is fully documented in the report):
 ./gradlew :matrix-parquet:test --tests '*ParquetLayoutBenchmarkTest' \
   -I /tmp/parquet-layout.init.gradle --no-configuration-cache --console=plain
 ```
+
+
+The subsequent PR review fixes and their verification are recorded in
+[PR #481 review fixes](optimized-parquet-review.md).

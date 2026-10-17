@@ -60,7 +60,31 @@ class HttpTransportTest {
     })
     def input = new HttpRangeInputFile(source, new ParquetReadOptions(rangeCacheBytes: 4))
     assertThrows(EOFException) { input.newStream().withCloseable { it.readFully(new byte[4]) } }
-    assertTrue(requests.every { it.disconnected })
+    assertTrue(requests.last().disconnected)
+    assertFalse(requests.first().disconnected) // Fully consumed success allows keep-alive reuse.
+  }
+
+  @Test
+  void staticUrlOverloadsUseBoundedTransportAndHubParsing() {
+    java.time.ZoneId zone = java.time.ZoneId.of('UTC')
+    [ { URL url -> MatrixParquetReader.read(url) },
+      { URL url -> MatrixParquetReader.read(url, zone) },
+      { URL url -> MatrixParquetReader.read(url, 'named', zone) } ].each { read ->
+      StubConnection request
+      URL url = new URL(null, 'https://example.test/file', new URLStreamHandler() {
+        @Override protected URLConnection openConnection(URL source) {
+          request = new StubConnection(source, 302, [Location: 'http://example.test/file'])
+          request
+        }
+      })
+      assertThrows(IOException) { read(url) }
+      assertEquals(10000, request.connectTimeout)
+      assertEquals(60000, request.readTimeout)
+      assertTrue(request.disconnected)
+    }
+    String invalid = 'hf://datasets/owner/repo/../file.parquet'
+    assertThrows(IllegalArgumentException) { MatrixParquetReader.readUrl(invalid, zone) }
+    assertThrows(IllegalArgumentException) { MatrixParquetReader.readUrl(invalid, 'named', zone) }
   }
 
   @Test

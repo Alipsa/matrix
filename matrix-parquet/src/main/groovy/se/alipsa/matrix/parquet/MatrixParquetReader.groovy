@@ -78,7 +78,7 @@ import java.time.ZoneOffset
  *
  * <h3>Limitations</h3>
  * <ul>
- *   <li>The entire file is loaded into memory (no streaming support)</li>
+ *   <li>read() collects the result in memory; closeable batches bound accepted rows</li>
  * </ul>
  *
  * @see MatrixParquetWriter
@@ -106,7 +106,7 @@ class MatrixParquetReader {
   /** Thread-local storage for timezone used during read operations */
   private static final ThreadLocal<ZoneId> ZONE_ID_HOLDER = new ThreadLocal<>()
 
-  /** Cache for Class.forName() results to avoid repeated reflection calls */
+  /** Binary text override used by the retained Group benchmark helper */
   private static final ThreadLocal<Boolean> BINARY_AS_STRING = new ThreadLocal<>()
 
   private static final String ERR_PATH_NULL = 'Path cannot be null'
@@ -233,7 +233,7 @@ class MatrixParquetReader {
     MatrixBatchIterator batches(File file) {
       if (file?.isDirectory()) { return batches(directoryFiles(file)) }
       validateFile(file)
-      new ParquetBatches(new org.apache.parquet.io.LocalInputFile(file.toPath()), options, defaultMatrixName(file))
+      new ParquetBatches(new org.apache.parquet.io.LocalInputFile(file.toPath()), options, defaultMatrixName(file), null, file.canonicalPath)
     }
 
 
@@ -279,7 +279,7 @@ class MatrixParquetReader {
     Matrix read(File file) {
       if (file?.isDirectory()) { return read(directoryFiles(file)) }
       validateFile(file)
-      readInput(new org.apache.parquet.io.LocalInputFile(file.toPath()), options, defaultMatrixName(file))
+      readInput(new org.apache.parquet.io.LocalInputFile(file.toPath()), options, defaultMatrixName(file), file.canonicalPath)
     }
 
     /**
@@ -386,7 +386,7 @@ class MatrixParquetReader {
    * Validates the file parameter before reading.
    *
    * @param file the file to validate
-   * @throws IllegalArgumentException if file is null, does not exist, or is a directory
+   * @throws IllegalArgumentException if file is null or does not exist
    */
   private static void validateFile(File file) {
     if (file == null) {
@@ -413,10 +413,10 @@ class MatrixParquetReader {
    * @param file the Parquet file to read
    * @param matrixName the name to apply to the resulting matrix
    * @return a matrix populated with the file contents
-   * @throws IllegalArgumentException if file is null, does not exist, or is a directory
+   * @throws IllegalArgumentException if file is null or does not exist
    */
   static Matrix read(File file, String matrixName) {
-    read(file, null, false, null).withMatrixName(matrixName)
+    builder().matrixName(matrixName).read(file)
   }
 
   /**
@@ -424,7 +424,7 @@ class MatrixParquetReader {
    *
    * @param path the Path to read
    * @return a matrix populated with the file contents
-   * @throws IllegalArgumentException if path is null, does not exist, or is a directory
+   * @throws IllegalArgumentException if path is null or does not exist
    */
   static Matrix read(java.nio.file.Path path) {
     if (path == null) {
@@ -439,7 +439,7 @@ class MatrixParquetReader {
    * @param path the Path to read
    * @param matrixName the name to apply to the resulting matrix
    * @return a matrix populated with the file contents
-   * @throws IllegalArgumentException if path is null, does not exist, or is a directory
+   * @throws IllegalArgumentException if path is null or does not exist
    */
   static Matrix read(java.nio.file.Path path, String matrixName) {
     if (path == null) {
@@ -453,7 +453,7 @@ class MatrixParquetReader {
    *
    * @param filePath the file path to read
    * @return a matrix populated with the file contents
-   * @throws IllegalArgumentException if filePath is null, does not exist, or is a directory
+   * @throws IllegalArgumentException if filePath is null or does not exist
    */
   static Matrix readFile(String filePath) {
     if (filePath == null) {
@@ -468,7 +468,7 @@ class MatrixParquetReader {
    * @param filePath the file path to read
    * @param matrixName the name to apply to the resulting matrix
    * @return a matrix populated with the file contents
-   * @throws IllegalArgumentException if filePath is null, does not exist, or is a directory
+   * @throws IllegalArgumentException if filePath is null or does not exist
    */
   static Matrix readFile(String filePath, String matrixName) {
     if (filePath == null) {
@@ -480,7 +480,7 @@ class MatrixParquetReader {
   /**
    * Read Parquet content from a byte array into a {@link Matrix}.
    *
-   * <p>Parquet requires a seekable input, so the content is copied to a temporary file.</p>
+   * <p>The byte array is read directly through a seekable in-memory input.</p>
    *
    * @param content byte array containing Parquet data
    * @return a matrix populated with the byte array contents
@@ -496,7 +496,7 @@ class MatrixParquetReader {
   /**
    * Read Parquet content from a byte array into a {@link Matrix} using the supplied name.
    *
-   * <p>Parquet requires a seekable input, so the content is copied to a temporary file.</p>
+   * <p>The byte array is read directly through a seekable in-memory input.</p>
    *
    * @param content byte array containing Parquet data
    * @param matrixName the name to apply to the resulting matrix
@@ -513,7 +513,7 @@ class MatrixParquetReader {
   /**
    * Read Parquet content from a byte array into a {@link Matrix} with a specific timezone.
    *
-   * <p>Parquet requires a seekable input, so the content is copied to a temporary file.</p>
+   * <p>The byte array is read directly through a seekable in-memory input.</p>
    *
    * @param content byte array containing Parquet data
    * @param zoneId the timezone to use for converting UTC timestamps to LocalDateTime values
@@ -530,7 +530,7 @@ class MatrixParquetReader {
   /**
    * Read Parquet content from a byte array into a {@link Matrix} with a specific timezone and name.
    *
-   * <p>Parquet requires a seekable input, so the content is copied to a temporary file.</p>
+   * <p>The byte array is read directly through a seekable in-memory input.</p>
    *
    * @param content byte array containing Parquet data
    * @param matrixName the name to apply to the resulting matrix
@@ -583,9 +583,7 @@ class MatrixParquetReader {
     if (url == null) {
       throw new IllegalArgumentException(ERR_URL_NULL)
     }
-    url.openStream().withCloseable { InputStream is ->
-      readFromInputStream(is, null, null)
-    }
+    builder().read(url)
   }
 
   /**
@@ -611,13 +609,13 @@ class MatrixParquetReader {
    * @param file the Parquet file to read
    * @param zoneId the timezone to use for converting UTC timestamps to LocalDateTime values
    * @return a matrix populated with the file contents
-   * @throws IllegalArgumentException if file is null, does not exist, is a directory, or zoneId is null
+   * @throws IllegalArgumentException if file is null, does not exist, or zoneId is null
    */
   static Matrix read(File file, ZoneId zoneId) {
     if (zoneId == null) {
       throw new IllegalArgumentException(ERR_ZONE_ID_NULL)
     }
-    read(file, file == null ? null : defaultMatrixName(file), false, zoneId)
+    builder().zoneId(zoneId).read(file)
   }
 
   /**
@@ -626,7 +624,7 @@ class MatrixParquetReader {
    * @param path the Path to read
    * @param zoneId the timezone to use for converting UTC timestamps to LocalDateTime values
    * @return a matrix populated with the file contents
-   * @throws IllegalArgumentException if path is null, does not exist, or is a directory, or zoneId is null
+   * @throws IllegalArgumentException if path is null, does not exist, or zoneId is null
    */
   static Matrix read(java.nio.file.Path path, ZoneId zoneId) {
     if (path == null) {
@@ -682,9 +680,7 @@ class MatrixParquetReader {
     if (zoneId == null) {
       throw new IllegalArgumentException(ERR_ZONE_ID_NULL)
     }
-    url.openStream().withCloseable { InputStream is ->
-      readFromInputStream(is, null, zoneId)
-    }
+    builder().zoneId(zoneId).read(url)
   }
 
   /**
@@ -699,7 +695,8 @@ class MatrixParquetReader {
     if (urlString == null) {
       throw new IllegalArgumentException(ERR_URL_STRING_NULL)
     }
-    read(new URI(urlString).toURL(), zoneId)
+    if (zoneId == null) { throw new IllegalArgumentException(ERR_ZONE_ID_NULL) }
+    builder().zoneId(zoneId).readUrl(urlString)
   }
 
   /**
@@ -709,13 +706,13 @@ class MatrixParquetReader {
    * @param matrixName the name to apply to the resulting matrix
    * @param zoneId the timezone to use for converting UTC timestamps to LocalDateTime values
    * @return a matrix populated with the file contents
-   * @throws IllegalArgumentException if file is null, does not exist, is a directory, or zoneId is null
+   * @throws IllegalArgumentException if file is null, does not exist, or zoneId is null
    */
   static Matrix read(File file, String matrixName, ZoneId zoneId) {
     if (zoneId == null) {
       throw new IllegalArgumentException(ERR_ZONE_ID_NULL)
     }
-    read(file, null, false, zoneId).withMatrixName(matrixName)
+    builder().matrixName(matrixName).zoneId(zoneId).read(file)
   }
 
   /**
@@ -784,9 +781,7 @@ class MatrixParquetReader {
     if (zoneId == null) {
       throw new IllegalArgumentException(ERR_ZONE_ID_NULL)
     }
-    url.openStream().withCloseable { InputStream is ->
-      readFromInputStream(is, matrixName, zoneId)
-    }
+    builder().matrixName(matrixName).zoneId(zoneId).read(url)
   }
 
   /**
@@ -802,7 +797,8 @@ class MatrixParquetReader {
     if (urlString == null) {
       throw new IllegalArgumentException(ERR_URL_STRING_NULL)
     }
-    read(new URI(urlString).toURL(), matrixName, zoneId)
+    if (zoneId == null) { throw new IllegalArgumentException(ERR_ZONE_ID_NULL) }
+    builder().matrixName(matrixName).zoneId(zoneId).readUrl(urlString)
   }
 
   /**
@@ -810,28 +806,11 @@ class MatrixParquetReader {
    *
    * @param file the Parquet file to read
    * @return a matrix populated with the file contents
-   * @throws IllegalArgumentException if file is null, does not exist, or is a directory
+   * @throws IllegalArgumentException if file is null or does not exist
    */
   static Matrix read(File file) {
     if (file?.isDirectory()) { return builder().read(file) }
-    read(file, file == null ? null : defaultMatrixName(file), false, null)
-  }
-
-  private static Matrix read(File file, String fallbackMatrixName, boolean preferSchemaName, ZoneId zoneId) {
-    if (zoneId == null) {
-      return read(file, fallbackMatrixName, preferSchemaName)
-    }
-    try {
-      ZONE_ID_HOLDER.set(zoneId)
-      return read(file, fallbackMatrixName, preferSchemaName)
-    } finally {
-      ZONE_ID_HOLDER.remove()
-    }
-  }
-
-  private static Matrix read(File file, String fallbackMatrixName, boolean preferSchemaName) {
-    validateFile(file)
-    readInput(new org.apache.parquet.io.LocalInputFile(file.toPath()), new ParquetReadOptions(), preferSchemaName ? null : fallbackMatrixName)
+    builder().read(file)
   }
 
   /** Reads a list of shards in the supplied order, with strict schema compatibility. */
@@ -866,7 +845,9 @@ class MatrixParquetReader {
       Matrix batch = iterator.next()
       batch.columnNames().eachWithIndex { String name, int index -> columns[index].addAll(batch.column(name)) }
     }
-    Matrix.builder(prototype.matrixName).columnNames(prototype.columnNames()).types(prototype.types()).columns(columns).build()
+    Matrix result = Matrix.builder(prototype.matrixName).columnNames(prototype.columnNames()).types(prototype.types()).columns(columns).build()
+    if (prototype.hasIndex()) { result.createIndex(prototype.indexedColumns() as String[]) }
+    result
   }
 
   @PackageScope
@@ -879,21 +860,13 @@ class MatrixParquetReader {
   }
 
   @PackageScope
-  static Matrix readInput(org.apache.parquet.io.InputFile input, ParquetReadOptions options, String name) {
+  static Matrix readInput(org.apache.parquet.io.InputFile input, ParquetReadOptions options, String name, String sourcePath = null) {
     log.debug("Reading Parquet input: $name")
     ZoneId previous = ZONE_ID_HOLDER.get()
     if (options.zoneId != null) { ZONE_ID_HOLDER.set(options.zoneId) }
     try {
-      new ParquetBatches(input, options, name).withCloseable { batches ->
-        Matrix empty = batches.emptyMatrix()
-        List<List> columns = empty.columnNames().collect { [] }
-        while (batches.hasNext()) {
-          Matrix batch = batches.next()
-          batch.columnNames().eachWithIndex { String column, int index -> columns[index].addAll(batch.column(column)) }
-        }
-        Matrix result = Matrix.builder(empty.matrixName).columnNames(empty.columnNames()).types(empty.types()).columns(columns).build()
-        if (empty.hasIndex()) { result.createIndex(empty.indexedColumns() as String[]) }
-        result
+      new ParquetBatches(input, options, name, null, sourcePath).withCloseable { batches ->
+        collectBatches(batches)
       }
     } finally {
       if (previous == null) { ZONE_ID_HOLDER.remove() } else { ZONE_ID_HOLDER.set(previous) }
@@ -1023,27 +996,8 @@ class MatrixParquetReader {
   }
 
   private static Matrix readFromInputStream(InputStream is, String matrixName, ZoneId zoneId) {
-    if (is == null) {
-      throw new IllegalArgumentException('InputStream cannot be null')
-    }
-    java.nio.file.Path tempFile = Files.createTempFile('matrix-parquet-', EXTENSION)
-    try {
-      Files.copy(is, tempFile, StandardCopyOption.REPLACE_EXISTING)
-      File file = tempFile.toFile()
-      Matrix result = read(file, defaultMatrixName(file), true, zoneId)
-      if (matrixName != null && !matrixName.trim().isEmpty()) {
-        result = result.withMatrixName(matrixName)
-      }
-      result
-    } finally {
-      try {
-        Files.deleteIfExists(tempFile)
-      } catch (IOException ignored) {
-      }
-    }
+    builder().matrixName(matrixName).zoneId(zoneId).read(is)
   }
-
-
 
   private static Class getJavaType(PrimitiveType.PrimitiveTypeName typeName) {
     switch (typeName) {
@@ -1055,6 +1009,13 @@ class MatrixParquetReader {
       case PrimitiveTypeName.BINARY, PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY -> byte[]
       default -> String
     }
+  }
+
+  @PackageScope
+  static boolean isTextLogicalType(LogicalTypeAnnotation logical) {
+    logical instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation ||
+        logical instanceof LogicalTypeAnnotation.JsonLogicalTypeAnnotation ||
+        logical instanceof LogicalTypeAnnotation.EnumLogicalTypeAnnotation
   }
 
   @PackageScope
@@ -1079,7 +1040,7 @@ class MatrixParquetReader {
             BigDecimal
           } else if (logical instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
             Time
-          } else if (logical instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation) {
+          } else if (isTextLogicalType(logical)) {
             String
           } else if (logical instanceof LogicalTypeAnnotation.UUIDLogicalTypeAnnotation) {
             UUID
@@ -1166,7 +1127,7 @@ class MatrixParquetReader {
     }
     if (raw instanceof org.apache.parquet.io.api.Binary) {
       if (expected == BigDecimal) { return new BigDecimal(raw.toStringUsingUTF8()) }
-      if (logical instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation || expected == String ||
+      if (isTextLogicalType(logical) || expected == String ||
           (logical == null && field.primitiveTypeName == PrimitiveTypeName.BINARY && binaryAsString && expected != byte[])) {
         return raw.toStringUsingUTF8()
       }

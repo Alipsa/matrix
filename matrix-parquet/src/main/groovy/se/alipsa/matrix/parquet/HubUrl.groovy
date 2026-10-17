@@ -8,6 +8,7 @@ final class HubUrl {
   private static final String SLASH = '/'
   private static final String ERR_FILE_PATH = 'A dataset file path is required'
   private static final String PLUS = '+'
+  private static final String PARENT = '..'
 
   private static final int PARTS = 3
   private static final String PREFIX = 'hf://datasets/'
@@ -46,13 +47,17 @@ final class HubUrl {
     if (!(repo ==~ /[^\/@]+\/[^\/@]+/) || revision.empty || path.empty) {
       throw new IllegalArgumentException('Invalid dataset repository, revision or file path')
     }
-    if (repo.contains('--') || repo.contains('..') || repo.endsWith('.git') ||
-        repo.split(SLASH).any { !(it ==~ /[\w](?:[\w.-]*[\w])?/) } || path.startsWith(SLASH) || path.contains('//')) {
+    if (repo.contains('--') || repo.contains(PARENT) || repo.endsWith('.git') ||
+        repo.split(SLASH).any { !(it ==~ /[\w](?:[\w.-]*[\w])?/) } || path.startsWith(SLASH) || path.contains('//') || hasDotSegments(path) || hasDotSegments(revision)) {
       throw new IllegalArgumentException('Invalid repository id or empty path segment')
     }
     String encodedRevision = SPECIAL.matcher(revision).matches() ? revision : encode(revision)
     String encodedPath = path.split(SLASH, -1).collect { encode(it) }.join(SLASH)
     new URI("https://huggingface.co/datasets/$repo/resolve/$encodedRevision/$encodedPath").toURL()
+  }
+
+  private static boolean hasDotSegments(String value) {
+    value.split(SLASH).any { it in ['.', PARENT] }
   }
 
   private static String encode(String value) {

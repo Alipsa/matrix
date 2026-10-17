@@ -74,7 +74,8 @@ ordinal row seeking API.
 Datasets validate every footer before returning rows and require identical logical fields,
 order, decimal precision/scale, timestamp units/UTC flags and Matrix type metadata. Duplicate
 canonical files and empty selections fail. Directory reads include direct `.parquet` children;
-globs are explicit and can select deeper paths. Dataset indices are omitted. A source column
+globs are explicit and can select deeper paths. Compatible Matrix indices are restored when every shard has the same index metadata and
+projection retains its columns. A source column
 contains canonical absolute paths and must not collide with a physical column. Parallel workers
 use independent streams and converters, reuse each parsed footer, prefetch at most one batch per
 worker, and preserve file/group order. `rowGroups` is for one file; use
@@ -96,15 +97,19 @@ def hub = MatrixParquetReader.builder().remoteReadMode('AUTO').limit(20)
 Replace owner/repo/path with a real dataset. DOWNLOAD preserves full-download behavior. AUTO
 verifies `206 Content-Range` support then uses ranges, or downloads when the initial probe is
 unsupported. RANGE requires range support. Once decoding starts, transport/object-change errors
-propagate. Range caching is bounded (individual fetches capped at 64 KiB). ETag/Last-Modified
-validators and total length detect changes when available; same-length changes without validators
-cannot be detected reliably. Redirects are bounded and HTTPS downgrades rejected. Connection failures before response headers
-are retried once; malformed responses and body failures propagate. Streams are spooled to temporary files; byte arrays use a seekable memory input.
+propagate. Range caching is bounded by `rangeCacheBytes`; individual requests are capped separately at
+8 MiB. Bulk reads request the needed span rather than splitting it into 64 KiB requests. Small
+reads prefetch at most 64 KiB. Validated redirect targets are reused, and fully consumed range
+responses permit HTTP keep-alive reuse. ETag/Last-Modified validators and total length detect
+changes when available; same-length changes without validators cannot be detected reliably.
+Redirects are bounded and HTTPS downgrades rejected. Connection failures before response headers
+are retried once; malformed responses and body failures propagate. Streams are spooled to
+temporary files; byte arrays use a seekable memory input.
 
 Hub dataset URI parsing is pinned to huggingface_hub v2.2.0. Revisions follow the repository:
 `hf://datasets/owner/repo@revision/path`. Encode ordinary revision slashes as `%2F`; special
 `refs/convert/<name>` and `refs/pr/N` forms may remain unescaped. `@` inside a file path is literal.
-HF URI paths are literal (already-percent-encoded path text is escaped again). `HF_TOKEN` is
+Dot and parent path/revision segments are rejected. HF URI paths are literal (already-percent-encoded path text is escaped again). `HF_TOKEN` is
 optional and read only for explicit hf:// calls; authorization is attached only to HTTPS
 `huggingface.co` on its default/443 port and never to CDN redirect origins. This is HTTP range
 access, with no Xet download/deduplication client.
@@ -112,7 +117,7 @@ access, with no Xet download/deduplication client.
 ## Read options
 
 Use fluent builder methods, `MatrixParquetReader.builder(typedOptions)`, or SPI maps:
-`Matrix.read([columns: ['id'], limit: 10L], file)`. Unknown options are rejected.
+`Matrix.read([columns: ['id'], limit: 10L], file)`. Unknown options are rejected. Null map values preserve defaults, including nullable AUTO options.
 `ParquetReadOptions.describe()` lists these options at runtime.
 
 | Option | Default | Meaning |
@@ -127,12 +132,12 @@ Use fluent builder methods, `MatrixParquetReader.builder(typedOptions)`, or SPI 
 | rowGroups | null/all | Unique, zero-based original footer IDs, caller order |
 | rowGroupsByFile | empty/all | Dataset-only canonical file path to ordered group ID list |
 | maxBatchRows | null | Positive accepted-row batch cap; default one row group |
-| sourceFileColumn | null | Optional dataset path column, added after projection |
+| sourceFileColumn | null | Optional canonical local file/shard path column, added after projection; unsupported for memory/stream/URL sources |
 | parallelism | 1 | Positive maximum dataset workers across files and row groups |
 | remoteReadMode | DOWNLOAD | DOWNLOAD, AUTO or RANGE |
 | connectTimeoutMillis | 10000 | Positive HTTP connection timeout |
 | readTimeoutMillis | 60000 | Positive HTTP read timeout |
-| rangeCacheBytes | 8388608 | Positive per-stream cache ceiling; actual fetch/cache is at most 64 KiB |
+| rangeCacheBytes | 8388608 | Positive per-stream cache ceiling; independent request cap is 8 MiB |
 
 ## Writer options and exact types
 
@@ -171,6 +176,11 @@ not enable a filter by themselves. Column settings use physical primitive paths 
 | bloomFilterNDV | empty | Primitive path to positive expected distinct-value count |
 | sizeStatisticsEnabled | true | Collect size statistics |
 
+Files are written to a temporary sibling and atomically replace the destination after successful
+close. Failed writes preserve an existing destination; filesystems without atomic replacement
+support fail safely. Existing POSIX permissions are retained.
+
+JSON and ENUM annotations decode as UTF-8 String; BSON remains binary.
 Strings are STRING-annotated recursively; byte[] stays raw BINARY. Byte/Short use signed width
 annotations, UUID uses FIXED[16], LocalTime uses TIME(NANOS), and Instant uses adjusted
 TIMESTAMP(MICROS). Instants with sub-microsecond precision or int64-microsecond overflow fail;

@@ -37,37 +37,37 @@ class ParquetWriteOptions {
 
   boolean dictionaryEncoding = true
 
-  /** Sets dictionaryEncoding (default true); target sizes are not hard memory limits. */
+  /** Enable dictionary encoding with plain-page fallback (default true). */
   ParquetWriteOptions dictionaryEncoding(boolean value) { this.dictionaryEncoding = value; this }
 
   String writerVersion = KEY_V1
 
-  /** Sets writerVersion (default KEY_V1); target sizes are not hard memory limits. */
+  /** Choose V1 or V2 value encodings and page layout (default V1). */
   ParquetWriteOptions writerVersion(String value) { this.writerVersion = value; this }
 
   int columnIndexTruncateLength = 64
 
-  /** Sets columnIndexTruncateLength (default 64); target sizes are not hard memory limits. */
+  /** Maximum binary bound bytes in page indexes (default 64). */
   ParquetWriteOptions columnIndexTruncateLength(int value) { this.columnIndexTruncateLength = value; this }
 
   int statisticsTruncateLength = Integer.MAX_VALUE
 
-  /** Sets statisticsTruncateLength (default Integer.MAX_VALUE); target sizes are not hard memory limits. */
+  /** Maximum binary bound bytes in row-group statistics (default 2147483647). */
   ParquetWriteOptions statisticsTruncateLength(int value) { this.statisticsTruncateLength = value; this }
 
   Map<String, Boolean> bloomFilterEnabled = [:]
 
-  /** Sets bloomFilterEnabled (default [:]); target sizes are not hard memory limits. */
+  /** Per-primitive-column bloom overrides (default empty, disabled). */
   ParquetWriteOptions bloomFilterEnabled(Map<String, Boolean> value) { this.bloomFilterEnabled = value; this }
 
   Map<String, Long> bloomFilterNDV = [:]
 
-  /** Sets bloomFilterNDV (default [:]); target sizes are not hard memory limits. */
+  /** Positive expected distinct counts for bloom sizing (default empty). */
   ParquetWriteOptions bloomFilterNDV(Map<String, Long> value) { this.bloomFilterNDV = value; this }
 
   boolean sizeStatisticsEnabled = true
 
-  /** Sets sizeStatisticsEnabled (default true); target sizes are not hard memory limits. */
+  /** Collect column size statistics (default true). */
   ParquetWriteOptions sizeStatisticsEnabled(boolean value) { this.sizeStatisticsEnabled = value; this }
 
   boolean inferPrecisionAndScale = true
@@ -175,6 +175,8 @@ class ParquetWriteOptions {
       throw new IllegalArgumentException('Writer sizes/truncate lengths must be positive')
     }
     if (!(writerVersion in [KEY_V1, 'V2'])) { throw new IllegalArgumentException('writerVersion must be V1 or V2') }
+    if (bloomFilterEnabled == null || bloomFilterNDV == null) { throw new IllegalArgumentException('Bloom option maps cannot be null') }
+    if (bloomFilterEnabled.values().any { it == null }) { throw new IllegalArgumentException('Bloom overrides must be non-null Booleans') }
     if (bloomFilterNDV.values().any { it == null || it <= 0 }) { throw new IllegalArgumentException('Bloom NDVs must be positive') }
 
     if ((precision == null) != (scale == null)) {
@@ -226,6 +228,7 @@ class ParquetWriteOptions {
     Set<String> unknown = new HashSet<>(normalized.keySet())
     unknown.removeAll(known)
     if (!unknown.empty) { throw new IllegalArgumentException("Unknown Parquet options: $unknown") }
+    normalized = normalized.findAll { String key, Object value -> value != null }
     if (normalized.containsKey('inferprecisionandscale')) {
       Object inferPrecisionAndScale = normalized.inferprecisionandscale
       if (inferPrecisionAndScale != null) {

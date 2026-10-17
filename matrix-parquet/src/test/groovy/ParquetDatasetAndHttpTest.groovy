@@ -53,6 +53,56 @@ class ParquetDatasetAndHttpTest {
   }
 
   @Test
+  void bulkRangesUseOneRequestAndReuseRedirectAndCache() {
+    byte[] bytes = new byte[2 * 1024 * 1024]
+    Arrays.fill(bytes, (byte) 37)
+    AtomicLong redirects = new AtomicLong()
+    AtomicLong ranges = new AtomicLong()
+    def server = HttpServer.create(new InetSocketAddress('127.0.0.1', 0), 0)
+    server.createContext('/resolve') { exchange ->
+      redirects.incrementAndGet()
+      exchange.responseHeaders.add('Location', '/object')
+      exchange.sendResponseHeaders(302, -1)
+      exchange.close()
+    }
+    server.createContext('/object') { exchange ->
+      ranges.incrementAndGet()
+      def match = exchange.requestHeaders.getFirst('Range') =~ /bytes=(\d+)-(\d+)/
+      assertTrue(match.matches())
+      int start = Integer.parseInt(match.group(1))
+      int end = Integer.parseInt(match.group(2))
+      exchange.responseHeaders.add('ETag', '"stable"')
+      exchange.responseHeaders.add('Content-Range', "bytes $start-$end/${bytes.length}")
+      exchange.sendResponseHeaders(206, end - start + 1)
+      exchange.responseBody.write(bytes, start, end - start + 1)
+      exchange.close()
+    }
+    server.start()
+    try {
+      URL url = new URI("http://127.0.0.1:${server.address.port}/resolve").toURL()
+      def input = new HttpRangeInputFile(url, new ParquetReadOptions())
+      input.newStream().withCloseable { stream ->
+        def target = java.nio.ByteBuffer.allocate(1024 * 1024)
+        stream.readFully(target)
+        assertEquals(37, target.get(0))
+        assertEquals(2L, ranges.get()) // Probe plus one 1 MiB bulk request.
+        stream.seek(0)
+        stream.readFully(new byte[1024 * 1024])
+        assertEquals(2L, ranges.get()) // Default cache retains the bulk range.
+      }
+      assertEquals(1L, redirects.get())
+      def tinyCache = new HttpRangeInputFile(url, new ParquetReadOptions(rangeCacheBytes: 1024))
+      tinyCache.newStream().withCloseable { stream ->
+        long before = ranges.get()
+        stream.readFully(new byte[1024 * 1024])
+        assertEquals(before + 1, ranges.get()) // Request size is independent of cache size.
+      }
+      println "HTTP bulk 1 MiB: one data request; redirects=${redirects.get()}, ranges=${ranges.get()}"
+      assertEquals(2L, redirects.get()) // One resolution per input, never per bulk request.
+    } finally { server.stop(0) }
+  }
+
+  @Test
   void rangeReadsFallbackAndObjectChange() {
     File file = new File(directory, 'large.parquet')
     def data = Matrix.builder().columns(id: (0..<20000).toList(), text: (0..<20000).collect { UUID.randomUUID().toString() }).build()

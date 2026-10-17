@@ -339,7 +339,7 @@ class MatrixParquetWriter {
    */
   static File write(Matrix matrix, File fileOrDir, boolean inferPrecisionAndScale = true) {
     validateInput(matrix, fileOrDir)
-    MessageType schema
+    WriteSchema schema
     if (inferPrecisionAndScale) {
       schema = buildSchema(matrix,true)
     } else {
@@ -449,7 +449,7 @@ class MatrixParquetWriter {
     }
     options.validate()
     File file = determineTargetFile(matrix, fileOrDir)
-    MessageType schema = createSchema(matrix, options)
+    WriteSchema schema = createSchema(matrix, options)
     if (options.zoneId != null) {
       return ParquetValueWriter.withZoneId(options.zoneId) {
         writeInternal(matrix, file, schema, options.compressionCodec, options.roundingMode, options)
@@ -469,7 +469,7 @@ class MatrixParquetWriter {
    */
   static byte[] writeBytes(Matrix matrix, boolean inferPrecisionAndScale = true) {
     validateInput(matrix)
-    MessageType schema = buildSchema(matrix, inferPrecisionAndScale)
+    WriteSchema schema = buildSchema(matrix, inferPrecisionAndScale)
     return writeBytesInternal(matrix, schema)
   }
 
@@ -498,7 +498,7 @@ class MatrixParquetWriter {
    */
   static byte[] writeBytes(Matrix matrix, Map<String, int[]> decimalMeta) {
     validateInput(matrix)
-    MessageType schema = buildSchema(matrix, ParquetWriteOptions.normalizeDecimalMeta(decimalMeta ?: [:]))
+    WriteSchema schema = buildSchema(matrix, ParquetWriteOptions.normalizeDecimalMeta(decimalMeta ?: [:]))
     return writeBytesInternal(matrix, schema)
   }
 
@@ -515,7 +515,7 @@ class MatrixParquetWriter {
       throw new IllegalArgumentException(ERR_OPTIONS_NULL)
     }
     options.validate()
-    MessageType schema = createSchema(matrix, options)
+    WriteSchema schema = createSchema(matrix, options)
     if (options.zoneId != null) {
       return ParquetValueWriter.withZoneId(options.zoneId) {
         writeBytesInternal(matrix, schema, options.compressionCodec, options.roundingMode, options)
@@ -549,7 +549,7 @@ class MatrixParquetWriter {
     normalized.toLowerCase(Locale.ROOT).endsWith('.parquet') ? normalized : "${normalized}.parquet"
   }
 
-  private static MessageType createSchema(Matrix matrix, ParquetWriteOptions options) {
+  private static WriteSchema createSchema(Matrix matrix, ParquetWriteOptions options) {
     buildSchema(matrix, options.decimalMeta,
         new DecimalSchemaPolicy(options.decimalMeta, options.inferPrecisionAndScale, options.precision, options.scale))
   }
@@ -559,21 +559,29 @@ class MatrixParquetWriter {
    * to a Parquet file, given an already constructed schema.
    * @param matrix the matrix to write
    * @param file the target file
-   * @param schema the Parquet MessageType schema
+   * @param resolved the validated physical schema and column policies
    * @return the target file
    */
-  private static File writeInternal(Matrix matrix, File file, MessageType schema,
+  private static File writeInternal(Matrix matrix, File file, WriteSchema resolved,
       CompressionCodecName compressionCodec = CompressionCodecName.SNAPPY, RoundingMode roundingMode = RoundingMode.UNNECESSARY, ParquetWriteOptions options = new ParquetWriteOptions()) {
-    def conf = new org.apache.parquet.conf.PlainParquetConfiguration()
-    def writerBuilder = ExampleParquetWriter.builder(new org.apache.parquet.io.LocalOutputFile(file.toPath()))
-        .withConf(conf)
-        .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
-        .withType(schema)
-        .withCompressionCodec(compressionCodec)
-        .withExtraMetaData(buildExtraMeta(matrix))
-    def writer = configureWriter(writerBuilder, schema, options).build()
-    writer.withCloseable { parquetWriter -> writeRows(parquetWriter, matrix, schema, roundingMode) }
-    return file
+    MessageType schema = resolved.schema
+    java.nio.file.Path target = file.toPath().toAbsolutePath()
+    java.nio.file.Path temporary = java.nio.file.Files.createTempFile(target.parent, '.matrix-parquet-', '.tmp')
+    try {
+      if (java.nio.file.Files.exists(target) && java.nio.file.Files.getFileStore(target).supportsFileAttributeView('posix')) {
+        java.nio.file.Files.setPosixFilePermissions(temporary, java.nio.file.Files.getPosixFilePermissions(target))
+      }
+      def conf = new org.apache.parquet.conf.PlainParquetConfiguration()
+      def writerBuilder = ExampleParquetWriter.builder(new org.apache.parquet.io.LocalOutputFile(temporary))
+          .withConf(conf).withWriteMode(ParquetFileWriter.Mode.OVERWRITE).withType(schema)
+          .withCompressionCodec(compressionCodec).withExtraMetaData(buildExtraMeta(matrix, resolved))
+      def writer = configureWriter(writerBuilder, schema, options).build()
+      writer.withCloseable { parquetWriter -> writeRows(parquetWriter, matrix, schema, roundingMode) }
+      // Fail safely if the filesystem cannot atomically replace the destination.
+      java.nio.file.Files.move(temporary, target, java.nio.file.StandardCopyOption.ATOMIC_MOVE,
+          java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+      file
+    } finally { java.nio.file.Files.deleteIfExists(temporary) }
   }
 
   private static final String FORMAT_VERSION = '2'
@@ -596,9 +604,9 @@ class MatrixParquetWriter {
     builder
   }
 
-  private static Map<String, String> buildExtraMeta(Matrix matrix) {
+  private static Map<String, String> buildExtraMeta(Matrix matrix, WriteSchema resolved) {
     Map<String, String> extraMeta = ['matrix.parquet.version': FORMAT_VERSION]
-    extraMeta.put(METADATA_COLUMN_TYPES, matrix.columnNames().collect { String col -> ColumnTypePolicy.resolve(col, matrix.column(col), matrix.type(col)).metadata.name }.join(COMMA))
+    extraMeta.put(METADATA_COLUMN_TYPES, matrix.columnNames().collect { String col -> resolved.types[col].metadata.name }.join(COMMA))
     if (matrix.hasIndex()) {
       extraMeta.put(METADATA_INDEX_COLUMNS, toJsonStringArray(matrix.indexedColumns()))
     }
@@ -638,18 +646,19 @@ class MatrixParquetWriter {
    * constraints (Integer.MAX_VALUE).</p>
    *
    * @param matrix the matrix to write
-   * @param schema the Parquet MessageType schema
+   * @param resolved the validated physical schema and column policies
    * @return byte array containing Parquet data
    */
-  private static byte[] writeBytesInternal(Matrix matrix, MessageType schema,
+  private static byte[] writeBytesInternal(Matrix matrix, WriteSchema resolved,
       CompressionCodecName compressionCodec = CompressionCodecName.SNAPPY, RoundingMode roundingMode = RoundingMode.UNNECESSARY, ParquetWriteOptions options = new ParquetWriteOptions()) {
+    MessageType schema = resolved.schema
     def conf = new org.apache.parquet.conf.PlainParquetConfiguration()
     InMemoryOutputFile outputFile = new InMemoryOutputFile()
     def writerBuilder = ExampleParquetWriter.builder(outputFile)
         .withConf(conf)
         .withType(schema)
         .withCompressionCodec(compressionCodec)
-        .withExtraMetaData(buildExtraMeta(matrix))
+        .withExtraMetaData(buildExtraMeta(matrix, resolved))
     def writer = configureWriter(writerBuilder, schema, options).build()
     writer.withCloseable { parquetWriter -> writeRows(parquetWriter, matrix, schema, roundingMode) }
     return outputFile.getBytes()
@@ -693,22 +702,25 @@ class MatrixParquetWriter {
    *
    * @param matrix the matrix
    * @param explicitDecimalMeta map of column name to [precision, scale] array for BigDecimal columns.
-   * @return the Parquet MessageType schema.
+   * @return validated physical schema and metadata policies.
    */
-  private static MessageType buildSchema(Matrix matrix, Map<String, int[]> explicitDecimalMeta, DecimalSchemaPolicy decimals = null) {
-    Map<String, int[]> decimalMeta = withBigIntegerPrecision(matrix, explicitDecimalMeta)
+  private static WriteSchema buildSchema(Matrix matrix, Map<String, int[]> explicitDecimalMeta, DecimalSchemaPolicy decimals = null) {
+    Map<String, ColumnTypePolicy> types = matrix.columnNames().collectEntries { String name ->
+      [(name): ColumnTypePolicy.resolve(name, matrix.column(name), matrix.type(name))]
+    }
+    Map<String, int[]> decimalMeta = withBigIntegerPrecision(matrix, explicitDecimalMeta, types)
     DecimalSchemaPolicy policy = decimals ?: new DecimalSchemaPolicy(explicitDecimalMeta ?: [:])
     def builder = Types.buildMessage()
     matrix.columnNames().each { col ->
       def type = matrix.type(col)
       def meta = decimalMeta?.get(col)
       log.debug("Building schema for column '$col' of type $type with decimal meta: $meta")
-      builder.addField(buildParquetType(col, matrix.column(col), type, meta, false, policy.child(col)))
+      builder.addField(buildParquetType(col, matrix.column(col), type, meta, false, policy.child(col), types[col]))
     }
     Set<String> unknown = new HashSet<>(policy.settings.keySet())
     unknown.removeAll(policy.used)
     if (!unknown.empty) { throw new IllegalArgumentException("Unknown/non-decimal metadata paths: $unknown") }
-    return builder.named(matrix.matrixName ?: 'MatrixSchema')
+    new WriteSchema(builder.named(matrix.matrixName ?: 'MatrixSchema'), types)
   }
 
   /**
@@ -716,10 +728,10 @@ class MatrixParquetWriter {
    * Explicit caller-supplied metadata wins after validating its scale is 0
    * and that its precision is large enough to hold every value in the column.
    */
-  private static Map<String, int[]> withBigIntegerPrecision(Matrix matrix, Map<String, int[]> explicitDecimalMeta) {
+  private static Map<String, int[]> withBigIntegerPrecision(Matrix matrix, Map<String, int[]> explicitDecimalMeta, Map<String, ColumnTypePolicy> types) {
     Map<String, int[]> merged = [:] + (explicitDecimalMeta ?: [:])
     matrix.columnNames().each { col ->
-      if (ColumnTypePolicy.resolve(col, matrix.column(col), matrix.type(col)).encoding != BigInteger) {
+      if (types[col].encoding != BigInteger) {
         return
       }
       int[] existing = merged[col]
@@ -728,33 +740,17 @@ class MatrixParquetWriter {
           throw new IllegalArgumentException(
               "decimalMeta['$col'] scale must be 0 for BigInteger columns but was ${existing[1]}")
         }
-        int requiredPrecision = inferBigIntegerPrecision(matrix, col)
+        int requiredPrecision = inferBigIntegerPrecision(matrix.column(col))
         if (existing[0] < requiredPrecision) {
           throw new IllegalArgumentException(
               "decimalMeta['$col'] precision (${existing[0]}) is too small to hold the data in this " +
               "column (requires at least $requiredPrecision digits)")
         }
       } else {
-        merged[col] = [inferBigIntegerPrecision(matrix, col), 0] as int[]
+        merged[col] = [inferBigIntegerPrecision(matrix.column(col)), 0] as int[]
       }
     }
     merged
-  }
-
-  /**
-   * Infers the minimum decimal precision needed to represent every BigInteger
-   * value in the given column as Parquet DECIMAL(precision, 0).
-   */
-  private static int inferBigIntegerPrecision(Matrix matrix, String col) {
-    int maxDigits = 1
-    (0..<matrix.rowCount()).each { i ->
-      def value = matrix[i, col]
-      if (value instanceof BigInteger) {
-        int digits = value.abs().toString().length()
-        maxDigits = Math.max(maxDigits, digits)
-      }
-    }
-    maxDigits
   }
 
   private static int inferBigIntegerPrecision(List<?> values) {
@@ -774,14 +770,10 @@ class MatrixParquetWriter {
    * @param matrix the matrix
    * @param inferPrecisionAndScale if true, infers decimal precision and scale. If false, BigDecimal fields require
    * explicit precision/scale settings.
-   * @return the Parquet MessageType schema.
+   * @return validated physical schema and metadata policies.
    */
-  private static MessageType buildSchema(Matrix matrix, boolean inferPrecisionAndScale = false) {
-    Map<String, int[]> decimalMeta = null
-    if (inferPrecisionAndScale) {
-      decimalMeta = inferDecimalPrecisionAndScale(matrix)
-    }
-    return buildSchema(matrix, decimalMeta, new DecimalSchemaPolicy(decimalMeta ?: [:], inferPrecisionAndScale))
+  private static WriteSchema buildSchema(Matrix matrix, boolean inferPrecisionAndScale = false) {
+    buildSchema(matrix, [:], new DecimalSchemaPolicy([:], inferPrecisionAndScale))
   }
 
   /**
@@ -793,8 +785,8 @@ class MatrixParquetWriter {
    * @param decimalMeta optional decimal precision/scale metadata for {@link BigDecimal} columns
    * @return a Parquet {@link Type} describing the column
    */
-  private static Type buildParquetType(String name, List<?> values, Class clazz, int[] decimalMeta = null, boolean preferStructForMaps = false, DecimalSchemaPolicy decimals = new DecimalSchemaPolicy([:])) {
-    ColumnTypePolicy resolved = ColumnTypePolicy.resolve(decimals.path ?: name, values, clazz)
+  private static Type buildParquetType(String name, List<?> values, Class clazz, int[] decimalMeta = null, boolean preferStructForMaps = false, DecimalSchemaPolicy decimals = new DecimalSchemaPolicy([:]), ColumnTypePolicy resolved = null) {
+    resolved = resolved ?: ColumnTypePolicy.resolve(decimals.path ?: name, values, clazz)
     if (resolved.encoding == List) {
       List<?> nestedValues = extractListElements(values)
       Type elementType = buildParquetType(FIELD_ELEMENT, nestedValues, Object, null, true, decimals.child(FIELD_ELEMENT))
@@ -907,8 +899,7 @@ class MatrixParquetWriter {
     if (maps.any { it.containsKey(null) }) { throw new IllegalArgumentException("Map field '$name' cannot contain null keys") }
 
     List<Object> keySamples = maps.collectMany { it?.keySet() ?: [] } as List<Object>
-    Object keySample = findFirstNonNull(keySamples)
-    Class<?> keyClass = inferClass(keySamples, keySample?.class ?: String)
+    Class<?> keyClass = ColumnTypePolicy.resolve(decimals.child(FIELD_KEY).path, keySamples, Object).encoding
     int[] keyDecimalMeta = keyClass == BigInteger ? [inferBigIntegerPrecision(keySamples), 0] as int[] : keyClass == BigDecimal ? decimals.child(FIELD_KEY).resolve(keySamples, null) : null
     PrimitiveType keyType = buildPrimitiveType(FIELD_KEY, keyClass ?: String, keyDecimalMeta, true)
     mapBuilder.key(keyType)
@@ -997,10 +988,6 @@ class MatrixParquetWriter {
     return elements
   }
 
-  private static Class<?> inferClass(List<?> values, Class<?> declaredType) {
-    ColumnTypePolicy.resolve('nested field', values, declaredType).encoding
-  }
-
   private static Object findFirstNonNull(List<?> values) {
     for (def val : values) {
       if (val != null) {
@@ -1010,56 +997,18 @@ class MatrixParquetWriter {
     return null
   }
 
-  /**
-   * Infers the required maximum precision and scale for all BigDecimal columns in the matrix.
-   * It performs the calculation in a single pass:
-   * 1. It tracks the running maximum scale (S).
-   * 2. It tracks the running maximum number of digits to the LEFT of the decimal (L).
-   * 3. The final precision P = L + S.
-   * This guarantees that the resulting schema is large enough to contain all values.
-   * @param matrix the matrix
-   * @return a Map of column name to [precision, scale] array.
-   */
-  private static Map<String, int[]> inferDecimalPrecisionAndScale(Matrix matrix) {
-    Map<String, int[]> result = [:] // columnName -> [precision, scale]
-
-    matrix.columnNames().each { col ->
-      if (ColumnTypePolicy.resolve(col, matrix.column(col), matrix.type(col)).encoding == BigDecimal) {
-        int maxScale = 0
-        int maxLeftDigits = 0 // Max digits to the left of the decimal
-
-        (0..<matrix.rowCount()).each { i ->
-          def value = matrix[i, col]
-          if (value instanceof BigDecimal) {
-            int valScale = value.scale()
-            maxScale = Math.max(maxScale, valScale)
-
-            // Calculate digits to the left of the decimal
-            // precision() - scale() works for most numbers (e.g., 123.45 -> p=5, s=2 -> 3)
-            // but fails for numbers < 1 (e.g., 0.45 -> p=2, s=2 -> 0)
-            // We must ensure at least one digit (for the '0')
-            int leftDigits = Math.max(1, value.precision() - value.scale())
-            maxLeftDigits = Math.max(maxLeftDigits, leftDigits)
-          }
-        }
-
-        // Total precision = max digits left + max digits right (max scale)
-        int maxPrecision = maxLeftDigits + maxScale
-
-        // Ensure precision is at least 1 (e.g., for a column of all 0s)
-        maxPrecision = Math.max(1, maxPrecision)
-
-        result[col] = [maxPrecision, maxScale] as int[]
-      }
-    }
-    log.debug("Inferred decimal precision/scale: $result")
-    return result
+  private static int minBytesForPrecision(int precision) {
+    int bitsNeeded = BigInteger.TEN.pow(precision).subtract(BigInteger.ONE).bitLength() + 1
+    Math.ceil(bitsNeeded / 8d) as int
   }
 
-  private static int minBytesForPrecision(int precision) {
-    // According to the Parquet spec: enough bits to hold [-(10^precision - 1), 10^precision - 1]
-    // in two's complement, i.e. the bit length of the largest magnitude plus a sign bit.
-    int bitsNeeded = BigInteger.TEN.pow(precision).subtract(BigInteger.ONE).bitLength() + 1
-    return Math.ceil(bitsNeeded / 8d) as int
+  private static final class WriteSchema {
+    final MessageType schema
+    final Map<String, ColumnTypePolicy> types
+
+    WriteSchema(MessageType schema, Map<String, ColumnTypePolicy> types) {
+      this.schema = schema
+      this.types = types
+    }
   }
 }

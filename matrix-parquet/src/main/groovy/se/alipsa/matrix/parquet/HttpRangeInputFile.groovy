@@ -11,7 +11,10 @@ final class HttpRangeInputFile implements InputFile {
   private static final String ETAG = 'ETag'
   private static final String LAST_MODIFIED = 'Last-Modified'
 
+  private static final int MAX_REQUEST_BYTES = 8388608
+  private static final int PREFETCH_BYTES = 65536
   private static final int EOF = -1
+  private volatile URL resolvedTarget
   private final URL source
   private final ParquetReadOptions options
   private final int cacheBytes
@@ -24,10 +27,11 @@ final class HttpRangeInputFile implements InputFile {
     if (!(source.protocol in ['http', 'https'])) { throw new IOException('Range reads require HTTP(S)') }
     this.source = source
     this.options = options
-    cacheBytes = Math.min(options.rangeCacheBytes, 65536)
+    cacheBytes = options.rangeCacheBytes
 
     def response = request(0L, 0L)
     def connection = response.connection
+    boolean complete = false
     try {
       String range = connection.getHeaderField(CONTENT_RANGE)
       def match = range =~ /bytes 0-0\/(\d+)/
@@ -39,14 +43,21 @@ final class HttpRangeInputFile implements InputFile {
       connection.inputStream.withCloseable { stream ->
         if (stream.read() < 0 || stream.read() != EOF) { throw new IOException('Invalid range payload length') }
       }
-    } finally { connection.disconnect() }
+      resolvedTarget = connection.URL
+      complete = true
+    } finally { if (!complete) { connection.disconnect() } }
   }
 
   private Map<String, HttpURLConnection> request(long start, long end) {
     Map<String, String> headers = [Range: "bytes=$start-$end".toString()]
     if (etag != null) { headers['If-Match'] = etag }
     else if (modified != null) { headers['If-Unmodified-Since'] = modified }
-    HttpURLConnection connection = HttpTransport.open(source, options, headers)
+    URL target = resolvedTarget ?: source
+    HttpURLConnection connection = HttpTransport.open(target, options, headers)
+    if (target.toExternalForm() != source.toExternalForm() && connection.responseCode in [401, 403]) {
+      connection.disconnect()
+      connection = HttpTransport.open(source, options, headers)
+    }
     if (connection.responseCode != 206 || !(connection.getHeaderField('Content-Encoding') in [null, 'identity'])) {
       int status = connection.responseCode
       connection.disconnect()
@@ -58,6 +69,7 @@ final class HttpRangeInputFile implements InputFile {
   private byte[] fetch(long start, int count) {
     long end = start + count - 1
     HttpURLConnection connection = request(start, end).connection
+    boolean complete = false
     try {
       if (connection.getHeaderField(CONTENT_RANGE) != "bytes $start-$end/$length".toString() ||
           (etag != null && connection.getHeaderField(ETAG) != etag) ||
@@ -67,9 +79,11 @@ final class HttpRangeInputFile implements InputFile {
       connection.inputStream.withCloseable { stream ->
         byte[] bytes = stream.readNBytes(count)
         if (bytes.length != count || stream.read() != EOF) { throw new EOFException('Truncated/oversized HTTP range') }
+        resolvedTarget = connection.URL
+        complete = true
         bytes
       }
-    } finally { connection.disconnect() }
+    } finally { if (!complete) { connection.disconnect() } }
   }
 
   @Override
@@ -101,12 +115,17 @@ final class HttpRangeInputFile implements InputFile {
         if (closed) { throw new IOException('Stream closed') }
         if (count == 0) { return 0 }
         if (position >= length) { return EOF }
+        byte[] available = cache
+        long start = cacheStart
         if (position < cacheStart || position >= cacheStart + cache.length) {
-          cacheStart = position
-          cache = fetch(position, (int) Math.min(cacheBytes, length - position))
+          start = position
+          int requested = Math.max(Math.min(count, MAX_REQUEST_BYTES), Math.min(cacheBytes, PREFETCH_BYTES))
+          available = fetch(position, (int) Math.min(requested, length - position))
+          cacheStart = start
+          cache = available.length <= cacheBytes ? available : new byte[0]
         }
-        int copied = (int) Math.min(count, cacheStart + cache.length - position)
-        System.arraycopy(cache, (int) (position - cacheStart), target, offset, copied)
+        int copied = (int) Math.min(count, start + available.length - position)
+        System.arraycopy(available, (int) (position - start), target, offset, copied)
         position += copied
         copied
       }
@@ -123,7 +142,7 @@ final class HttpRangeInputFile implements InputFile {
       }
       @Override
       int read(ByteBuffer target) {
-        byte[] bytes = new byte[Math.min(target.remaining(), cacheBytes)]
+        byte[] bytes = new byte[Math.min(target.remaining(), MAX_REQUEST_BYTES)]
         int result = read(bytes, 0, bytes.length)
         if (result > 0) { target.put(bytes, 0, result) }
         result

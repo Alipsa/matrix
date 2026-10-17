@@ -42,6 +42,14 @@ for cdc in (False, True):
             assert pq.read_table(out / name).equals(table)
             assert (out / name).stat().st_size <= 1024 * 1024
             manifest['files'][name] = {'options': options, 'sha256': hashlib.sha256((out / name).read_bytes()).hexdigest(), 'schema': str(table.schema)}
+# Arrow emits an empty dictionary for an all-null string column.
+for name, extra in {
+    'arrow-all-null-string.parquet': pa.table({'s': pa.array([None] * 3, type=pa.string())}),
+    'arrow-json.parquet': pa.table({'json': pa.array(['{"label":"α"}', None, '{}'], type=pa.json_())}),
+}.items():
+    pq.write_table(extra, out / name, use_dictionary=True, write_page_index=True)
+    manifest['files'][name] = {'sha256': hashlib.sha256((out / name).read_bytes()).hexdigest(),
+                             'rows': extra.num_rows, 'schema': str(extra.schema)}
 # A synthetic legacy [B footer exercises contextual rejection; the original writer cannot
 # produce a valid byte[] file in this checkout (InvalidSchemaException, captured separately).
 legacy_binary = pa.table({'payload': pa.array([b'[B@legacy-text'], type=pa.binary())})

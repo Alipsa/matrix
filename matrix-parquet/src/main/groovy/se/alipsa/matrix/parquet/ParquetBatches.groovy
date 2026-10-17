@@ -26,6 +26,7 @@ final class ParquetBatches implements MatrixBatchIterator {
   private final ParquetPredicate residual
   private final FilterCompat.Filter filter
   private final String name
+  private final String sourcePath
   private final String indexMetadata
   private final boolean binaryAsString
   private ColumnMaterializer materializer
@@ -39,9 +40,11 @@ final class ParquetBatches implements MatrixBatchIterator {
 
   /** Opens an input and parses its footer exactly once. */
   @SuppressWarnings('AbcMetric') // Validates and snapshots all footer-dependent state before data I/O.
-  ParquetBatches(InputFile input, ParquetReadOptions options, String fallbackName, ParquetMetadata snapshot = null) {
+  ParquetBatches(InputFile input, ParquetReadOptions options, String fallbackName, ParquetMetadata snapshot = null, String sourcePath = null) {
     options.validate()
     this.options = options
+    this.sourcePath = sourcePath
+    if (options.sourceFileColumn != null && sourcePath == null) { throw new IllegalArgumentException('sourceFileColumn requires a local file') }
     def conf = new PlainParquetConfiguration()
     def baseOptions = org.apache.parquet.ParquetReadOptions.builder(conf).build()
     ParquetMetadata footer = snapshot
@@ -57,9 +60,7 @@ final class ParquetBatches implements MatrixBatchIterator {
     indexMetadata = metadata[MatrixParquetReader.METADATA_INDEX_COLUMNS]
     String typeString = metadata[MatrixParquetReader.METADATA_COLUMN_TYPES]
     boolean legacy = typeString != null && !metadata.containsKey('matrix.parquet.version')
-    if (legacy && typeString.split(COMMA, KEEP_EMPTY).contains('[B')) {
-      throw new IllegalArgumentException('Unrecoverable legacy Matrix byte[]: original binary payload was not preserved')
-    }
+
     binaryAsString = options.binaryAsString != null ? options.binaryAsString : legacy
     outputNames = options.columns == null ? full.fields*.name : new ArrayList<>(options.columns)
     outputNames.each { String column ->
@@ -68,6 +69,8 @@ final class ParquetBatches implements MatrixBatchIterator {
     residual = options.filter?.bind(full, options.zoneId)
     Set<String> needed = new LinkedHashSet<>(outputNames)
     if (options.filter != null) { needed.addAll(options.filter.columns()) }
+    validateLegacyBinary(full, typeString, needed, legacy)
+    if (options.sourceFileColumn != null && full.containsField(options.sourceFileColumn)) { throw new IllegalArgumentException('sourceFileColumn collides with file schema') }
     requested = new MessageType(full.name, full.fields.findAll { needed.contains(it.name) })
     List<Class> inferred = MatrixParquetReader.extractFieldTypes(full)
     List<String> declared = typeString == null ? [] : typeString.split(COMMA, KEEP_EMPTY).toList()
@@ -101,6 +104,13 @@ final class ParquetBatches implements MatrixBatchIterator {
     remaining = options.limit == null ? Long.MAX_VALUE : options.limit
   }
 
+  private static void validateLegacyBinary(MessageType full, String typeString, Set<String> needed, boolean legacy) {
+    List<String> legacyTypes = typeString == null ? [] : typeString.split(COMMA, KEEP_EMPTY).toList()
+    if (legacy && legacyTypes.size() == full.fieldCount && full.fields.any { field -> needed.contains(field.name) && legacyTypes[full.getFieldIndex(field.name)] == '[B' }) {
+      throw new IllegalArgumentException('Unrecoverable legacy Matrix byte[]: original binary payload was not preserved')
+    }
+  }
+
   private static boolean compatibleMetadata(Class expected, Type field) {
     if (expected == null) { return false }
     if (!field.primitive) {
@@ -114,7 +124,7 @@ final class ParquetBatches implements MatrixBatchIterator {
     if (logical instanceof org.apache.parquet.schema.LogicalTypeAnnotation.TimeLogicalTypeAnnotation) { return expected in [java.sql.Time, java.time.LocalTime, Date] }
     if (logical instanceof org.apache.parquet.schema.LogicalTypeAnnotation.DateLogicalTypeAnnotation) { return expected in [java.sql.Date, java.time.LocalDate, Date] }
     if (logical instanceof org.apache.parquet.schema.LogicalTypeAnnotation.UUIDLogicalTypeAnnotation) { return expected == UUID }
-    if (logical instanceof org.apache.parquet.schema.LogicalTypeAnnotation.StringLogicalTypeAnnotation) { return expected == String }
+    if (MatrixParquetReader.isTextLogicalType(logical)) { return expected == String }
     compatiblePhysicalMetadata(expected, primitive.primitiveTypeName)
   }
 
@@ -144,6 +154,8 @@ final class ParquetBatches implements MatrixBatchIterator {
     Matrix result = Matrix.builder(name).columnNames(outputNames).types(indexes.collect { types[it] })
         .columns(copied).build()
     MatrixParquetReader.restoreIndex(result, indexMetadata)
+    if (options.sourceFileColumn != null) { result.addColumn(options.sourceFileColumn, String, [sourcePath] * result.rowCount()) }
+    result
   }
 
   @Override

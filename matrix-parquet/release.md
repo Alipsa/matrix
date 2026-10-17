@@ -14,6 +14,7 @@ Complete defaults, supported types and end-to-end examples are in [the module gu
 | New Matrix strings | STRING-annotated BINARY recursively | No opt-out; standard annotation fixes interoperability |
 | Legacy Matrix plain BINARY text | Remains String, including nested text/map keys | Automatic; metadata carrying the new format marker overrides legacy inference |
 | 0.7.x byte[] columns | Fail with a contextual unrecoverable-legacy-binary error | The pinned 0.7.x writer fails with InvalidSchemaException for byte[]; legacy `[B` text payloads cannot recover bytes; regenerate from source |
+| JSON / ENUM BINARY | UTF-8 String, including dictionary/null-only cases | Preserves pre-0.8 text behavior; BSON remains byte[] |
 | External raw BINARY | byte[] | `binaryAsString(true)` restores prior UTF-8 behavior |
 | Unadjusted timestamps | Local wall-clock time preserved | No bug-preserving flag; applications needing the former shift can explicitly convert the local value through UTC into the desired zone |
 | Integer-backed DECIMAL | BigDecimal with declared scale | No bug-preserving flag; explicit `unscaledValue()` obtains prior raw numeric value |
@@ -45,8 +46,13 @@ External INT96/FLOAT16 raise contextual unsupported-type errors. External TIME s
 java.sql.Time at millisecond precision; exact predicate filtering preserves original precision.
 Mixed Date/Timestamp policies are now rejected before writing, preventing the prior 1000× unit
 corruption. New Object/supertype values are resolved consistently for schema and metadata.
-Unknown SPI options are now rejected. Dataset reads omit Matrix indices, require matching type
+Unknown SPI options are now rejected. Dataset reads restore common compatible Matrix indices, require matching type
 metadata, and reject empty selections and duplicate paths.
+
+Review fixes also cover empty Arrow dictionaries; consistent static URL/Hub and directory overloads;
+local source columns; daemon dataset workers; null option-map defaults; path-segment validation;
+projection around legacy `[B` columns; one validated type-policy scan per column; and atomic output
+replacement on success. HTTP bulk requests reuse resolved targets and a separately bounded cache.
 
 Native CDC writing remains deferred to upstream parquet-java #3818; the Python rewrite preserves
 custom metadata. Hadoop stays as a runtime dependency because codec initialization still loads it.

@@ -157,13 +157,13 @@ final class ColumnMaterializer extends RecordMaterializer<Boolean> {
     void addBinary(Binary value) { accept(value) }
     @Override
     boolean hasDictionarySupport() {
-      field.logicalTypeAnnotation instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation || expected == String
+      MatrixParquetReader.isTextLogicalType(field.logicalTypeAnnotation) || expected == String
     }
     @Override
     void setDictionary(Dictionary source) {
       dictionary = new Object[source.maxId + 1]
       if (logicalSink != null) { logicalDictionary = new Object[source.maxId + 1] }
-      (0..source.maxId).each { int id ->
+      for (int id = 0; id <= source.maxId; id++) {
         Binary value = source.decodeToBinary(id)
         dictionary[id] = MatrixParquetReader.decodePrimitive(value, field, expected, binaryAsString)
         if (logicalSink != null) { logicalDictionary[id] = logicalValue(value) }

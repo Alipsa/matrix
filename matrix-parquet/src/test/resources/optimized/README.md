@@ -40,3 +40,6 @@ regex accepts dots/dashes (`[\w.-]+`), and revision separation occurs immediatel
 namespaced repository, so deep-path `@` is literal. Special convert/pr refs remain unescaped;
 other revision slashes are encoded. Revision text is unquoted once; paths are literal and
 quoted, including existing percent signs. The Java parser follows the tested 2.2.0 behavior.
+
+The additional three-row Arrow fixtures cover an all-null STRING dictionary and JSON logical
+annotations. Their file-level manifest rows override the main 4096-row dataset count.

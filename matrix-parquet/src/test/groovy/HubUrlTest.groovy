@@ -17,4 +17,14 @@ class HubUrlTest {
       assertThrows(IllegalArgumentException) { HubUrl.resolve(value) }
     }
   }
+
+  @Test
+  void rejectDotSegments() {
+    ['.', '..', 'nested/../file', 'nested/./file'].each { path ->
+      assertThrows(IllegalArgumentException) { HubUrl.resolve("hf://datasets/owner/repo/$path") }
+    }
+    ['..', '%2E%2E', 'feature%2F..%2Fbranch'].each { revision ->
+      assertThrows(IllegalArgumentException) { HubUrl.resolve("hf://datasets/owner/repo@$revision/file") }
+    }
+  }
 }

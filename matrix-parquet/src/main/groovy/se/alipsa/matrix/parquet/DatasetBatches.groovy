@@ -45,9 +45,18 @@ final class DatasetBatches implements MatrixBatchIterator {
     remaining = options.limit == null ? Long.MAX_VALUE : options.limit
     ParquetReadOptions emptyOptions = ParquetReadOptions.fromMap(options.toMap())
     emptyOptions.rowGroups = []
+    emptyOptions.sourceFileColumn = null
     new ParquetBatches(new LocalInputFile(files[0].toPath()), emptyOptions, files[0].name, footers[0]).withCloseable { cursor -> template = cursor.emptyMatrix() }
+    if (!footers.every { it.fileMetaData.keyValueMetaData[MatrixParquetReader.METADATA_INDEX_COLUMNS] == footers[0].fileMetaData.keyValueMetaData[MatrixParquetReader.METADATA_INDEX_COLUMNS] }) {
+      template = Matrix.builder(template.matrixName).columnNames(template.columnNames()).types(template.types()).build()
+    }
     if (options.sourceFileColumn != null) { template.addColumn(options.sourceFileColumn, String, []) }
-    executor = Executors.newFixedThreadPool(Math.min(options.parallelism, Math.max(1, work.size())))
+    executor = Executors.newFixedThreadPool(Math.min(options.parallelism, Math.max(1, work.size())),
+        { Runnable action ->
+          Thread worker = new Thread(action, 'matrix-parquet-dataset')
+          worker.daemon = true
+          worker
+        } as java.util.concurrent.ThreadFactory)
     try {
       if (remaining > 0) { (0..<Math.min(options.parallelism, work.size())).each { scheduleWork() } }
     } catch (Exception failure) { close(); throw failure }
@@ -88,7 +97,9 @@ final class DatasetBatches implements MatrixBatchIterator {
 
   @Override
   Matrix emptyMatrix() {
-    Matrix.builder(template.matrixName).columnNames(template.columnNames()).types(template.types()).build()
+    Matrix result = Matrix.builder(template.matrixName).columnNames(template.columnNames()).types(template.types()).build()
+    if (template.hasIndex()) { result.createIndex(template.indexedColumns() as String[]) }
+    result
   }
 
   private void scheduleWork() {
@@ -100,6 +111,7 @@ final class DatasetBatches implements MatrixBatchIterator {
     }
     ParquetReadOptions perFile = ParquetReadOptions.fromMap(options.toMap())
     perFile.limit = null
+    perFile.sourceFileColumn = null
     perFile.rowGroups = [work[index].group]
     cursors[index] = new ParquetBatches(new LocalInputFile(files[source].toPath()), perFile, files[source].name, footers[source])
     scheduleBatch(index)
@@ -134,6 +146,7 @@ final class DatasetBatches implements MatrixBatchIterator {
         }
         remaining -= batch.rowCount()
         if (options.sourceFileColumn != null) { batch.addColumn(options.sourceFileColumn, String, [files[work[current].file].absolutePath] * batch.rowCount()) }
+        batch = withDatasetIndex(batch)
         ready = batch
         if (remaining > 0) { scheduleBatch(current) }
         return true
@@ -145,6 +158,17 @@ final class DatasetBatches implements MatrixBatchIterator {
       try { close() } catch (Exception cleanup) { failure.addSuppressed(cleanup) }
       throw new IOException("Dataset decoding failed for $source", failure)
     }
+  }
+
+  private Matrix withDatasetIndex(Matrix batch) {
+    if (template.hasIndex()) {
+      if (!batch.hasIndex()) { batch.createIndex(template.indexedColumns() as String[]) }
+    } else if (batch.hasIndex()) {
+      List<List> columns = batch.columnNames().collect { (List) batch.column(it) }
+      return Matrix.builder(batch.matrixName).columnNames(batch.columnNames()).types(batch.types())
+          .columns(columns).build()
+    }
+    batch
   }
 
   @Override

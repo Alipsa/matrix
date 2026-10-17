@@ -141,6 +141,7 @@ class ParquetReadOptions {
     Set<String> unknown = new HashSet<>(normalized.keySet())
     unknown.removeAll(known)
     if (!unknown.empty) { throw new IllegalArgumentException("Unknown Parquet options: $unknown") }
+    normalized = normalized.findAll { String key, Object value -> value != null }
     if (normalized.containsKey('matrixname')) {
       String matrixName = OptionMaps.stringValueOrNull(normalized.matrixname)
       if (matrixName != null) {

@@ -162,6 +162,16 @@
       "sha256": "9061dc6cac1f451ec43aed6ed0fb7392b2d5669b9a5f27ac3aa22a9a187092e3",
       "schema": "id: int64\ntext: string\npayload: binary\nprice: decimal128(12, 2)\nlocal: timestamp[us]\ndate: date32[day]\nnulls: string\nmedia: struct<bytes: binary, path: string>\n  child 0, bytes: binary\n  child 1, path: string\ntags: list<item: string>\n  child 0, item: string"
     },
+    "arrow-all-null-string.parquet": {
+      "sha256": "12949788c7fc627d17a79937f560e82b4b4b6d7977b220c32bc74e1ceb668e71",
+      "rows": 3,
+      "schema": "s: string"
+    },
+    "arrow-json.parquet": {
+      "sha256": "b017865f5ec5157bae2147e206f0d304d8c24f031968545df3f7e76208397667",
+      "rows": 3,
+      "schema": "json: extension<arrow.json>"
+    },
     "legacy-binary-metadata.parquet": {
       "provenance": "synthetic legacy [B metadata, not claimed as original recoverable bytes",
       "sha256": "f46e7f0cc774068aba6cc44575209f92d8efb01ef2c008a403777c532943e8d1",
