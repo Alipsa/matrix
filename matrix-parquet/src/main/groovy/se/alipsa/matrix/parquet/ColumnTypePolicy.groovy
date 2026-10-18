@@ -14,7 +14,6 @@ import java.time.LocalTime
 @PackageScope
 final class ColumnTypePolicy {
 
-  private static final int NANOS_PER_MICRO = 1000
   static final List<Class> SUPPORTED = [String, Integer, Long, Float, Double, Boolean, Byte, Short,
       BigInteger, BigDecimal, Character, byte[], LocalDate, LocalDateTime, LocalTime, Instant,
       UUID, Date, java.sql.Date, Time, Timestamp, List, Map]
@@ -28,7 +27,7 @@ final class ColumnTypePolicy {
     this.metadata = metadata
   }
 
-  static ColumnTypePolicy resolve(String name, List<?> values, Class declaration) {
+  static ColumnTypePolicy resolve(String name, List<?> values, Class declaration, org.apache.parquet.schema.LogicalTypeAnnotation.TimeUnit unit = org.apache.parquet.schema.LogicalTypeAnnotation.TimeUnit.MICROS) {
     Class declared = box(declaration ?: Object)
     boolean infer = declared == Object || declared.interface || Modifier.isAbstract(declared.modifiers)
     Class policy = null
@@ -36,13 +35,12 @@ final class ColumnTypePolicy {
       if (value == null) {
         return
       }
-      if (!declared.isInstance(value)) {
+      if (!declared.isInstance(value) && !(declared == String && value instanceof CharSequence)) {
         throw new IllegalArgumentException("Column '$name', row $row: declared ${declared.name}, got ${value.getClass().name}")
       }
       if (value instanceof Instant) {
-        if (value.nano % NANOS_PER_MICRO != 0) { throw new IllegalArgumentException("Column '$name', row $row: Instant loses sub-microsecond precision") }
-        try { Math.addExact(Math.multiplyExact(value.epochSecond, 1_000_000L), value.nano.intdiv(NANOS_PER_MICRO)) }
-        catch (ArithmeticException failure) { throw new IllegalArgumentException("Column '$name', row $row: Instant overflows epoch micros", failure) }
+        try { TemporalUnits.epochUnits(value, unit) }
+        catch (ArithmeticException failure) { throw new IllegalArgumentException("Column '$name', row $row: Instant overflows epoch $unit", failure) }
       }
       Class current = policyType(value.getClass())
       if (current == null || (policy != null && policy != current)) {

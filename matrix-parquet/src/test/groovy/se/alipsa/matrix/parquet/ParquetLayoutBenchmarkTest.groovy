@@ -32,4 +32,18 @@ class ParquetLayoutBenchmarkTest {
       }
     }
   }
+  @Test
+  void wideMatrixWriteThroughput() {
+    int rows = 50000
+    int columns = 200
+    def matrix = se.alipsa.matrix.core.Matrix.builder('wide').columns((0..<columns).collectEntries { index ->
+      [("column$index".toString()): (0..<rows).toList()]
+    }).build()
+    long start = System.nanoTime()
+    byte[] bytes = MatrixParquetWriter.writeBytes(matrix)
+    long elapsed = System.nanoTime() - start
+    assert MatrixParquetReader.builder().columns(['column199']).read(bytes).rowCount() == rows
+    println "WIDE_WRITE columns=$columns rows=$rows millis=${elapsed.intdiv(1000000)} bytes=${bytes.length}"
+  }
+
 }

@@ -2,7 +2,6 @@ package se.alipsa.matrix.parquet
 
 import groovy.transform.PackageScope
 
-import org.apache.parquet.example.data.Group
 import org.apache.parquet.schema.GroupType
 import org.apache.parquet.schema.LogicalTypeAnnotation
 import org.apache.parquet.schema.PrimitiveType
@@ -14,7 +13,6 @@ import se.alipsa.matrix.core.util.Logger
 
 import java.nio.ByteBuffer
 import java.nio.file.Files
-import java.nio.file.StandardCopyOption
 import java.sql.Time
 import java.sql.Timestamp
 import java.time.DateTimeException
@@ -85,29 +83,23 @@ import java.time.ZoneOffset
  * @see Matrix
  */
 class MatrixParquetReader {
+  private static final int JSON_PAIR_LENGTH = 2
   private static final String OPEN_BRACKET = '['
   private static final String EXTENSION = '.parquet'
 
-
   private static final Logger log = Logger.getLogger(MatrixParquetReader)
 
-  /** Metadata key for storing Matrix column types in Parquet file */
+  /** Metadata key for canonical nested leaf types by logical path. */
+  static final String METADATA_NESTED_TYPES = 'matrix.nestedTypes'
+
+  /** Metadata key for storing Matrix column types in Parquet file. */
   static final String METADATA_COLUMN_TYPES = 'matrix.columnTypes'
 
   /** Metadata key for storing Matrix index column names in Parquet file */
   static final String METADATA_INDEX_COLUMNS = 'matrix.indexColumns'
 
-  /** Parquet schema field name for repeated list entries */
-  private static final String FIELD_LIST = 'list'
-
-  /** Parquet schema field name for map key-value pairs */
-  private static final String FIELD_KEY_VALUE = 'key_value'
-
   /** Thread-local storage for timezone used during read operations */
   private static final ThreadLocal<ZoneId> ZONE_ID_HOLDER = new ThreadLocal<>()
-
-  /** Binary text override used by the retained Group benchmark helper */
-  private static final ThreadLocal<Boolean> BINARY_AS_STRING = new ThreadLocal<>()
 
   private static final String ERR_PATH_NULL = 'Path cannot be null'
   private static final String ERR_FILE_PATH_NULL = 'File path cannot be null'
@@ -221,7 +213,7 @@ class MatrixParquetReader {
     }
 
     /** Opens ordered shard batches; prefetch is bounded by parallelism. */
-    MatrixBatchIterator batches(List<File> files) { new DatasetBatches(files, options) }
+    MatrixBatchIterator batches(List<File> files) { new DatasetBatches(files, options, files ? defaultMatrixName(files[0]) : null) }
 
     /** Reads explicit file globs in normalized path order. */
     Matrix readGlob(String pattern) { read(globFiles(pattern)) }
@@ -231,11 +223,10 @@ class MatrixParquetReader {
 
     /** Opens closeable batches; close explicitly when stopping before exhaustion. */
     MatrixBatchIterator batches(File file) {
-      if (file?.isDirectory()) { return batches(directoryFiles(file)) }
+      if (file?.isDirectory()) { return new DatasetBatches(directoryFiles(file), options, file.name) }
       validateFile(file)
       new ParquetBatches(new org.apache.parquet.io.LocalInputFile(file.toPath()), options, defaultMatrixName(file), null, file.canonicalPath)
     }
-
 
     /**
      * Sets the name for the resulting Matrix.
@@ -277,7 +268,7 @@ class MatrixParquetReader {
      * @return a Matrix populated with the file contents
      */
     Matrix read(File file) {
-      if (file?.isDirectory()) { return read(directoryFiles(file)) }
+      if (file?.isDirectory()) { return batches(file).withCloseable { iterator -> collectBatches(iterator) } }
       validateFile(file)
       readInput(new org.apache.parquet.io.LocalInputFile(file.toPath()), options, defaultMatrixName(file), file.canonicalPath)
     }
@@ -313,9 +304,9 @@ class MatrixParquetReader {
      */
     Matrix read(InputStream is) {
       if (is == null) { throw new IllegalArgumentException('InputStream cannot be null') }
-      File temp = File.createTempFile('matrix-parquet-', EXTENSION)
+      File temp = createReadTempFile().toFile()
       try {
-        Files.copy(is, temp.toPath(), StandardCopyOption.REPLACE_EXISTING)
+        Files.newOutputStream(temp.toPath()).withCloseable { output -> is.transferTo(output) }
         readInput(new org.apache.parquet.io.LocalInputFile(temp.toPath()), options, null)
       } finally { Files.deleteIfExists(temp.toPath()) }
     }
@@ -809,7 +800,6 @@ class MatrixParquetReader {
    * @throws IllegalArgumentException if file is null or does not exist
    */
   static Matrix read(File file) {
-    if (file?.isDirectory()) { return builder().read(file) }
     builder().read(file)
   }
 
@@ -824,17 +814,23 @@ class MatrixParquetReader {
         .sort { it.canonicalPath }.toList()
   }
 
+  @PackageScope
+  static java.nio.file.Path createReadTempFile() { Files.createTempFile('matrix-parquet-', EXTENSION) }
+
+  @PackageScope
+  static GlobSpec parseGlob(String pattern, String separator) { GlobSpec.parse(pattern, separator) }
+
   private static List<File> globFiles(String pattern) {
-    java.nio.file.Path path = java.nio.file.Path.of(pattern).toAbsolutePath().normalize()
-    String text = path as String
-    int wildcard = text.findIndexOf { it in ['*', '?', OPEN_BRACKET, '{'] }
-    if (wildcard < 0) { return [path.toFile()] }
-    int slash = text.lastIndexOf(File.separator, wildcard)
-    java.nio.file.Path root = java.nio.file.Path.of(text.substring(0, Math.max(1, slash)))
-    def matcher = java.nio.file.FileSystems.default.getPathMatcher("glob:$text")
-    Files.walk(root).withCloseable { paths ->
-      paths.filter { Files.isRegularFile(it) && matcher.matches(it) }.sorted().map { it.toFile() }.toList()
+    GlobSpec spec = parseGlob(pattern, File.separator)
+    if (!spec.glob) { return [new File(spec.root)] }
+    java.nio.file.Path root = java.nio.file.Path.of(spec.root)
+    if (!Files.isDirectory(root)) { throw new IllegalArgumentException("No such glob root '${spec.root}'") }
+    def matcher = java.nio.file.FileSystems.default.getPathMatcher('glob:' + spec.pattern)
+    List<File> matches = Files.walk(root, spec.depth).withCloseable { paths ->
+      paths.filter { Files.isRegularFile(it) && matcher.matches(root.relativize(it)) }.sorted().map { it.toFile() }.toList()
     }
+    if (matches.empty) { throw new IllegalArgumentException("No files match glob '$pattern'") }
+    matches
   }
 
   private static Matrix collectBatches(MatrixBatchIterator iterator) {
@@ -903,6 +899,38 @@ class MatrixParquetReader {
 
   private static String[] parseLegacyIndexColumns(String value) {
     value.split(COMMA)*.trim() as String[]
+  }
+
+  @PackageScope
+  static Map<String, String> parseNestedTypes(String json) {
+    Map<String, String> result = [:]
+    if (json == null) { return result }
+    String text = json.trim()
+    if (!text.startsWith('{') || !text.endsWith('}')) { return result }
+    // Reuse the strict escaped-string parser; separators inside quoted paths stay intact.
+    StringBuilder array = new StringBuilder(OPEN_BRACKET)
+    int separators = 0
+    boolean quoted = false
+    boolean escaped = false
+    for (int index = 1; index < text.length() - 1; index++) {
+      char ch = text.charAt(index)
+      if (!quoted && (ch == ':' as char || ch == COMMA as char)) {
+        char required = separators % JSON_PAIR_LENGTH == 0 ? ':' as char : COMMA as char
+        if (ch != required) { return [:] }
+        separators++
+        array.append(COMMA)
+      }
+      else { array.append(ch) }
+      if (!escaped && ch == '"' as char) { quoted = !quoted }
+      if (!escaped && ch == '\\' as char) { escaped = true } else { escaped = false }
+    }
+    array.append(']')
+    try {
+      List<String> entries = parseJsonStringArray(array.toString())
+      if (entries.size() % JSON_PAIR_LENGTH != 0 || !entries.isEmpty() && separators != entries.size() - 1) { return result }
+      for (int index = 0; index < entries.size(); index += JSON_PAIR_LENGTH) { result[entries[index]] = entries[index + 1] }
+    } catch (IllegalArgumentException ignored) { return [:] }
+    result
   }
 
   private static List<String> parseJsonStringArray(String json) {
@@ -1001,6 +1029,7 @@ class MatrixParquetReader {
 
   private static Class getJavaType(PrimitiveType.PrimitiveTypeName typeName) {
     switch (typeName) {
+      case PrimitiveTypeName.INT96 -> LocalDateTime
       case PrimitiveTypeName.INT32 -> Integer
       case PrimitiveTypeName.INT64 -> Long
       case PrimitiveTypeName.FLOAT -> Float
@@ -1032,7 +1061,9 @@ class MatrixParquetReader {
         def primitive = field.asPrimitiveType().primitiveTypeName
 
         if (logical != null) {
-          if (logical == LogicalTypeAnnotation.dateType()) {
+          if (logical instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation && !logical.isSigned()) {
+            unsignedType(logical)
+          } else if (logical == LogicalTypeAnnotation.dateType()) {
             LocalDate
           } else if (logical instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
             LocalDateTime
@@ -1055,43 +1086,10 @@ class MatrixParquetReader {
   }
 
   @PackageScope
-  static Object readValue(Group group, String fieldName, Type fieldType, Class expectedType) {
-    if (group.getFieldRepetitionCount(fieldName) == 0) {
-      return null
-    }
-
-    if (fieldType.isPrimitive()) {
-      return readPrimitive(group, fieldName, fieldType.asPrimitiveType(), expectedType)
-    }
-
-    GroupType groupType = fieldType.asGroupType()
-    def logical = groupType.logicalTypeAnnotation
-    if (logical instanceof LogicalTypeAnnotation.ListLogicalTypeAnnotation) {
-      readList(group, fieldName, groupType)
-    } else if (logical instanceof LogicalTypeAnnotation.MapLogicalTypeAnnotation) {
-      readMap(group, fieldName, groupType)
-    } else {
-      readStruct(group, fieldName, groupType)
-    }
-  }
-
-  private static Object readPrimitive(Group group, String fieldName, PrimitiveType fieldType, Class expectedType) {
-    Object raw = switch (fieldType.primitiveTypeName) {
-      case PrimitiveTypeName.INT32 -> group.getInteger(fieldName, 0)
-      case PrimitiveTypeName.INT64 -> group.getLong(fieldName, 0)
-      case PrimitiveTypeName.FLOAT -> group.getFloat(fieldName, 0)
-      case PrimitiveTypeName.DOUBLE -> group.getDouble(fieldName, 0)
-      case PrimitiveTypeName.BOOLEAN -> group.getBoolean(fieldName, 0)
-      case PrimitiveTypeName.BINARY, PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY -> group.getBinary(fieldName, 0)
-      default -> throw new IllegalArgumentException("Unsupported ${fieldType.primitiveTypeName} field $fieldName")
-    }
-    decodePrimitive(raw, fieldType, expectedType, BINARY_AS_STRING.get() == Boolean.TRUE)
-  }
-
-  @PackageScope
+  @SuppressWarnings('AbcMetric') // Exhaustive physical/logical type decoding.
   static Object decodePrimitive(Object raw, PrimitiveType field, Class expected, boolean binaryAsString) {
     if (field.primitiveTypeName == PrimitiveTypeName.INT96) {
-      throw new IllegalArgumentException("Unsupported INT96 field '${field.name}'; convert legacy timestamps explicitly")
+      return decodeInt96((org.apache.parquet.io.api.Binary) raw, field.name, expected)
     }
     def logical = field.logicalTypeAnnotation
     if (logical instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
@@ -1104,9 +1102,7 @@ class MatrixParquetReader {
     }
     if (logical instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
       Instant instant = timestampInstant(((Number) raw).longValue(), logical.unit)
-      if (expected == Instant) { return instant }
-      if (expected == Timestamp) { return Timestamp.from(instant) }
-      if (expected == Date) { return Date.from(instant) }
+      if (expected in [Instant, Timestamp, Date]) { return adjustedTimestamp(instant, expected) }
       return LocalDateTime.ofInstant(instant, logical.isAdjustedToUTC() ? getZoneId() : ZoneOffset.UTC)
     }
     if (logical instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
@@ -1133,7 +1129,33 @@ class MatrixParquetReader {
       }
       return raw.bytes
     }
+    if (logical instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation && !logical.isSigned()) {
+      if (logical.bitWidth == Integer.SIZE) { return Integer.toUnsignedLong(((Number) raw).intValue()) }
+      if (logical.bitWidth == Long.SIZE) { return new BigInteger(Long.toUnsignedString(((Number) raw).longValue())) }
+    }
     narrowInteger(raw, field.name, expected)
+  }
+
+  private static Object decodeInt96(org.apache.parquet.io.api.Binary raw, String fieldName, Class expected) {
+    byte[] bytes = raw.bytes
+    if (bytes.length != 12) { throw new IllegalArgumentException("Invalid INT96 length for field '$fieldName': ${bytes.length}") }
+    ByteBuffer buffer = ByteBuffer.wrap(bytes).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+    long nanos = buffer.getLong()
+    long day = Integer.toUnsignedLong(buffer.getInt()) - 2_440_588L
+    if (nanos < 0 || nanos >= NANOS_PER_DAY) { throw new IllegalArgumentException("Invalid INT96 nanos-of-day for field '$fieldName': $nanos") }
+    adjustedTimestamp(Instant.ofEpochSecond(Math.multiplyExact(day, 86400L), nanos), expected)
+  }
+
+  private static Object adjustedTimestamp(Instant instant, Class expected) {
+    if (expected == Instant) { return instant }
+    if (expected == Timestamp) { return Timestamp.from(instant) }
+    if (expected == Date) { return Date.from(instant) }
+    LocalDateTime.ofInstant(instant, getZoneId())
+  }
+
+  @PackageScope
+  static Class unsignedType(LogicalTypeAnnotation.IntLogicalTypeAnnotation logical) {
+    logical.bitWidth == Integer.SIZE ? Long : logical.bitWidth == Long.SIZE ? BigInteger : Integer
   }
 
   private static Object narrowInteger(Object raw, String fieldName, Class expected) {
@@ -1200,47 +1222,4 @@ class MatrixParquetReader {
         Math.floorMod(value, MICROS_PER_SECOND) * NANOS_PER_MICRO)
   }
 
-  private static List readList(Group group, String fieldName, GroupType groupType) {
-    List result = []
-    Group listGroup = group.getGroup(fieldName, 0)
-    GroupType repeatedType = groupType.getType(0).asGroupType()
-    Type elementType = repeatedType.getType(0)
-    int elementCount = listGroup.getFieldRepetitionCount(FIELD_LIST)
-    for (int j = 0; j < elementCount; j++) {
-      Group elementGroup = listGroup.getGroup(FIELD_LIST, j)
-      def element = readValue(elementGroup, elementType.name, elementType, null)
-      result << element
-    }
-    result
-  }
-
-  private static Map readMap(Group group, String fieldName, GroupType groupType) {
-    Map result = [:]
-    Group mapGroup = group.getGroup(fieldName, 0)
-    GroupType keyValueType = groupType.getType(0).asGroupType()
-    Type keyType = keyValueType.getType(0)
-    Type valueType = keyValueType.getFieldCount() > 1 ? keyValueType.getType(1) : null
-    int keyValueCount = mapGroup.getFieldRepetitionCount(FIELD_KEY_VALUE)
-    for (int j = 0; j < keyValueCount; j++) {
-      Group kvGroup = mapGroup.getGroup(FIELD_KEY_VALUE, j)
-      def key = readValue(kvGroup, keyType.name, keyType, null)
-      def value = valueType == null ? null : readValue(kvGroup, valueType.name, valueType, null)
-      result[key] = value
-    }
-    result
-  }
-
-  private static Map readStruct(Group group, String fieldName, GroupType groupType) {
-    if (groupType.fields.isEmpty()) {
-      [:]
-    } else {
-      Group structGroup = group.getGroup(fieldName, 0)
-      Map<String, Object> result = [:]
-      groupType.fields.each { Type field ->
-        def value = readValue(structGroup, field.name, field, null)
-        result[field.name] = value
-      }
-      result
-    }
-  }
 }

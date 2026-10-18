@@ -28,6 +28,7 @@ final class ParquetBatches implements MatrixBatchIterator {
   private final String name
   private final String sourcePath
   private final String indexMetadata
+  private final Map<String, Class> nestedTypes = [:]
   private final boolean binaryAsString
   private ColumnMaterializer materializer
   private RecordReader<Boolean> records
@@ -81,6 +82,13 @@ final class ParquetBatches implements MatrixBatchIterator {
       explicit ?: (binaryAsString && field.primitive && field.asPrimitiveType().logicalTypeAnnotation == null &&
           field.asPrimitiveType().primitiveTypeName == org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.BINARY ? String : inferred[index])
     }
+    Map<String, String> nested = MatrixParquetReader.parseNestedTypes(metadata[MatrixParquetReader.METADATA_NESTED_TYPES])
+    requested.fields.each { Type field ->
+      NestedPaths.leaves(field, field.name).each { String path, Type leaf ->
+        Class expected = ColumnTypePolicy.METADATA_TYPES[nested[path]]
+        if (path != field.name && compatibleMetadata(expected, leaf)) { nestedTypes[path] = expected }
+      }
+    }
     selected = options.rowGroups == null ? (0..<footer.blocks.size()).toList() : new ArrayList<>(options.rowGroups)
     selected.each { Integer id ->
       if (id == null || id < 0 || id >= footer.blocks.size()) { throw new IllegalArgumentException("Invalid row-group ID $id") }
@@ -111,7 +119,8 @@ final class ParquetBatches implements MatrixBatchIterator {
     }
   }
 
-  private static boolean compatibleMetadata(Class expected, Type field) {
+  @groovy.transform.PackageScope
+  static boolean compatibleMetadata(Class expected, Type field) {
     if (expected == null) { return false }
     if (!field.primitive) {
       boolean list = field.logicalTypeAnnotation instanceof org.apache.parquet.schema.LogicalTypeAnnotation.ListLogicalTypeAnnotation
@@ -125,12 +134,18 @@ final class ParquetBatches implements MatrixBatchIterator {
     if (logical instanceof org.apache.parquet.schema.LogicalTypeAnnotation.DateLogicalTypeAnnotation) { return expected in [java.sql.Date, java.time.LocalDate, Date] }
     if (logical instanceof org.apache.parquet.schema.LogicalTypeAnnotation.UUIDLogicalTypeAnnotation) { return expected == UUID }
     if (MatrixParquetReader.isTextLogicalType(logical)) { return expected == String }
+    if (logical instanceof org.apache.parquet.schema.LogicalTypeAnnotation.IntLogicalTypeAnnotation) {
+      if (!logical.isSigned()) { return expected == MatrixParquetReader.unsignedType(logical) }
+      return logical.bitWidth == 8 ? expected in [Byte, Short, Integer] : logical.bitWidth == 16 ? expected in [Short, Integer] :
+          expected == (logical.bitWidth == Long.SIZE ? Long : Integer)
+    }
     compatiblePhysicalMetadata(expected, primitive.primitiveTypeName)
   }
 
   private static boolean compatiblePhysicalMetadata(Class expected,
       org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName physical) {
     switch (physical) {
+      case org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.INT96 -> expected in [Date, java.sql.Timestamp, java.time.LocalDateTime, java.time.Instant]
       case org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.INT32 -> expected in [Byte, Short, Integer]
       case org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.INT64 -> expected == Long
       case org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.FLOAT -> expected == Float
@@ -177,7 +192,7 @@ final class ParquetBatches implements MatrixBatchIterator {
           pages = reader.readFilteredRowGroup(index)
           if (pages == null) { continue }
           rowsRemaining = pages.rowCount
-          materializer = new ColumnMaterializer(requested, types, binaryAsString, residual)
+          materializer = new ColumnMaterializer(requested, types, binaryAsString, residual, nestedTypes)
           def columnIO = new ColumnIOFactory(reader.fileMetaData.createdBy).getColumnIO(requested, reader.fileMetaData.schema, true)
           records = columnIO.getRecordReader(pages, materializer, filter)
         }

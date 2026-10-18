@@ -14,6 +14,7 @@ import java.util.concurrent.Future
 
 /** Ordered shard batches with strict schema checks and at most one prefetched batch per worker. */
 final class DatasetBatches implements MatrixBatchIterator {
+  private final String fallbackName
   private final List<File> files
   private final List<ParquetMetadata> footers = []
   private final List<Map<String, Integer>> work = []
@@ -31,7 +32,8 @@ final class DatasetBatches implements MatrixBatchIterator {
   private Matrix ready
 
   /** Checks every footer before reading any rows; supplied shard order is retained. */
-  DatasetBatches(List<File> selection, ParquetReadOptions options) {
+  DatasetBatches(List<File> selection, ParquetReadOptions options, String fallbackName) {
+    this.fallbackName = fallbackName
     options.validate()
     this.options = options
     if (selection == null) { throw new IllegalArgumentException('Dataset files cannot be null') }
@@ -46,7 +48,7 @@ final class DatasetBatches implements MatrixBatchIterator {
     ParquetReadOptions emptyOptions = ParquetReadOptions.fromMap(options.toMap())
     emptyOptions.rowGroups = []
     emptyOptions.sourceFileColumn = null
-    new ParquetBatches(new LocalInputFile(files[0].toPath()), emptyOptions, files[0].name, footers[0]).withCloseable { cursor -> template = cursor.emptyMatrix() }
+    new ParquetBatches(new LocalInputFile(files[0].toPath()), emptyOptions, fallbackName, footers[0]).withCloseable { cursor -> template = cursor.emptyMatrix() }
     if (!footers.every { it.fileMetaData.keyValueMetaData[MatrixParquetReader.METADATA_INDEX_COLUMNS] == footers[0].fileMetaData.keyValueMetaData[MatrixParquetReader.METADATA_INDEX_COLUMNS] }) {
       template = Matrix.builder(template.matrixName).columnNames(template.columnNames()).types(template.types()).build()
     }
@@ -77,6 +79,7 @@ final class DatasetBatches implements MatrixBatchIterator {
     def schema = footers[0].fileMetaData.schema
     footers.eachWithIndex { ParquetMetadata footer, int index ->
       if (footer.fileMetaData.keyValueMetaData[MatrixParquetReader.METADATA_COLUMN_TYPES] != footers[0].fileMetaData.keyValueMetaData[MatrixParquetReader.METADATA_COLUMN_TYPES]) { throw new IllegalArgumentException("Incompatible shard Matrix types: ${files[index]}") }
+      if (footer.fileMetaData.keyValueMetaData[MatrixParquetReader.METADATA_NESTED_TYPES] != footers[0].fileMetaData.keyValueMetaData[MatrixParquetReader.METADATA_NESTED_TYPES]) { throw new IllegalArgumentException("Incompatible shard nested types: ${files[index]}") }
       if (footer.fileMetaData.schema.fields != schema.fields) { throw new IllegalArgumentException("Incompatible shard schema: ${files[index]}") }
       if (options.sourceFileColumn != null && schema.containsField(options.sourceFileColumn)) { throw new IllegalArgumentException('sourceFileColumn collides with dataset schema') }
     }
@@ -113,7 +116,7 @@ final class DatasetBatches implements MatrixBatchIterator {
     perFile.limit = null
     perFile.sourceFileColumn = null
     perFile.rowGroups = [work[index].group]
-    cursors[index] = new ParquetBatches(new LocalInputFile(files[source].toPath()), perFile, files[source].name, footers[source])
+    cursors[index] = new ParquetBatches(new LocalInputFile(files[source].toPath()), perFile, fallbackName, footers[source])
     scheduleBatch(index)
   }
 

@@ -24,7 +24,7 @@ final class ColumnMaterializer extends RecordMaterializer<Boolean> {
   private final int[] sizes
   private final ParquetPredicate residual
 
-  ColumnMaterializer(MessageType schema, List<Class> types, boolean binaryAsString, ParquetPredicate residual) {
+  ColumnMaterializer(MessageType schema, List<Class> types, boolean binaryAsString, ParquetPredicate residual, Map<String, Class> nestedTypes = [:]) {
     columns = schema.fields.collect { [] }
     sizes = new int[columns.size()]
     this.residual = residual
@@ -32,7 +32,7 @@ final class ColumnMaterializer extends RecordMaterializer<Boolean> {
     schema.fields.eachWithIndex { Type field, int index ->
       Closure logicalSink = residual != null && residual.columns().contains(field.name) ? { Object value -> current[field.name] = value } : null
       children[index] = converter(field, types[index], binaryAsString,
-          { Object value -> columns[index].add(value) }, logicalSink)
+          { Object value -> columns[index].add(value) }, logicalSink, field.name, nestedTypes)
     }
     root = new GroupConverter() {
       @Override
@@ -68,21 +68,28 @@ final class ColumnMaterializer extends RecordMaterializer<Boolean> {
     }
   }
 
-  private static Converter converter(Type type, Class expected, boolean binaryAsString, Closure sink, Closure logicalSink = null) {
+  @SuppressWarnings('ParameterCount') // Recursion carries physical wrapper roles and logical paths explicitly.
+  private static Converter converter(Type type, Class expected, boolean binaryAsString, Closure sink, Closure logicalSink = null, String path = '', Map<String, Class> nestedTypes = [:],
+      boolean parentIsMap = false, boolean wrapper = false, boolean mapWrapper = false) {
     if (type.primitive) {
-      return new ValueConverter(type.asPrimitiveType(), expected, binaryAsString, sink, logicalSink)
+      return new ValueConverter(type.asPrimitiveType(), nestedTypes[path] ?: expected, binaryAsString, sink, logicalSink)
     }
     GroupType group = type.asGroupType()
     Map<String, Object> values = [:]
     Converter[] children = new Converter[group.fieldCount]
+    boolean map = NestedPaths.isMap(group, parentIsMap)
+    boolean list = group.logicalTypeAnnotation instanceof LogicalTypeAnnotation.ListLogicalTypeAnnotation
     group.fields.eachWithIndex { Type child, int index ->
-      children[index] = converter(child, null, binaryAsString) { Object value ->
+      boolean childWrapper = list && NestedPaths.wrappedList(group) || map
+      String childPath = childWrapper ? path :
+          NestedPaths.child(path, list || wrapper && !mapWrapper ? 'element' : mapWrapper ? (index == 0 ? 'key' : 'value') : child.name)
+      children[index] = converter(child, null, binaryAsString, { Object value ->
         if (child.repetition == Type.Repetition.REPEATED) {
           ((List) values.computeIfAbsent(child.name) { [] }).add(value)
         } else {
           values[child.name] = value
         }
-      }
+      }, null, childPath, nestedTypes, map, childWrapper, map)
     }
     new GroupConverter() {
       @Override
@@ -97,12 +104,15 @@ final class ColumnMaterializer extends RecordMaterializer<Boolean> {
         if (logical instanceof LogicalTypeAnnotation.ListLogicalTypeAnnotation) {
           Type repeated = group.getType(0)
           List entries = (List) (values[repeated.name] ?: [])
-          boolean wrapped = !repeated.primitive && repeated.asGroupType().fieldCount == 1 &&
-              !(repeated.name in ['array', "${group.name}_tuple".toString()])
+          boolean wrapped = NestedPaths.wrappedList(group)
           sink.call(wrapped ? entries.collect { entry -> ((Map) entry)[repeated.asGroupType().getType(0).name] } : entries)
-        } else if (logical instanceof LogicalTypeAnnotation.MapLogicalTypeAnnotation) {
+        } else if (map) {
           Map result = [:]
-          ((List) (values[group.getType(0).name] ?: [])).each { entry -> Map pair = (Map) entry; result[pair.key] = pair.value }
+          GroupType kv = group.getType(0).asGroupType()
+          ((List) (values[group.getType(0).name] ?: [])).each { entry ->
+            Map pair = (Map) entry
+            result[pair[kv.getType(0).name]] = kv.fieldCount > 1 ? pair[kv.getType(1).name] : null
+          }
           sink.call(result)
         } else {
           Map result = [:]
@@ -137,8 +147,9 @@ final class ColumnMaterializer extends RecordMaterializer<Boolean> {
 
     private Object logicalValue(Object value) {
       Class logicalExpected = field.logicalTypeAnnotation instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation ? java.time.LocalTime :
+          (field.primitiveTypeName == PrimitiveType.PrimitiveTypeName.INT96 ||
           field.logicalTypeAnnotation instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation &&
-          ((LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) field.logicalTypeAnnotation).isAdjustedToUTC() ? java.time.Instant :
+          ((LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) field.logicalTypeAnnotation).isAdjustedToUTC()) ? java.time.Instant :
           field.logicalTypeAnnotation == null && field.primitiveTypeName == PrimitiveType.PrimitiveTypeName.BINARY ? byte[] : null
       MatrixParquetReader.decodePrimitive(value, field, logicalExpected, false)
     }

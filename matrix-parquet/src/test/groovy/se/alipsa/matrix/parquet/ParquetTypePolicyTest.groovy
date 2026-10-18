@@ -75,7 +75,7 @@ class ParquetTypePolicyTest {
     [ZonedDateTime.now(), OffsetDateTime.now(), new Object()].each { value ->
       assertThrows(IllegalArgumentException) { MatrixParquetWriter.writeBytes(Matrix.builder().columns(value: [value]).build()) }
     }
-    [Instant.MIN, Instant.MAX, Instant.EPOCH.plusNanos(1)].each { instant ->
+    [Instant.MIN, Instant.MAX].each { instant ->
       assertThrows(IllegalArgumentException) { MatrixParquetWriter.writeBytes(Matrix.builder().columns(value: [instant]).build()) }
     }
   }
@@ -150,12 +150,12 @@ class ParquetTypePolicyTest {
 
   @Test
   void explicitUnsupportedTypesAndUntrustedMetadata() {
-    ['optional int96 value;', 'optional fixed_len_byte_array(2) value (FLOAT16);'].eachWithIndex { declaration, index ->
+    ['optional fixed_len_byte_array(2) value (FLOAT16);'].eachWithIndex { declaration, index ->
       def schema = MessageTypeParser.parseMessageType("message external { $declaration }")
       File file = new File(directory, "unsupported${index}.parquet")
       ExampleParquetWriter.builder(new LocalOutputFile(file.toPath())).withConf(new PlainParquetConfiguration()).withType(schema).build().withCloseable { writer ->
         def group = new SimpleGroupFactory(schema).newGroup()
-        group.add('value', Binary.fromConstantByteArray(new byte[index == 0 ? 12 : 2]))
+        group.add('value', Binary.fromConstantByteArray(new byte[2]))
         writer.write(group)
       }
       assertThrows(IllegalArgumentException) { MatrixParquetReader.read(file) }
@@ -241,7 +241,7 @@ class ParquetTypePolicyTest {
       def result = MatrixParquetReader.builder().columns(['price']).filter(filter).read(file)
       assertEquals(1, result.rowCount())
     }
-    assertThrows(ArithmeticException) { MatrixParquetReader.builder().filter(Predicates.eq('price', 1.251G)).read(file) }
-    assertThrows(IllegalArgumentException) { MatrixParquetReader.builder().filter(Predicates.eq('instant', Instant.EPOCH.plusNanos(1))).read(file) }
+    assertEquals(0, MatrixParquetReader.builder().filter(Predicates.eq('price', 1.251G)).read(file).rowCount())
+    assertEquals(0, MatrixParquetReader.builder().filter(Predicates.eq('instant', Instant.EPOCH.plusNanos(1))).read(file).rowCount())
   }
 }

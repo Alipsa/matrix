@@ -17,7 +17,6 @@ import org.apache.parquet.schema.Types
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
 
-import java.beans.PropertyDescriptor
 import java.math.RoundingMode
 import java.sql.Time
 import java.sql.Timestamp
@@ -46,6 +45,9 @@ import java.time.ZoneId
  * {@link #METADATA_COLUMN_TYPES}, enabling {@link MatrixParquetReader} to reconstruct
  * the original Matrix types when reading.</p>
  *
+ * Timestamp precision defaults to MICROS with sub-microsecond truncation; use
+ * {@link WriterBuilder#timestampUnit(String)} for full NANOS precision.
+ *
  * @see MatrixParquetReader
  * @see Matrix
  */
@@ -53,7 +55,10 @@ class MatrixParquetWriter {
 
   private static final Logger log = Logger.getLogger(MatrixParquetWriter)
 
-  /** Metadata key for storing Matrix column types in Parquet file */
+  /** Metadata key for canonical nested leaf types by logical path. */
+  static final String METADATA_NESTED_TYPES = 'matrix.nestedTypes'
+
+  /** Metadata key for storing Matrix column types in Parquet file. */
   static final String METADATA_COLUMN_TYPES = 'matrix.columnTypes'
 
   /** Metadata key for storing Matrix index column names in Parquet file */
@@ -96,7 +101,7 @@ class MatrixParquetWriter {
    *
    * // Write to byte array
    * byte[] bytes = MatrixParquetWriter.builder(matrix)
-   *     .inferPrecisionAndScale(false)
+   *     .inferPrecisionAndScale(false).precision(38).scale(18)
    *     .writeBytes()
    * }</pre>
    *
@@ -117,6 +122,16 @@ class MatrixParquetWriter {
   static class WriterBuilder {
 
     private final Matrix matrix
+    /**
+     * Timestamp unit, default MICROS: truncates sub-microsecond digits downward in time for
+     * LocalDateTime, Timestamp and Instant. NANOS preserves digits but Spark-family readers
+     * may not support it. NANOS range: 1677-09-21T00:12:43.145224192Z to
+     * 2262-04-11T23:47:16.854775807Z; out-of-range values fail. MICROS covers about ±292,000 years.
+     * @param value MICROS or NANOS
+     * @return this builder
+     */
+    WriterBuilder timestampUnit(String value) { options.timestampUnit(value); this }
+
     /** Sets rowGroupSize; see ParquetWriteOptions for defaults. */
     WriterBuilder rowGroupSize(long value) { options.rowGroupSize(value); this }
 
@@ -153,7 +168,7 @@ class MatrixParquetWriter {
     /**
      * Sets whether to infer precision and scale for BigDecimal columns (default: {@code true}).
      *
-     * @param value {@code true} to infer, {@code false} to fall back to double storage
+     * @param value {@code true} to infer, {@code false} to require explicit precision/scale or decimalMeta
      * @return this builder
      */
     WriterBuilder inferPrecisionAndScale(boolean value) {
@@ -372,10 +387,9 @@ class MatrixParquetWriter {
 
   /**
    * Writes a Matrix to a Parquet file using uniform decimal precision
-   * and scale for all BigDecimal columns. This is useful if you don't
-   * want to infer precision/scale but also don't want to store them as double
-   * so you can set the precision and scale to a sufficiently large value (e.g., [38, 18] for typical financial calculations)
-   * so there will be no loss of precision.
+   * and scale for all BigDecimal columns instead of inferring settings.
+   * Choose settings large enough for the data (e.g., [38, 18] for typical financial calculations).
+   * Values that require rounding fail unless a rounding mode is explicitly selected.
    *
    * @param matrix the matrix to write
    * @param fileOrDir the target file or directory
@@ -422,7 +436,7 @@ class MatrixParquetWriter {
    * @param matrix the matrix to write
    * @param fileOrDir the target file or directory. If directory the file name will be based on the matrix name.
    * @param decimalMeta a Map where keys are column names (String) and values are int arrays [precision, scale].
-   * if set to null or there is no matching entry for a BigDecimal column, that column will default to double storage
+   * Unmatched BigDecimal paths infer exact settings; metadata for unknown/non-decimal paths is rejected.
    * @return the target file
    * @throws IllegalArgumentException if matrix is null, has no columns, or fileOrDir is null
    */
@@ -551,7 +565,8 @@ class MatrixParquetWriter {
 
   private static WriteSchema createSchema(Matrix matrix, ParquetWriteOptions options) {
     buildSchema(matrix, options.decimalMeta,
-        new DecimalSchemaPolicy(options.decimalMeta, options.inferPrecisionAndScale, options.precision, options.scale))
+        new DecimalSchemaPolicy(options.decimalMeta, options.inferPrecisionAndScale, options.precision, options.scale, '', [] as Set<String>,
+            LogicalTypeAnnotation.TimeUnit.valueOf(options.timestampUnit)))
   }
 
   /**
@@ -620,6 +635,11 @@ class MatrixParquetWriter {
   private static Map<String, String> buildExtraMeta(Matrix matrix, WriteSchema resolved) {
     Map<String, String> extraMeta = ['matrix.parquet.version': FORMAT_VERSION]
     extraMeta.put(METADATA_COLUMN_TYPES, matrix.columnNames().collect { String col -> resolved.types[col].metadata.name }.join(COMMA))
+    if (!resolved.nestedTypes.isEmpty()) {
+      extraMeta[METADATA_NESTED_TYPES] = '{' + resolved.nestedTypes.collect { String path, String type ->
+        "\"${escapeJson(path)}\":\"${escapeJson(type)}\""
+      }.join(COMMA) + '}'
+    }
     if (matrix.hasIndex()) {
       extraMeta.put(METADATA_INDEX_COLUMNS, toJsonStringArray(matrix.indexedColumns()))
     }
@@ -631,14 +651,13 @@ class MatrixParquetWriter {
     def rowCount = matrix.rowCount()
     def colNames = matrix.columnNames()
 
-    (0..<rowCount).each { i ->
-      def group = factory.newGroup()
-      colNames.each { col ->
-        def value = matrix[i, col]
-        if (value != null) {
-          def fieldType = schema.getType(col)
-          ParquetValueWriter.writeValue(group, col, fieldType, value, roundingMode)
-        }
+    List<List> columns = colNames.collect { (List) matrix.column(it) }
+    List<Type> fieldTypes = colNames.collect { schema.getType(it) }
+    // Indexed loops avoid per-cell column-name scans, coercion and closure allocation in this hot path.
+    for (int row = 0; row < rowCount; row++) {
+      Group group = factory.newGroup()
+      for (int column = 0; column < colNames.size(); column++) {
+        ParquetValueWriter.writeValue(group, colNames[column], fieldTypes[column], columns[column][row], roundingMode, colNames[column], row)
       }
       parquetWriter.write(group)
     }
@@ -718,11 +737,11 @@ class MatrixParquetWriter {
    * @return validated physical schema and metadata policies.
    */
   private static WriteSchema buildSchema(Matrix matrix, Map<String, int[]> explicitDecimalMeta, DecimalSchemaPolicy decimals = null) {
+    DecimalSchemaPolicy policy = decimals ?: new DecimalSchemaPolicy(explicitDecimalMeta ?: [:])
     Map<String, ColumnTypePolicy> types = matrix.columnNames().collectEntries { String name ->
-      [(name): ColumnTypePolicy.resolve(name, matrix.column(name), matrix.type(name))]
+      [(name): ColumnTypePolicy.resolve(name, matrix.column(name), matrix.type(name), policy.timestampUnit)]
     }
     Map<String, int[]> decimalMeta = withBigIntegerPrecision(matrix, explicitDecimalMeta, types)
-    DecimalSchemaPolicy policy = decimals ?: new DecimalSchemaPolicy(explicitDecimalMeta ?: [:])
     def builder = Types.buildMessage()
     matrix.columnNames().each { col ->
       def type = matrix.type(col)
@@ -733,7 +752,7 @@ class MatrixParquetWriter {
     Set<String> unknown = new HashSet<>(policy.settings.keySet())
     unknown.removeAll(policy.used)
     if (!unknown.empty) { throw new IllegalArgumentException("Unknown/non-decimal metadata paths: $unknown") }
-    new WriteSchema(builder.named(matrix.matrixName ?: 'MatrixSchema'), types)
+    new WriteSchema(builder.named(matrix.matrixName ?: 'MatrixSchema'), types, policy.nestedTypes)
   }
 
   /**
@@ -799,19 +818,17 @@ class MatrixParquetWriter {
    * @return a Parquet {@link Type} describing the column
    */
   private static Type buildParquetType(String name, List<?> values, Class clazz, int[] decimalMeta = null, boolean preferStructForMaps = false, DecimalSchemaPolicy decimals = new DecimalSchemaPolicy([:]), ColumnTypePolicy resolved = null) {
-    resolved = resolved ?: ColumnTypePolicy.resolve(decimals.path ?: name, values, clazz)
+    boolean nested = resolved == null
+    resolved = resolved ?: ColumnTypePolicy.resolve(decimals.path ?: name, values, clazz, decimals.timestampUnit)
     if (resolved.encoding == List) {
       List<?> nestedValues = extractListElements(values)
       Type elementType = buildParquetType(FIELD_ELEMENT, nestedValues, Object, null, true, decimals.child(FIELD_ELEMENT))
-      if (elementType == null) {
-        elementType = buildPrimitiveType(FIELD_ELEMENT, String, null, false)
-      }
       return Types.optionalList().element(elementType).named(name)
     }
 
     if (resolved.encoding == Map) {
-      if (preferStructForMaps) {
-        return buildStructType(name, values, clazz, decimals)
+      if (preferStructForMaps && values.findAll { it != null }.every { ((Map) it).keySet().every { key -> key instanceof String } }) {
+        return buildStructType(name, values, decimals)
       }
       return buildMapType(name, values, decimals)
     }
@@ -823,14 +840,15 @@ class MatrixParquetWriter {
     if (effectiveClass == BigInteger && effectiveDecimalMeta == null) {
       effectiveDecimalMeta = [inferBigIntegerPrecision(values), 0] as int[]
     }
-    return buildPrimitiveType(name, effectiveClass, effectiveDecimalMeta, false)
+    if (nested) { recordNestedType(decimals, resolved) }
+    return buildPrimitiveType(name, effectiveClass, effectiveDecimalMeta, false, decimals.path ?: name, decimals.timestampUnit)
   }
 
   @SuppressWarnings(['AbcMetric', 'CyclomaticComplexity']) // Exhaustive physical/logical type dispatch.
-  private static PrimitiveType buildPrimitiveType(String name, Class clazz, int[] decimalMeta = null, boolean required = false) {
+  private static PrimitiveType buildPrimitiveType(String name, Class clazz, int[] decimalMeta = null, boolean required = false, String path = name, LogicalTypeAnnotation.TimeUnit timestampUnit = LogicalTypeAnnotation.TimeUnit.MICROS) {
     if (clazz == BigInteger) {
       if (decimalMeta == null || decimalMeta.length != DECIMAL_META_LENGTH || decimalMeta[0] <= 0 || decimalMeta[1] != 0) {
-        throw new IllegalArgumentException("BigInteger field '$name' requires decimal metadata [precision, 0]")
+        throw new IllegalArgumentException("BigInteger field '$path' requires decimal metadata [precision, 0]")
       }
       int precision = decimalMeta[0]
       def builder = required ? Types.required(PrimitiveTypeName.BINARY) : Types.optional(PrimitiveTypeName.BINARY)
@@ -850,7 +868,7 @@ class MatrixParquetWriter {
             .as(LogicalTypeAnnotation.decimalType(scale, precision))
         return builder.named(name)
       }
-      throw new IllegalArgumentException("BigDecimal field '$name' requires precision/scale")
+      throw new IllegalArgumentException("BigDecimal field '$path' requires precision/scale")
     }
 
     if (clazz == UUID) {
@@ -886,7 +904,7 @@ class MatrixParquetWriter {
       }
       case LocalDateTime, Timestamp, Instant -> {
         primitive = PrimitiveTypeName.INT64
-        logical = LogicalTypeAnnotation.timestampType(true, LogicalTypeAnnotation.TimeUnit.MICROS)
+        logical = LogicalTypeAnnotation.timestampType(true, timestampUnit)
       }
       case Time -> {
         primitive = PrimitiveTypeName.INT32
@@ -896,7 +914,7 @@ class MatrixParquetWriter {
         primitive = PrimitiveTypeName.INT64
         logical = LogicalTypeAnnotation.timestampType(true, LogicalTypeAnnotation.TimeUnit.MILLIS)
       }
-      default -> throw new IllegalArgumentException("Unsupported primitive $clazz for field $name")
+      default -> throw new IllegalArgumentException("Unsupported primitive $clazz for field $path")
     }
 
     def builder = required ? Types.required(primitive) : Types.optional(primitive)
@@ -909,18 +927,20 @@ class MatrixParquetWriter {
   private static Type buildMapType(String name, List<?> values, DecimalSchemaPolicy decimals) {
     def mapBuilder = Types.optionalMap()
     List<Map> maps = values.findAll { it instanceof Map } as List<Map>
-    if (maps.any { it.containsKey(null) }) { throw new IllegalArgumentException("Map field '$name' cannot contain null keys") }
+    if (maps.any { it.keySet().any { key -> key == null } }) { throw new IllegalArgumentException("Map field '${decimals.path ?: name}' cannot contain null keys") }
 
     List<Object> keySamples = maps.collectMany { it?.keySet() ?: [] } as List<Object>
-    Class<?> keyClass = ColumnTypePolicy.resolve(decimals.child(FIELD_KEY).path, keySamples, Object).encoding
+    ColumnTypePolicy keyPolicy = ColumnTypePolicy.resolve(decimals.child(FIELD_KEY).path, keySamples, Object, decimals.timestampUnit)
+    Class<?> keyClass = keyPolicy.encoding
+    recordNestedType(decimals.child(FIELD_KEY), keyPolicy)
     int[] keyDecimalMeta = keyClass == BigInteger ? [inferBigIntegerPrecision(keySamples), 0] as int[] : keyClass == BigDecimal ? decimals.child(FIELD_KEY).resolve(keySamples, null) : null
-    PrimitiveType keyType = buildPrimitiveType(FIELD_KEY, keyClass ?: String, keyDecimalMeta, true)
+    PrimitiveType keyType = buildPrimitiveType(FIELD_KEY, keyClass ?: String, keyDecimalMeta, true, decimals.child(FIELD_KEY).path, decimals.timestampUnit)
     mapBuilder.key(keyType)
 
     List<Object> valueSamples = maps.collectMany { it?.values() ?: [] } as List<Object>
-    Set<Class<?>> valueClasses = valueSamples.findAll { it != null }*.class.toSet()
-    if (valueClasses.size() > 1) {
-      return buildStructType(name, values, Map, decimals)
+    Set<Class> valueClasses = valueSamples.findAll { it != null }.collect { ColumnTypePolicy.policyType(it.getClass()) }.toSet()
+    if (valueClasses.size() > 1 || valueClasses.contains(null)) {
+      return buildStructType(name, values, decimals)
     }
     Type valueType
     if (valueSamples.isEmpty()) {
@@ -932,63 +952,28 @@ class MatrixParquetWriter {
     return mapBuilder.named(name)
   }
 
-  private static Type buildStructType(String name, List<?> values, Class<?> declaredType, DecimalSchemaPolicy decimals) {
-    Object sample = findFirstNonNull(values)
-    if (sample == null) {
-      return Types.optionalGroup().named(name)
+  private static void recordNestedType(DecimalSchemaPolicy decimals, ColumnTypePolicy policy) {
+    if (policy.metadata in [Instant, Date, Timestamp, java.sql.Date, Byte, Short, BigInteger]) {
+      decimals.nestedTypes[decimals.path] = policy.metadata.name
     }
+  }
 
+  private static Type buildStructType(String name, List<?> values, DecimalSchemaPolicy decimals) {
     def groupBuilder = Types.optionalGroup()
-    Map<String, List<Object>> fieldValues = [:]
-    Map<String, Class<?>> fieldTypes = [:]
-
-    if (sample instanceof Map || Map.isAssignableFrom(declaredType)) {
-      Set<String> keys = new LinkedHashSet<>()
-      values.each { val ->
-        if (val instanceof Map mapVal) {
-          mapVal.keySet().each { key ->
-            if (!(key instanceof String)) { throw new IllegalArgumentException("Struct field '$name' requires String keys; got ${key?.getClass()?.name}") }
-            keys.add(key)
-          }
+    Set<String> keys = new LinkedHashSet<>()
+    values.each { value ->
+      if (value instanceof Map) {
+        value.keySet().each { key ->
+          if (!(key instanceof String)) { throw new IllegalArgumentException("Struct field '${decimals.path ?: name}' requires String keys; got ${key?.getClass()?.name}") }
+          keys.add(key)
         }
-      }
-      keys.each { key ->
-        List<Object> collected = []
-        values.each { val ->
-          if (val instanceof Map mapVal) {
-            collected.add(mapVal.get(key))
-          } else {
-            collected.add(null)
-          }
-        }
-        fieldValues[key] = collected
-        fieldTypes[key] = Object
-      }
-    } else {
-      List<PropertyDescriptor> descriptors = ParquetValueWriter.getPropertyDescriptors(sample.class)
-      descriptors.each { PropertyDescriptor pd ->
-        List<Object> collected = []
-        values.each { val ->
-          if (val == null) {
-            collected.add(null)
-          } else {
-            def method = pd.readMethod
-            if (!method.accessible) {
-              method.accessible = true
-            }
-            collected.add(method.invoke(val))
-          }
-        }
-        fieldValues[pd.name] = collected
-        fieldTypes[pd.name] = pd.propertyType
       }
     }
-
-    fieldValues.each { fieldName, collected ->
-      Type fieldType = buildParquetType(fieldName, collected, fieldTypes[fieldName] ?: Object, null, false, decimals.child(fieldName))
-      groupBuilder.addField(fieldType)
+    keys.each { String key ->
+      List collected = values.collect { value -> value == null ? null : ((Map) value)[key] }
+      groupBuilder.addField(buildParquetType(key, collected, Object, null, false, decimals.child(key)))
     }
-    return groupBuilder.named(name)
+    groupBuilder.named(name)
   }
 
   private static List<?> extractListElements(List<?> values) {
@@ -1001,15 +986,6 @@ class MatrixParquetWriter {
     return elements
   }
 
-  private static Object findFirstNonNull(List<?> values) {
-    for (def val : values) {
-      if (val != null) {
-        return val
-      }
-    }
-    return null
-  }
-
   private static int minBytesForPrecision(int precision) {
     int bitsNeeded = BigInteger.TEN.pow(precision).subtract(BigInteger.ONE).bitLength() + 1
     Math.ceil(bitsNeeded / 8d) as int
@@ -1018,8 +994,10 @@ class MatrixParquetWriter {
   private static final class WriteSchema {
     final MessageType schema
     final Map<String, ColumnTypePolicy> types
+    final Map<String, String> nestedTypes
 
-    WriteSchema(MessageType schema, Map<String, ColumnTypePolicy> types) {
+    WriteSchema(MessageType schema, Map<String, ColumnTypePolicy> types, Map<String, String> nestedTypes) {
+      this.nestedTypes = nestedTypes
       this.schema = schema
       this.types = types
     }

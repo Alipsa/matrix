@@ -10,10 +10,17 @@ final class DecimalSchemaPolicy {
   final Integer precision
   final Integer scale
   final String path
+  final org.apache.parquet.schema.LogicalTypeAnnotation.TimeUnit timestampUnit
+  final Map<String, String> nestedTypes
   final Set<String> used
 
+  @SuppressWarnings('ParameterCount') // Child policies share write-scoped settings and metadata accumulators.
   DecimalSchemaPolicy(Map<String, int[]> settings, boolean infer = true, Integer precision = null,
-      Integer scale = null, String path = '', Set<String> used = new HashSet<>()) {
+      Integer scale = null, String path = '', Set<String> used = new HashSet<>(),
+      org.apache.parquet.schema.LogicalTypeAnnotation.TimeUnit timestampUnit = org.apache.parquet.schema.LogicalTypeAnnotation.TimeUnit.MICROS,
+      Map<String, String> nestedTypes = [:]) {
+    this.timestampUnit = timestampUnit
+    this.nestedTypes = nestedTypes
     this.settings = settings
     this.infer = infer
     this.precision = precision
@@ -23,7 +30,7 @@ final class DecimalSchemaPolicy {
   }
 
   DecimalSchemaPolicy child(String name) {
-    new DecimalSchemaPolicy(settings, infer, precision, scale, path.empty ? name : "$path.$name".toString(), used)
+    new DecimalSchemaPolicy(settings, infer, precision, scale, NestedPaths.child(path, name), used, timestampUnit, nestedTypes)
   }
 
   int[] resolve(List<?> values, int[] supplied) {

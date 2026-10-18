@@ -32,8 +32,11 @@ assert selected.column('id') == [2L, 3L]
 Projection accepts top-level fields in output order. Filter-only columns are read internally.
 `Predicates.eq/ne/lt/le/gt/ge` have Number, String, Boolean, LocalDate, LocalDateTime, Instant,
 LocalTime and byte[] overloads. Use `isNull`, `isNotNull`, `and`, `or` and `not` for composition.
-Values must match the file's logical schema. Integer overflow, fractional integer values,
-lossy decimal rescaling, and timestamp/time precision loss are rejected before reading pages.
+Values must match the file's logical schema. Unrepresentable numeric bounds, fractional integer values, NaN/Infinity, lossy decimal
+rescaling, and finer timestamp/time bounds use exact residual evaluation instead of pushdown.
+For example, `Predicates.gt('i', 1.5G)` on an integer column correctly selects integers 2 and above.
+An `and` can still push its safe child; `or` requires both children to be safe supersets, and `not`
+is always residual.
 Repeated/nested predicates are rejected. Missing indexes fall back to scans; corrupt data fails.
 
 String ordering uses unsigned UTF-8 bytes, matching Parquet. Unannotated BINARY predicates take
@@ -72,7 +75,8 @@ IDs remain valid when filters prune their groups; such groups produce no batch. 
 ordinal row seeking API.
 
 Datasets validate every footer before returning rows and require identical logical fields,
-order, decimal precision/scale, timestamp units/UTC flags and Matrix type metadata. Duplicate
+order, decimal precision/scale, timestamp units/UTC flags and Matrix type metadata, including
+`matrix.nestedTypes`. Duplicate
 canonical files and empty selections fail. Directory reads include direct `.parquet` children;
 globs are explicit and can select deeper paths. Compatible Matrix indices are restored when every shard has the same index metadata and
 projection retains its columns. A source column
@@ -80,6 +84,17 @@ contains canonical absolute paths and must not collide with a physical column. P
 use independent streams and converters, reuse each parsed footer, prefetch at most one batch per
 worker, and preserve file/group order. `rowGroups` is for one file; use
 `rowGroupsByFile: [(file.canonicalPath): [1, 0]]` for explicit dataset group selections.
+
+Directory results use the directory name; list and glob results use the first selected filename
+without `.parquet`. `matrixName` overrides either default, including batches.
+
+Globs match paths relative to the literal root. `train/*.parquet` visits only direct children;
+`train/**/*.parquet` permits arbitrary depth. `{a,b/c}` alternatives also permit variable depth.
+Fixed-depth patterns bound the filesystem walk. A missing root or an empty match raises a contextual
+`IllegalArgumentException`. POSIX backslashes escape glob characters (`train/x\\*.parquet` in a
+Groovy string selects the literal `x*.parquet`); Windows backslashes are converted to `/` separators,
+and glob escaping is unavailable there. `C:*.parquet` drive-relative patterns are rejected; use
+`C:/data/*.parquet`. Ordinary `read(String)` paths never expand globs.
 
 ## HTTP and Hub URIs
 
@@ -102,9 +117,11 @@ propagate. Range caching is bounded by `rangeCacheBytes`; individual requests ar
 reads prefetch at most 64 KiB. Validated redirect targets are reused, and fully consumed range
 responses permit HTTP keep-alive reuse. ETag/Last-Modified validators and total length detect
 changes when available; same-length changes without validators cannot be detected reliably.
+Strong ETags use `If-Match`; weak `W/` tags use `If-Unmodified-Since` when Last-Modified is present.
+Response ETags are still compared on every fetch to detect changes.
 Redirects are bounded and HTTPS downgrades rejected. Connection failures before response headers
 are retried once; malformed responses and body failures propagate. Streams are spooled to
-temporary files; byte arrays use a seekable memory input.
+owner-only temporary files on POSIX; byte arrays use a seekable memory input.
 
 Hub dataset URI parsing is pinned to huggingface_hub v2.2.0. Revisions follow the repository:
 `hf://datasets/owner/repo@revision/path`. Encode ordinary revision slashes as `%2F`; special
@@ -161,6 +178,7 @@ not enable a filter by themselves. Column settings use physical primitive paths 
 | Option | Default | Meaning |
 |---|---|---|
 | compressionCodec | SNAPPY | Codec name/CompressionCodecName; tested SNAPPY, ZSTD, GZIP, UNCOMPRESSED |
+| timestampUnit | MICROS | MICROS truncates sub-microsecond timestamp digits; NANOS preserves them within int64 range |
 | inferPrecisionAndScale | true | Infer exact decimal settings when no explicit settings apply |
 | precision / scale | null / null | Uniform positive precision and nonnegative scale, provided together |
 | decimalMeta | empty | Logical field path to `[precision, scale]`; overrides uniform settings |
@@ -172,8 +190,8 @@ not enable a filter by themselves. Column settings use physical primitive paths 
 | writerVersion | V1 | V1 or V2 writer encodings and page layout |
 | columnIndexTruncateLength | 64 | Positive binary page-bound truncation bytes |
 | statisticsTruncateLength | 2147483647 | Positive row-group binary statistics truncation bytes |
-| bloomFilterEnabled | empty, disabled | Primitive path to Boolean override |
-| bloomFilterNDV | empty | Primitive path to positive expected distinct-value count |
+| bloomFilterEnabled | empty, disabled | Primitive path to Boolean override; SPI also accepts trimmed true/false strings |
+| bloomFilterNDV | empty | Primitive path to positive integral long count; SPI accepts integral numbers and numeric strings, rejecting fractions/overflow |
 | sizeStatisticsEnabled | true | Collect size statistics |
 
 Files are written to a temporary sibling and atomically replace the destination after successful
@@ -187,8 +205,9 @@ these are unpublished temporary output and can be removed once no writer is usin
 JSON and ENUM annotations decode as UTF-8 String; BSON remains binary.
 Strings are STRING-annotated recursively; byte[] stays raw BINARY. Byte/Short use signed width
 annotations, UUID uses FIXED[16], LocalTime uses TIME(NANOS), and Instant uses adjusted
-TIMESTAMP(MICROS). Instants with sub-microsecond precision or int64-microsecond overflow fail;
-Instant.MIN/MAX are unsupported. Character and enums become String (`name()` for enums).
+TIMESTAMP(MICROS) by default. Sub-microsecond digits are truncated consistently for Instant,
+LocalDateTime and Timestamp; int64 overflow fails with column/row context. Instant.MIN/MAX
+are unsupported. Character and enums become String (`name()` for enums).
 ZonedDateTime/OffsetDateTime/custom objects require explicit conversion to Instant/String/Map.
 Date/Timestamp subclasses must share a single encoding policy; mixed units fail before output.
 
@@ -204,6 +223,61 @@ uniform, then inference. Nested logical paths use `.element`, `.key`, `.value`, 
 names (for example `nested.element.amount`). With inference disabled every decimal needs settings.
 All-null BigDecimal infers `(1, 0)`. There is no DOUBLE fallback. Explicit decimal conversion obeys
 roundingMode. See [migration notes](release.md) for changed 0.7.x behavior.
+
+Nested collections with different concrete implementations share one LIST/MAP policy. Map values
+with different logical policies become STRUCT fields and therefore require String keys. Maps in
+lists become STRUCTs when every key is a String; Integer or other supported primitive keys retain
+MAP encoding. Readers derive key/value roles from the schema, including nonstandard field names,
+legacy outer MAP_KEY_VALUE groups and key-only maps (whose values become null). String-declared columns accept any CharSequence, including GString, and write text.
+
+`matrix.nestedTypes` is a JSON footer object mapping logical leaf paths to canonical Matrix class
+names. It preserves nested Instant, Date, Timestamp, sql.Date, Byte, Short and BigInteger values
+in lists, map keys/values and struct fields. LocalTime/Time are distinguished by TIME annotations.
+Older readers ignore the new key; files without it retain schema inference. Unknown classes and
+incompatible entries are ignored, with no external class loading.
+
+| Parquet / Matrix type | Read or write behavior |
+|---|---|
+| UINT8 / UINT16 | Integer; residual predicates |
+| UINT32 | Long with unsigned widening; residual predicates |
+| UINT64 | BigInteger with unsigned widening; residual predicates |
+| Instant / LocalDateTime / Timestamp | TIMESTAMP(MICROS, adjusted=true) by default; truncate sub-microsecond digits; NANOS opt-in |
+| External INT96 | Read as UTC instant, returned as LocalDateTime in reader zone; compatible metadata restores Instant/Timestamp/Date; residual predicates; writer never emits INT96 |
+| FLOAT16 | Contextual unsupported-type error |
+
+### Timestamp precision
+
+The default `timestampUnit: 'MICROS'` discards sub-microsecond digits downward in time for
+LocalDateTime, Timestamp and Instant, including before 1970. LocalDateTime is converted through
+the writer zone first. This chiefly affects Linux JDK 15+ nanosecond clocks and Windows 100 ns
+clocks; measured macOS clocks provide microseconds. Ordinary `now()` writes therefore succeed.
+
+`timestampUnit('NANOS')` preserves full precision, but Spark-family readers may not support
+TIMESTAMP(NANOS). The int64 NANOS range is 1677-09-21T00:12:43.145224192Z through
+2262-04-11T23:47:16.854775807Z; values outside it fail. MICROS covers about ±292,000 years
+and is suitable for wider dates. Both units reject overflow with column/row context.
+
+Under MICROS, filtering with the original sub-microsecond value finds no equal row because
+predicates compare exactly against the truncated stored value. Truncate the filter value too,
+or write NANOS:
+
+```groovy
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.parquet.*
+
+Instant original = Instant.EPOCH.plusNanos(123456789) // also occurs with Instant.now()
+def data = Matrix.builder().columns(ts: [original]).build()
+byte[] micros = MatrixParquetWriter.builder(data).writeBytes()
+assert MatrixParquetReader.builder().filter(Predicates.eq('ts', original)).read(micros).rowCount() == 0
+assert MatrixParquetReader.builder().filter(Predicates.eq('ts', original.truncatedTo(ChronoUnit.MICROS)))
+    .read(micros).rowCount() == 1
+byte[] nanos = MatrixParquetWriter.builder(data).timestampUnit('NANOS').writeBytes()
+assert MatrixParquetReader.builder().filter(Predicates.eq('ts', original)).read(nanos).rowCount() == 1
+// SPI equivalent, with the same default MICROS if omitted:
+data.write([timestampUnit: 'NANOS'], new File('timestamps.parquet'))
+```
 
 ## CDC output, tests and benchmarks
 

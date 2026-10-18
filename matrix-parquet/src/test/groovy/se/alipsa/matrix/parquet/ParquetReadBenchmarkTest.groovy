@@ -64,7 +64,7 @@ class ParquetReadBenchmarkTest {
       Group row = reader.read()
       while (row != null) {
         def values = []
-        names.eachWithIndex { String name, int index -> values << MatrixParquetReader.readValue(row, name, schema.getType(name), types[index]) }
+        names.eachWithIndex { String name, int index -> values << GroupValueReader.readValue(row, name, schema.getType(name), types[index]) }
         builder.addRow(values as Object[])
         row = reader.read()
       }

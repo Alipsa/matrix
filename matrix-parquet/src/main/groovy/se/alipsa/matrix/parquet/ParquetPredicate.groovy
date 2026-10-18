@@ -17,6 +17,7 @@ import java.time.ZoneId
 
 /** Immutable logical predicate; values are converted against the file schema before reading. */
 final class ParquetPredicate {
+  private static final Object NOT_PUSHABLE = new Object()
   private static final String IS_NOT_NULL = 'isNotNull'
 
   private static final String KEY_EQ = 'eq'
@@ -95,12 +96,12 @@ final class ParquetPredicate {
   FilterPredicate pushdown(MessageType schema) {
     if (column == null) {
       List<FilterPredicate> predicates = children*.pushdown(schema)
-      if (predicates.any { it == null }) { return null }
-      return switch (operation) {
-        case 'and' -> FilterApi.and(predicates[0], predicates[1])
-        case 'or' -> FilterApi.or(predicates[0], predicates[1])
-        default -> null
+      if (operation == 'and') {
+        // Partial AND relies on always applying the residual and never pushing NOT.
+        return predicates[0] == null ? predicates[1] : predicates[1] == null ? predicates[0] : FilterApi.and(predicates[0], predicates[1])
       }
+      if (predicates.any { it == null }) { return null }
+      return operation == 'or' ? FilterApi.or(predicates[0], predicates[1]) : null
     }
     TypeCheck.validate(this, schema)
     PrimitiveType field = schema.getType(column).asPrimitiveType()
@@ -109,16 +110,16 @@ final class ParquetPredicate {
     if (logical instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation &&
         field.primitiveTypeName in [PrimitiveType.PrimitiveTypeName.BINARY, PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY]) { return null }
     if (!(field.primitiveTypeName in [PrimitiveType.PrimitiveTypeName.INT32, PrimitiveType.PrimitiveTypeName.INT64, PrimitiveType.PrimitiveTypeName.BINARY])) { return null }
+    if (logical instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation && !logical.isSigned()) { return null }
     Object physical = physicalValue(field)
+    if (physical.is(NOT_PUSHABLE)) { return null }
     def col
     switch (field.primitiveTypeName) {
       case PrimitiveType.PrimitiveTypeName.INT32 -> {
         col = FilterApi.intColumn(column)
-        if (physical != null) { physical = new BigDecimal(physical.toString()).intValueExact() }
       }
       case PrimitiveType.PrimitiveTypeName.INT64 -> {
         col = FilterApi.longColumn(column)
-        if (physical != null) { physical = new BigDecimal(physical.toString()).longValueExact() }
       }
       case PrimitiveType.PrimitiveTypeName.BINARY -> {
         col = FilterApi.binaryColumn(column)
@@ -147,35 +148,45 @@ final class ParquetPredicate {
     TypeCheck.validate(this, schema)
     PrimitiveType field = schema.getType(column).asPrimitiveType()
     Object normalized = value
-    if (field.logicalTypeAnnotation instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation &&
-        ((LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) field.logicalTypeAnnotation).isAdjustedToUTC() && value instanceof LocalDateTime) {
+    if ((field.primitiveTypeName == PrimitiveType.PrimitiveTypeName.INT96 ||
+        (field.logicalTypeAnnotation instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation &&
+        ((LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) field.logicalTypeAnnotation).isAdjustedToUTC())) && value instanceof LocalDateTime) {
       normalized = value.atZone(zone ?: ZoneId.systemDefault()).toInstant()
     }
     ParquetPredicate bound = new ParquetPredicate(operation, column, normalized)
-    bound.physicalValue(field)
     bound
   }
 
   private Object physicalValue(PrimitiveType field) {
+    try { physicalValueExact(field) }
+    catch (ArithmeticException | IllegalArgumentException ignored) { NOT_PUSHABLE }
+  }
+
+  @SuppressWarnings('AbcMetric') // Exhaustive exact physical conversion with residual fallback.
+  private Object physicalValueExact(PrimitiveType field) {
     if (value == null) { return null }
     def logical = field.logicalTypeAnnotation
+    if (logical instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation && !logical.isSigned()) { return NOT_PUSHABLE }
     if (logical instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
       BigDecimal decimal = new BigDecimal(value.toString()).setScale(logical.scale, java.math.RoundingMode.UNNECESSARY)
       if (decimal.precision() > logical.precision) { throw new IllegalArgumentException("Decimal predicate overflows '${field.name}'") }
-      return decimal.unscaledValue()
+      BigInteger unscaled = decimal.unscaledValue()
+      return field.primitiveTypeName == PrimitiveType.PrimitiveTypeName.INT32 ? (Object) unscaled.intValueExact() :
+          field.primitiveTypeName == PrimitiveType.PrimitiveTypeName.INT64 ? (Object) unscaled.longValueExact() : unscaled
     }
     if (value instanceof LocalDate) { return Math.toIntExact(value.toEpochDay()) }
     if (logical instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
       long nanos = ((LocalTime) value).toNanoOfDay()
       long divisor = logical.unit == LogicalTypeAnnotation.TimeUnit.MILLIS ? 1_000_000L : logical.unit == LogicalTypeAnnotation.TimeUnit.MICROS ? 1000L : 1L
       if (nanos % divisor != 0) { throw new IllegalArgumentException("Lossy TIME predicate '${field.name}'") }
-      return nanos.intdiv(divisor)
+      long units = nanos.intdiv(divisor)
+      return field.primitiveTypeName == PrimitiveType.PrimitiveTypeName.INT32 ? (Object) Math.toIntExact(units) : (Object) units
     }
     if (logical instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
       Instant instant = value instanceof Instant ? (Instant) value : ((LocalDateTime) value).toInstant(java.time.ZoneOffset.UTC)
       long divisor = logical.unit == LogicalTypeAnnotation.TimeUnit.MILLIS ? 1_000_000L : logical.unit == LogicalTypeAnnotation.TimeUnit.MICROS ? 1000L : 1L
       if (instant.nano % divisor != 0) { throw new IllegalArgumentException("Lossy TIMESTAMP predicate '${field.name}'") }
-      return Math.addExact(Math.multiplyExact(instant.epochSecond, 1_000_000_000L.intdiv(divisor)), instant.nano.intdiv(divisor))
+      return TemporalUnits.epochUnits(instant, logical.unit)
     }
     if (field.primitiveTypeName == PrimitiveType.PrimitiveTypeName.INT32) { return new BigDecimal(value.toString()).intValueExact() }
     if (field.primitiveTypeName == PrimitiveType.PrimitiveTypeName.INT64) { return new BigDecimal(value.toString()).longValueExact() }
@@ -197,7 +208,8 @@ final class ParquetPredicate {
       boolean compatible = Number.isAssignableFrom(inferred) ? value instanceof Number :
           inferred == java.sql.Time ? value instanceof LocalTime :
           inferred == LocalDateTime ? (value instanceof LocalDateTime ||
-              (value instanceof Instant && ((LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) field.logicalTypeAnnotation).isAdjustedToUTC())) : inferred.isInstance(value)
+              (value instanceof Instant && (field.asPrimitiveType().primitiveTypeName == PrimitiveType.PrimitiveTypeName.INT96 ||
+              ((LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) field.logicalTypeAnnotation).isAdjustedToUTC()))) : inferred.isInstance(value)
       if (!compatible) { throw new IllegalArgumentException("Incompatible predicate value for '${predicate.column}': expected $inferred") }
     }
   }
