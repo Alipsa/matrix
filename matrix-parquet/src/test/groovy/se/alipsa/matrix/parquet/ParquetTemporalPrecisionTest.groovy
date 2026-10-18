@@ -92,6 +92,18 @@ class ParquetTemporalPrecisionTest {
   }
 
   @Test
+  void microsLocalDateTimeOverflowStillFailsAtSchemaValidation() {
+    [LocalDateTime.MAX, LocalDateTime.of(-291000, 1, 1, 0, 0)].each { value ->
+      def failure = assertThrows(IllegalArgumentException) {
+        MatrixParquetWriter.writeBytes(Matrix.builder().columns(ts: [value]).build(), new ParquetWriteOptions().zoneId('UTC'))
+      }
+      assertTrue(failure.message.contains('LocalDateTime') && failure.message.contains('row 0'), failure.message)
+    }
+    assertEquals(1, MatrixParquetReader.read(MatrixParquetWriter.writeBytes(
+        Matrix.builder().columns(ts: [LocalDateTime.of(289999, 1, 1, 0, 0)]).build(), new ParquetWriteOptions().zoneId('UTC'))).rowCount())
+  }
+
+  @Test
   void farFutureLocalDateTimeAndTimestampFailAtSchemaValidationBeforeWriting(@TempDir File directory) {
     File file = new File(directory, 'overflow.parquet')
     LocalDateTime sentinel = LocalDateTime.of(9999, 12, 31, 0, 0)
