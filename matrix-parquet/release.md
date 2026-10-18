@@ -19,10 +19,16 @@ Complete defaults, supported types and end-to-end examples are in [the module gu
 | Unadjusted timestamps | Local wall-clock time preserved | No bug-preserving flag; applications needing the former shift can explicitly convert the local value through UTC into the desired zone |
 | Integer-backed DECIMAL | BigDecimal with declared scale | No bug-preserving flag; explicit `unscaledValue()` obtains prior raw numeric value |
 | UUID annotation | UUID | No text-decoding compatibility flag; explicit UUID/string/byte conversion at application boundary |
-| FLOAT16 / INT96 unsupported cases | Contextual unsupported-type error | No UTF-8 fallback; convert these types explicitly before reading |
+| FLOAT16 | Contextual unsupported-type error | No UTF-8 fallback; convert explicitly before reading |
+| External INT96 | Read-only UTC timestamp support, returned in reader zone or as compatible metadata type | Residual filters; writer never emits INT96 |
+| Unsigned integers | UINT8/16 → Integer, UINT32 → Long, UINT64 → BigInteger | Correct unsigned values; residual-only predicates |
+| Timestamp precision | LocalDateTime/Timestamp/Instant default to TIMESTAMP(MICROS), consistently truncating sub-microsecond digits; Instant.now() works on Linux/Windows | timestampUnit('NANOS') preserves precision within int64 range; intentional exception to lossless-decimal default, bounded below 1 µs |
+| Dataset names | Directory name for directory reads; first filename without extension for lists/globs | matrixName overrides collected/batched names |
+| String-declared GString | CharSequence values accepted and converted to text | Other declared-type checks remain strict |
+| Nested type metadata | matrix.nestedTypes preserves canonical nested leaf classes | Older readers ignore key; missing/unknown/incompatible metadata retains inference |
 | Byte / Short fallback | Signed INT32 with INT(8/16), restored as Byte/Short | Legacy unannotated text stays String; explicitly convert to String before writing to retain text output |
 | LocalTime fallback | TIME(NANOS), restored as LocalTime using new-format metadata | Legacy text stays String; explicit String conversion retains text output |
-| Instant fallback | TIMESTAMP(MICROS, adjusted=true), restored as Instant using new-format metadata | Legacy text stays String; reject sub-microsecond precision loss and int64-micros overflow; explicitly convert to String for text output |
+| Instant fallback | TIMESTAMP(MICROS, adjusted=true), restored as Instant using new-format metadata | Legacy text stays String; truncate sub-microsecond digits under MICROS, reject int64 overflow; NANOS preserves precision |
 | UUID writer fallback | FIXED[16] + UUID, restored as UUID | Legacy text stays String; explicit String conversion retains text output |
 | Character fallback | STRING, returned as String | Normalize emitted metadata to String; Character identity is not preserved |
 | Enum fallback | STRING using enum name(), returned as String | Normalize metadata to String; convert explicitly for former overridden toString() output |
@@ -42,7 +48,7 @@ Legacy Matrix text compatibility applies recursively; new raw binary metadata re
 The checked-in original 0.7.x string fixture predates these writer changes. Legacy byte[] recovery
 claims were narrowed after an end-to-end check found InvalidSchemaException in this checkout.
 
-External INT96/FLOAT16 raise contextual unsupported-type errors. External TIME still returns
+External INT96 decodes as adjusted UTC timestamps; FLOAT16 raises contextual unsupported-type errors. External TIME still returns
 java.sql.Time at millisecond precision; exact predicate filtering preserves original precision.
 Mixed Date/Timestamp policies are now rejected before writing, preventing the prior 1000× unit
 corruption. New Object/supertype values are resolved consistently for schema and metadata.
@@ -57,6 +63,11 @@ are retained, and writes through existing symbolic links update the resolved tar
 the link. Local file writes require same-directory atomic replacement support; unsupported network
 or FUSE filesystems raise `AtomicMoveNotSupportedException` and leave existing output unchanged.
 HTTP bulk requests reuse resolved targets and a separately bounded cache.
+
+October review fixes also add exact residual fallback for unrepresentable predicate bounds,
+partial AND pruning, canonical container inference, full nested error paths, strict bloom/codec
+validation, secure read spooling, bounded cross-platform glob parsing, weak-ETag preconditions,
+legacy MAP layouts, and indexed column access in the write loop; dead reader/POJO paths were removed.
 
 Native CDC writing remains deferred to upstream parquet-java #3818; the Python rewrite preserves
 custom metadata. Hadoop stays as a runtime dependency because codec initialization still loads it.

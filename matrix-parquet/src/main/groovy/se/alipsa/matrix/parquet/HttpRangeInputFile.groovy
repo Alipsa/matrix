@@ -50,7 +50,7 @@ final class HttpRangeInputFile implements InputFile {
 
   private Map<String, HttpURLConnection> request(long start, long end) {
     Map<String, String> headers = [Range: "bytes=$start-$end".toString()]
-    if (etag != null) { headers['If-Match'] = etag }
+    if (etag != null && !etag.startsWith('W/')) { headers['If-Match'] = etag }
     else if (modified != null) { headers['If-Unmodified-Since'] = modified }
     URL target = resolvedTarget ?: source
     HttpURLConnection connection = HttpTransport.open(target, options, headers)

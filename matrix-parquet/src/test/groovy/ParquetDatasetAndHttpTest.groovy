@@ -171,4 +171,39 @@ class ParquetDatasetAndHttpTest {
       assertThrows(IOException) { input.newStream().withCloseable { it.read() } }
     } finally { server.stop(0) }
   }
+  @Test
+  void weakEtagsUseLastModifiedAndStillDetectChanges() {
+    byte[] bytes = MatrixParquetWriter.writeBytes(Matrix.builder().columns(id: [1, 2]).build())
+    AtomicLong ifMatch = new AtomicLong()
+    AtomicLong unmodified = new AtomicLong()
+    def version = new java.util.concurrent.atomic.AtomicReference<String>('W/"v1"')
+    def server = HttpServer.create(new InetSocketAddress('127.0.0.1', 0), 0)
+    server.createContext('/weak') { exchange ->
+      if (exchange.requestHeaders.getFirst('If-Match') != null) {
+        ifMatch.incrementAndGet(); exchange.sendResponseHeaders(412, -1); exchange.close(); return
+      }
+      if (exchange.requestHeaders.getFirst('If-Unmodified-Since') != null) { unmodified.incrementAndGet() }
+      def match = exchange.requestHeaders.getFirst('Range') =~ /bytes=(\d+)-(\d+)/
+      assertTrue(match.matches())
+      int start = Integer.parseInt(match.group(1)), end = Integer.parseInt(match.group(2))
+      exchange.responseHeaders.add('ETag', version.get())
+      exchange.responseHeaders.add('Last-Modified', 'Wed, 01 Jan 2025 00:00:00 GMT')
+      exchange.responseHeaders.add('Content-Range', "bytes $start-$end/${bytes.length}")
+      exchange.sendResponseHeaders(206, end - start + 1)
+      exchange.responseBody.write(bytes, start, end - start + 1)
+      exchange.close()
+    }
+    server.start()
+    try {
+      URL url = new URI("http://127.0.0.1:${server.address.port}/weak").toURL()
+      ['RANGE', 'AUTO'].each { mode -> assertEquals([1, 2], MatrixParquetReader.builder().remoteReadMode(mode).read(url).column('id')) }
+      assertEquals(0L, ifMatch.get())
+      assertTrue(unmodified.get() > 0)
+      def input = new HttpRangeInputFile(url, new ParquetReadOptions(remoteReadMode: 'RANGE'))
+      version.set('W/"v2"')
+      def failure = assertThrows(IOException) { input.newStream().withCloseable { it.read() } }
+      assertTrue(failure.message.contains('Remote object/range changed during read'))
+    } finally { server.stop(0) }
+  }
+
 }

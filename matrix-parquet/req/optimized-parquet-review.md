@@ -20,10 +20,10 @@ on `feature/optimized-parquet-review`, based on the original PR commit eee2b16e.
 - 9.6 [x] Support sourceFileColumn for local single-file reads and batches. Restore common
   compatible indices for both collected and batched dataset reads, including truncated batches;
   omit indices when projection removes their columns or shards disagree on index metadata.
-- 9.7 [x] Resolve each top-level column's validated type policy once and carry it in WriteSchema
+- 9.7 [x] (Partially completed here; finished in [v0.8.0-fixes §6](v0.8.0-fixes.md#6-full-logical-paths-in-nested-errors-completes-review-97).) Resolve each top-level column's validated type policy once and carry it in WriteSchema
   through decimal/schema construction and metadata emission. Remove obsolete duplicate inference
   helpers and report full nested logical paths; test nested error context.
-- 9.8 [x] Treat null option-map values as absent consistently, preserving Boolean/default/map
+- 9.8 [x] (Partially completed here; finished in [v0.8.0-fixes §7.1](v0.8.0-fixes.md#7-writer-option-validation).) Treat null option-map values as absent consistently, preserving Boolean/default/map
   values and nullable AUTO semantics. Reject null bloom entries with contextual validation.
 - 9.9 [x] Create dataset worker threads through a daemon ThreadFactory. Assert their daemon
   status while an iterator remains open; explicit close is still required for prompt cleanup.
@@ -33,7 +33,7 @@ on `feature/optimized-parquet-review`, based on the original PR commit eee2b16e.
   retain the pinned client URL cases. Test nested paths and encoded revision traversal.
 - 9.12 [x] Reject unrecoverable legacy [B metadata only for required output/filter columns.
   Test successful projection around the damaged column and rejection when a filter needs it.
-- 9.13 [x] Correct the reader's memory/batch/cache comments and writer option documentation,
+- 9.13 [x] (Partially completed here; finished in [v0.8.0-fixes §14.1](v0.8.0-fixes.md#14-documentation).) Correct the reader's memory/batch/cache comments and writer option documentation,
   including literal V1 defaults; update source/index/transport behavior in the module guide.
 
 ## Verification

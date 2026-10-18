@@ -10,8 +10,6 @@ import org.apache.parquet.schema.PrimitiveType
 import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName
 import org.apache.parquet.schema.Type
 
-import java.beans.Introspector
-import java.beans.PropertyDescriptor
 import java.math.RoundingMode
 import java.nio.ByteBuffer
 import java.sql.Time
@@ -21,7 +19,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Writes individual Matrix cell values into Parquet {@link Group} records.
@@ -45,14 +42,8 @@ final class ParquetValueWriter {
   /** Thread-local storage for timezone used during write operations */
   private static final ThreadLocal<ZoneId> ZONE_ID_HOLDER = new ThreadLocal<>()
 
-  /** Cache for PropertyDescriptor lists by class to avoid repeated reflection calls */
-  private static final Map<Class<?>, List<PropertyDescriptor>> PROPERTY_DESCRIPTOR_CACHE =
-      new ConcurrentHashMap<>()
-
   private static final int ERROR_VALUE_MAX_LENGTH = 100
-  private static final long MICROS_PER_SECOND = 1_000_000L
   private static final long NANOS_PER_MILLI = 1_000_000L
-  private static final long NANOS_PER_MICRO = 1_000L
 
   private ParquetValueWriter() {}
 
@@ -82,67 +73,52 @@ final class ParquetValueWriter {
   /**
    * Gets the current timezone for timestamp conversion.
    * Returns the thread-local value if set, otherwise the system default.
+   * Package scope so schema-time validation ({@link ColumnTypePolicy}) sees the same zone as value writing.
    */
-  private static ZoneId getZoneId() {
+  static ZoneId getZoneId() {
     ZoneId zoneId = ZONE_ID_HOLDER.get()
     return zoneId != null ? zoneId : ZoneId.systemDefault()
   }
 
-  /**
-   * Gets cached PropertyDescriptors for the given class.
-   * Uses Introspector to get bean info and caches the result for subsequent calls.
-   */
-  static List<PropertyDescriptor> getPropertyDescriptors(Class<?> clazz) {
-    return PROPERTY_DESCRIPTOR_CACHE.computeIfAbsent(clazz) { c ->
-      def beanInfo = Introspector.getBeanInfo(c, Object)
-      return beanInfo.propertyDescriptors.findAll { it.readMethod != null }
-    }
-  }
-
-  static void writeValue(Group group, String fieldName, Type fieldType, Object value, RoundingMode roundingMode) {
+  static void writeValue(Group group, String fieldName, Type fieldType, Object value, RoundingMode roundingMode, String path, int row) {
     if (value == null) {
       return
     }
     if (fieldType.isPrimitive()) {
-      writePrimitiveValue(group, fieldName, fieldType.asPrimitiveType(), value, roundingMode)
+      try { writePrimitiveValue(group, fieldName, fieldType.asPrimitiveType(), value, roundingMode, path, row) }
+      catch (ArithmeticException failure) { throw new IllegalArgumentException("Column '$path', row $row: timestamp overflows epoch units", failure) }
       return
     }
 
     GroupType groupType = fieldType.asGroupType()
     def logical = groupType.logicalTypeAnnotation
     if (logical instanceof LogicalTypeAnnotation.ListLogicalTypeAnnotation) {
-      writeList(group, fieldName, groupType, value, roundingMode)
+      writeList(group, fieldName, groupType, value, roundingMode, path, row)
     } else if (logical instanceof LogicalTypeAnnotation.MapLogicalTypeAnnotation) {
-      writeMap(group, fieldName, groupType, value, roundingMode)
+      writeMap(group, fieldName, groupType, value, roundingMode, path, row)
     } else {
-      writeStruct(group, fieldName, groupType, value, roundingMode)
+      writeStruct(group, fieldName, groupType, value, roundingMode, path, row)
     }
   }
 
   static void writePrimitiveValue(Group group, String fieldName, PrimitiveType field, Object value,
-      RoundingMode roundingMode) {
+      RoundingMode roundingMode, String path, int row) {
     switch (value.class) {
       case Byte, Short, Integer, int -> group.append(fieldName, (int) value)
       case Long, long -> group.append(fieldName, ((Number) value).longValue())
       case BigInteger -> group.add(fieldName, Binary.fromConstantByteArray(((BigInteger) value).toByteArray()))
       case Float, float -> group.append(fieldName, ((Number) value).floatValue())
       case Double, double -> group.append(fieldName, ((Number) value).doubleValue())
-      case BigDecimal -> writeBigDecimalValue(group, fieldName, field, (BigDecimal) value, roundingMode)
+      case BigDecimal -> writeBigDecimalValue(group, fieldName, field, (BigDecimal) value, roundingMode, path, row)
       case Boolean, boolean -> group.append(fieldName, (boolean) value)
       case LocalDate -> group.append(fieldName, ((LocalDate) value).toEpochDay().intValue())
       case java.sql.Date -> group.append(fieldName, ((java.sql.Date) value).toLocalDate().toEpochDay().intValue())
       case Time -> group.append(fieldName, timeToMillis((Time) value))
-      case LocalDateTime -> group.append(fieldName, instantToMicros(((LocalDateTime) value).atZone(getZoneId()).toInstant()))
-      case Timestamp -> group.append(fieldName, instantToMicros(((Timestamp) value).toInstant()))
+      case LocalDateTime -> group.append(fieldName, TemporalUnits.epochUnits(((LocalDateTime) value).atZone(getZoneId()).toInstant(), ((LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) field.logicalTypeAnnotation).unit))
+      case Timestamp -> group.append(fieldName, TemporalUnits.epochUnits(((Timestamp) value).toInstant(), ((LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) field.logicalTypeAnnotation).unit))
       case byte[] -> group.add(fieldName, Binary.fromConstantByteArray((byte[]) value))
       case LocalTime -> group.append(fieldName, ((LocalTime) value).toNanoOfDay())
-      case Instant -> {
-        Instant instant = (Instant) value
-        if (instant.nano % NANOS_PER_MICRO != 0) {
-          throw new IllegalArgumentException("Instant field '$fieldName' loses sub-microsecond precision")
-        }
-        group.append(fieldName, instantToMicros(instant))
-      }
+      case Instant -> group.append(fieldName, TemporalUnits.epochUnits((Instant) value, ((LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) field.logicalTypeAnnotation).unit))
       case UUID -> {
         UUID uuid = (UUID) value
         group.add(fieldName, Binary.fromConstantByteArray(ByteBuffer.allocate(16).putLong(uuid.mostSignificantBits).putLong(uuid.leastSignificantBits).array()))
@@ -150,33 +126,30 @@ final class ParquetValueWriter {
       case String, Character, CharSequence -> group.append(fieldName, value.toString())
       case Enum -> group.append(fieldName, ((Enum) value).name())
       case Date -> group.append(fieldName, ((Date) value).time)
-      default -> throw new IllegalArgumentException("Unsupported ${value.getClass().name} for field $fieldName")
+      default -> throw new IllegalArgumentException("Unsupported ${value.getClass().name} for field $path, row $row")
     }
   }
 
   private static int timeToMillis(Time time) {
     def localTime = Instant.ofEpochMilli(time.time).atZone(ZoneId.systemDefault()).toLocalTime()
-    (int) (localTime.toNanoOfDay() / NANOS_PER_MILLI)
-  }
-
-  private static long instantToMicros(Instant instant) {
-    Math.addExact(Math.multiplyExact(instant.epochSecond, MICROS_PER_SECOND), (long) (instant.nano / NANOS_PER_MICRO))
+    (int) (localTime.toNanoOfDay().intdiv(NANOS_PER_MILLI))
   }
 
   private static void writeBigDecimalValue(Group group, String fieldName, PrimitiveType field, BigDecimal value,
-      RoundingMode roundingMode) {
+      RoundingMode roundingMode, String path, int row) {
     def logical = field.getLogicalTypeAnnotation()
     if (field.primitiveTypeName == PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY &&
         logical instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
       writeFixedLenBigDecimal(group, fieldName, field, value,
-          (LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) logical, roundingMode)
+          (LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) logical, roundingMode, path, row)
     } else {
-      throw new IllegalArgumentException("Missing DECIMAL annotation for $fieldName")
+      throw new IllegalArgumentException("Missing DECIMAL annotation for $path, row $row")
     }
   }
 
+  @SuppressWarnings('ParameterCount') // Encoding context includes logical path and row for nested diagnostics.
   private static void writeFixedLenBigDecimal(Group group, String fieldName, PrimitiveType field, BigDecimal value,
-      LogicalTypeAnnotation.DecimalLogicalTypeAnnotation logical, RoundingMode roundingMode) {
+      LogicalTypeAnnotation.DecimalLogicalTypeAnnotation logical, RoundingMode roundingMode, String path, int row) {
     int scale = logical.scale
     int precision = logical.precision
     BigDecimal rescaled
@@ -184,12 +157,12 @@ final class ParquetValueWriter {
       rescaled = value.setScale(scale, roundingMode)
     } catch (ArithmeticException exception) {
       throw new IllegalArgumentException(
-          "BigDecimal value '$value' for field '$fieldName' cannot be represented at scale $scale with roundingMode $roundingMode. " +
+          "BigDecimal value '$value' for field '$path', row $row cannot be represented at scale $scale with roundingMode $roundingMode. " +
           'Use an exact value or explicitly select a rounding mode such as HALF_UP.', exception)
     }
     if (rescaled.precision() > precision) {
       throw new IllegalArgumentException(
-          "BigDecimal value '$value' for field '$fieldName' exceeds DECIMAL($precision, $scale) after applying roundingMode $roundingMode. " +
+          "BigDecimal value '$value' for field '$path', row $row exceeds DECIMAL($precision, $scale) after applying roundingMode $roundingMode. " +
           "Rescaled value '$rescaled' has precision ${rescaled.precision()}. Increase the precision or choose an appropriate rounding mode.")
     }
     def unscaled = rescaled.unscaledValue()
@@ -197,7 +170,7 @@ final class ParquetValueWriter {
     int size = field.typeLength
     if (bytes.length > size) {
       throw new IllegalArgumentException(
-          "BigDecimal value '$value' for field '$fieldName' cannot be encoded in DECIMAL($precision, $scale). " +
+          "BigDecimal value '$value' for field '$path', row $row cannot be encoded in DECIMAL($precision, $scale). " +
           "The value requires ${bytes.length} bytes but schema allows only $size bytes " +
           "after applying roundingMode $roundingMode. Increase the precision or use inferPrecisionAndScale=true.")
     }
@@ -209,10 +182,10 @@ final class ParquetValueWriter {
     group.add(fieldName, Binary.fromConstantByteArray(padded))
   }
 
-  private static void writeList(Group group, String fieldName, GroupType groupType, Object value, RoundingMode roundingMode) {
+  private static void writeList(Group group, String fieldName, GroupType groupType, Object value, RoundingMode roundingMode, String path, int row) {
     if (!(value instanceof Collection)) {
       throw new IllegalArgumentException(
-          "Cannot write field '$fieldName' as Parquet LIST: expected a Collection (List, Set, etc.) " +
+          "Cannot write field '$path', row $row as Parquet LIST: expected a Collection (List, Set, etc.) " +
           "but got ${value.class.simpleName}. Value: ${truncateForError(value)}")
     }
     Collection<?> collection = (Collection<?>) value
@@ -221,14 +194,14 @@ final class ParquetValueWriter {
     Type elementType = repeatedType.getType(0)
     collection.each { Object element ->
       Group entry = listGroup.addGroup(FIELD_LIST)
-      writeValue(entry, elementType.name, elementType, element, roundingMode)
+      writeValue(entry, elementType.name, elementType, element, roundingMode, NestedPaths.child(path, 'element'), row)
     }
   }
 
-  private static void writeMap(Group group, String fieldName, GroupType groupType, Object value, RoundingMode roundingMode) {
+  private static void writeMap(Group group, String fieldName, GroupType groupType, Object value, RoundingMode roundingMode, String path, int row) {
     if (!(value instanceof Map)) {
       throw new IllegalArgumentException(
-          "Cannot write field '$fieldName' as Parquet MAP: expected a Map " +
+          "Cannot write field '$path', row $row as Parquet MAP: expected a Map " +
           "but got ${value.class.simpleName}. Value: ${truncateForError(value)}")
     }
     Map<?, ?> mapValue = (Map<?, ?>) value
@@ -238,39 +211,22 @@ final class ParquetValueWriter {
     Type valueType = keyValueType.getFieldCount() > 1 ? keyValueType.getType(1) : null
     mapValue.each { Object k, Object v ->
       Group kvGroup = mapGroup.addGroup(FIELD_KEY_VALUE)
-      writePrimitiveValue(kvGroup, keyPrimitive.name, keyPrimitive, k, roundingMode)
+      writeValue(kvGroup, keyPrimitive.name, keyPrimitive, k, roundingMode, NestedPaths.child(path, 'key'), row)
       if (valueType != null && v != null) {
-        writeValue(kvGroup, valueType.name, valueType, v, roundingMode)
+        writeValue(kvGroup, valueType.name, valueType, v, roundingMode, NestedPaths.child(path, 'value'), row)
       }
     }
   }
 
-  private static void writeStruct(Group group, String fieldName, GroupType groupType, Object value, RoundingMode roundingMode) {
-    Map<String, Object> structValues = toStructMap(value)
+  private static void writeStruct(Group group, String fieldName, GroupType groupType, Object value, RoundingMode roundingMode, String path, int row) {
+    Map structValues = (Map) value
     Group structGroup = group.addGroup(fieldName)
     groupType.fields.each { Type field ->
       def childValue = structValues.get(field.name)
       if (childValue != null) {
-        writeValue(structGroup, field.name, field, childValue, roundingMode)
+        writeValue(structGroup, field.name, field, childValue, roundingMode, NestedPaths.child(path, field.name), row)
       }
     }
-  }
-
-  private static Map<String, Object> toStructMap(Object value) {
-    if (value instanceof Map mapValue) {
-      Map<String, Object> result = [:]
-      mapValue.each { k, v -> result[String.valueOf(k)] = v }
-      return result
-    }
-    Map<String, Object> map = [:]
-    getPropertyDescriptors(value.class).each { PropertyDescriptor pd ->
-      def method = pd.readMethod
-      if (!method.accessible) {
-        method.accessible = true
-      }
-      map[pd.name] = method.invoke(value)
-    }
-    return map
   }
 
   /**

@@ -234,4 +234,16 @@ class ParquetReviewRegressionTest {
       MatrixParquetReader.builder().columns(['id']).filter(Predicates.isNull('payload')).read(file)
     }
   }
+  @Test
+  void nestedFailuresCarryCompleteLogicalPaths() {
+    [[Matrix.builder().columns(l: [[10.00G]]).types(List).build(), 'l.element',
+      new ParquetWriteOptions().decimalMeta(['l.element': [3, 2] as int[]])],
+     [Matrix.builder().columns(l: [[[(null): 1]]]).types(List).build(), 'l.element', new ParquetWriteOptions()],
+     [Matrix.builder().columns(mm: [[a: [(null): 1]]]).types(Map).build(), 'mm.value', new ParquetWriteOptions()],
+     [Matrix.builder().columns(l: [[new Object()]]).types(List).build(), 'l.element', new ParquetWriteOptions()]].each { matrix, path, options ->
+      def failure = assertThrows(IllegalArgumentException) { MatrixParquetWriter.writeBytes(matrix, options) }
+      assertTrue(failure.message.contains(path), failure.message)
+    }
+  }
+
 }

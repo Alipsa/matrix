@@ -129,7 +129,7 @@ class MatrixParquetBigIntegerTest {
 
     Matrix matrix = MatrixParquetReader.read(file)
 
-    assertEquals([huge as BigDecimal, BigInteger.ONE as BigDecimal], matrix.bigs[0])
+    assertEquals([huge, BigInteger.ONE], matrix.bigs[0])
   }
 
   @Test
@@ -157,6 +157,6 @@ class MatrixParquetBigIntegerTest {
 
     Matrix matrix = MatrixParquetReader.read(file)
 
-    assertEquals([(key as BigDecimal): 'a'], matrix.m[0])
+    assertEquals([(key): 'a'], matrix.m[0])
   }
 }

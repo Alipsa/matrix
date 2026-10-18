@@ -49,6 +49,10 @@ dependencies {
 }
 
 test {
+    ['parquet.baseline', 'parquet.layoutBenchmark', 'parquet.datasetBenchmark', 'parquet.benchmarkRows'].each { key ->
+        def value = providers.gradleProperty(key).orNull
+        if (value != null) { systemProperty key, value }
+    }
     testLogging.showStandardStreams = true
     useJUnitPlatform()
 }
