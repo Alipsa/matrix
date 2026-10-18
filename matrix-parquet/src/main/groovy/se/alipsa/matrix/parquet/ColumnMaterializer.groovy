@@ -73,8 +73,7 @@ final class ColumnMaterializer extends RecordMaterializer<Boolean> {
       boolean parentIsMap = false, boolean wrapper = false, boolean mapWrapper = false) {
     if (type.primitive) {
       // Top-level converters carry their declared type; nestedTypes only applies to nested leaves.
-      Class leafExpected = expected != null ? expected : (nestedTypes[path] ?: expected)
-      return new ValueConverter(type.asPrimitiveType(), leafExpected, binaryAsString, sink, logicalSink)
+      return new ValueConverter(type.asPrimitiveType(), expected ?: nestedTypes[path], binaryAsString, sink, logicalSink)
     }
     GroupType group = type.asGroupType()
     Map<String, Object> values = [:]

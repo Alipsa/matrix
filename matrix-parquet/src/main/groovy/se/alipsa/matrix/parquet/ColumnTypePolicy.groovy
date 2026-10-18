@@ -41,7 +41,7 @@ final class ColumnTypePolicy {
       if (value instanceof Instant) {
         try { TemporalUnits.epochUnits(value, unit) }
         catch (ArithmeticException failure) { throw new IllegalArgumentException("Column '$name', row $row: Instant overflows epoch $unit", failure) }
-      } else if (value instanceof LocalDateTime) {
+      } else if (value instanceof LocalDateTime && requiresEpochCheck((LocalDateTime) value, unit)) {
         try { TemporalUnits.epochUnits(((LocalDateTime) value).atZone(ParquetValueWriter.getZoneId()).toInstant(), unit) }
         catch (ArithmeticException failure) { throw new IllegalArgumentException("Column '$name', row $row: LocalDateTime overflows epoch $unit", failure) }
       } else if (value instanceof Timestamp) {
@@ -85,6 +85,14 @@ final class ColumnTypePolicy {
       return Map
     }
     SUPPORTED.contains(type) ? type : null
+  }
+
+  /**
+   * MICROS covers about ±292,000 years; well inside {@code ±290,000} the exact epoch conversion
+   * cannot overflow, so the per-cell zone lookup is skipped.
+   */
+  private static boolean requiresEpochCheck(LocalDateTime value, org.apache.parquet.schema.LogicalTypeAnnotation.TimeUnit unit) {
+    unit != org.apache.parquet.schema.LogicalTypeAnnotation.TimeUnit.MICROS || Math.abs(value.year) >= 290_000
   }
 
   static Class box(Class type) {

@@ -234,7 +234,9 @@ legacy outer MAP_KEY_VALUE groups and key-only maps (whose values become null). 
 names. It preserves nested Instant, Date, Timestamp, sql.Date, Byte, Short and BigInteger values
 in lists, map keys/values and struct fields. LocalTime/Time are distinguished by TIME annotations.
 Older readers ignore the new key; files without it retain schema inference. Unknown classes and
-incompatible entries are ignored, with no external class loading.
+incompatible entries are ignored, with no external class loading. Segments containing `.` or `\`
+are escaped (`\.`, `\\`) so dotted column or struct-key names cannot collide with the path
+separator; `decimalMeta` keys remain the raw, unescaped dotted paths.
 
 | Parquet / Matrix type | Read or write behavior |
 |---|---|

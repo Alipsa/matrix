@@ -9,7 +9,10 @@ final class DecimalSchemaPolicy {
   final boolean infer
   final Integer precision
   final Integer scale
+  /** Raw user-facing dotted path used for decimalMeta settings and error messages. */
   final String path
+  /** Escaped path used as matrix.nestedTypes key; unambiguous even for dotted or backslash-containing names. */
+  final String nestedPath
   final org.apache.parquet.schema.LogicalTypeAnnotation.TimeUnit timestampUnit
   final Map<String, String> nestedTypes
   final Set<String> used
@@ -18,7 +21,7 @@ final class DecimalSchemaPolicy {
   DecimalSchemaPolicy(Map<String, int[]> settings, boolean infer = true, Integer precision = null,
       Integer scale = null, String path = '', Set<String> used = new HashSet<>(),
       org.apache.parquet.schema.LogicalTypeAnnotation.TimeUnit timestampUnit = org.apache.parquet.schema.LogicalTypeAnnotation.TimeUnit.MICROS,
-      Map<String, String> nestedTypes = [:]) {
+      Map<String, String> nestedTypes = [:], String nestedPath = '') {
     this.timestampUnit = timestampUnit
     this.nestedTypes = nestedTypes
     this.settings = settings
@@ -26,11 +29,14 @@ final class DecimalSchemaPolicy {
     this.precision = precision
     this.scale = scale
     this.path = path
+    this.nestedPath = nestedPath
     this.used = used
   }
 
   DecimalSchemaPolicy child(String name) {
-    new DecimalSchemaPolicy(settings, infer, precision, scale, NestedPaths.child(path, name), used, timestampUnit, nestedTypes)
+    String childPath = path.empty ? name : "$path.$name".toString()
+    new DecimalSchemaPolicy(settings, infer, precision, scale, childPath, used, timestampUnit, nestedTypes,
+        NestedPaths.child(nestedPath, name))
   }
 
   int[] resolve(List<?> values, int[] supplied) {

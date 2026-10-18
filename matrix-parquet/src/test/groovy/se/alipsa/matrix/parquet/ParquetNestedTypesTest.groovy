@@ -102,4 +102,16 @@ class ParquetNestedTypesTest {
     assertEquals(Byte, struct.a.b.getClass())
   }
 
+  @Test
+  void decimalMetaKeepsRawDottedPathsForColumnsAndStructKeys() {
+    def top = Matrix.builder().columns('a.b': [1.25G]).build()
+    byte[] bytes = MatrixParquetWriter.writeBytes(top, new ParquetWriteOptions().decimalMeta(['a.b': [10, 2] as int[]]))
+    assertEquals(1.25G, MatrixParquetReader.read(bytes)[0, 'a.b'])
+    def nested = Matrix.builder().columns(s: [['p.q': 1.25G, n: 'x']]).types(Map).build()
+    bytes = MatrixParquetWriter.writeBytes(nested, new ParquetWriteOptions().decimalMeta(['s.p.q': [10, 2] as int[]]))
+    def struct = MatrixParquetReader.read(bytes)[0, 's']
+    assertEquals(1.25G, struct['p.q'])
+    assertEquals('x', struct.n)
+  }
+
 }

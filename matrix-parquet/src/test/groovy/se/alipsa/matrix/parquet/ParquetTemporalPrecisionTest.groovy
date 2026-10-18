@@ -71,6 +71,27 @@ class ParquetTemporalPrecisionTest {
   }
 
   @Test
+  void overflowReportsColumnAndRowForEveryTemporalClass() {
+    ['MICROS', 'NANOS'].each { unit ->
+      def failure = assertThrows(IllegalArgumentException) {
+        MatrixParquetWriter.writeBytes(Matrix.builder().columns(ts: [Instant.MAX]).build(), new ParquetWriteOptions().timestampUnit(unit))
+      }
+      assertTrue(failure.message.contains('ts') && failure.message.contains('row 0'))
+    }
+    [Instant.parse('1677-09-21T00:12:43.145224191Z'), Instant.parse('2262-04-11T23:47:16.854775808Z')].each { value ->
+      [value, Timestamp.from(value), LocalDateTime.ofInstant(value, ZoneOffset.UTC)].each { temporal ->
+        def matrix = Matrix.builder().columns(ts: [temporal]).build()
+        def failure = assertThrows(IllegalArgumentException) { MatrixParquetWriter.builder(matrix).zoneId('UTC').timestampUnit('NANOS').writeBytes() }
+        assertTrue(failure.message.contains('ts') && failure.message.contains('row 0'))
+        assertEquals(1, MatrixParquetReader.read(MatrixParquetWriter.builder(matrix).zoneId('UTC').writeBytes()).rowCount())
+      }
+    }
+    Instant minimum = Instant.parse('-290308-12-21T19:59:05.224192Z')
+    assertEquals(minimum, MatrixParquetReader.read(MatrixParquetWriter.writeBytes(Matrix.builder().columns(ts: [minimum]).build()))[0, 'ts'])
+    assertThrows(IllegalArgumentException) { MatrixParquetWriter.writeBytes(Matrix.builder().columns(ts: [minimum.minusNanos(1000)]).build()) }
+  }
+
+  @Test
   void farFutureLocalDateTimeAndTimestampFailAtSchemaValidationBeforeWriting(@TempDir File directory) {
     File file = new File(directory, 'overflow.parquet')
     LocalDateTime sentinel = LocalDateTime.of(9999, 12, 31, 0, 0)

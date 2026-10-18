@@ -952,13 +952,7 @@ class MatrixParquetWriter {
 
   private static void recordNestedType(DecimalSchemaPolicy decimals, ColumnTypePolicy policy) {
     if (policy.metadata in [Instant, Date, Timestamp, java.sql.Date, Byte, Short, BigInteger]) {
-      String existing = decimals.nestedTypes[decimals.path]
-      if (existing != null && existing != policy.metadata.name) {
-        // Same path recorded with different types; drop it rather than silently keeping one.
-        decimals.nestedTypes.remove(decimals.path)
-      } else {
-        decimals.nestedTypes[decimals.path] = policy.metadata.name
-      }
+      decimals.nestedTypes[decimals.nestedPath] = policy.metadata.name
     }
   }
 
