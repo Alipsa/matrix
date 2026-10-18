@@ -11,7 +11,13 @@ import org.apache.parquet.schema.Type
 final class NestedPaths {
   private NestedPaths() {}
 
-  static String child(String path, String name) { path.empty ? name : "$path.$name".toString() }
+  /** Escapes '.' and '\\' so dotted or backslash-containing names cannot collide with path separators. */
+  static String escape(String name) { name.replace('\\', '\\\\').replace('.', '\\.') }
+
+  /** Logical path of a top-level field. */
+  static String root(String name) { escape(name) }
+
+  static String child(String path, String name) { path.empty ? escape(name) : "${path}.${escape(name)}".toString() }
 
   static boolean isMap(GroupType group, boolean parentIsMap = false) {
     group.logicalTypeAnnotation instanceof LogicalTypeAnnotation.MapLogicalTypeAnnotation ||

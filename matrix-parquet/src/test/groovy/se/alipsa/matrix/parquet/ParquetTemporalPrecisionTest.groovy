@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*
 
 import org.apache.parquet.schema.LogicalTypeAnnotation.TimeUnit
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 
 import se.alipsa.matrix.core.Matrix
 
@@ -70,23 +71,30 @@ class ParquetTemporalPrecisionTest {
   }
 
   @Test
-  void overflowReportsColumnAndRowForEveryTemporalClass() {
-    ['MICROS', 'NANOS'].each { unit ->
-      def failure = assertThrows(IllegalArgumentException) {
-        MatrixParquetWriter.writeBytes(Matrix.builder().columns(ts: [Instant.MAX]).build(), new ParquetWriteOptions().timestampUnit(unit))
-      }
-      assertTrue(failure.message.contains('ts') && failure.message.contains('row 0'))
+  void farFutureLocalDateTimeAndTimestampFailAtSchemaValidationBeforeWriting(@TempDir File directory) {
+    File file = new File(directory, 'overflow.parquet')
+    LocalDateTime sentinel = LocalDateTime.of(9999, 12, 31, 0, 0)
+    def localFailure = assertThrows(IllegalArgumentException) {
+      MatrixParquetWriter.write(Matrix.builder().columns(ts: [sentinel]).build(), file, new ParquetWriteOptions().timestampUnit('NANOS'))
     }
-    [Instant.parse('1677-09-21T00:12:43.145224191Z'), Instant.parse('2262-04-11T23:47:16.854775808Z')].each { value ->
-      [value, Timestamp.from(value), LocalDateTime.ofInstant(value, ZoneOffset.UTC)].each { temporal ->
-        def matrix = Matrix.builder().columns(ts: [temporal]).build()
-        def failure = assertThrows(IllegalArgumentException) { MatrixParquetWriter.builder(matrix).zoneId('UTC').timestampUnit('NANOS').writeBytes() }
-        assertTrue(failure.message.contains('ts') && failure.message.contains('row 0'))
-        assertEquals(1, MatrixParquetReader.read(MatrixParquetWriter.builder(matrix).zoneId('UTC').writeBytes()).rowCount())
-      }
+    assertTrue(localFailure.message.contains('LocalDateTime') && localFailure.message.contains('row 0'), localFailure.message)
+    assertFalse(file.exists(), 'schema validation must fail before any file is created')
+    def timestampFailure = assertThrows(IllegalArgumentException) {
+      MatrixParquetWriter.writeBytes(Matrix.builder().columns(ts: [Timestamp.from(Instant.parse('2263-01-01T00:00:00Z'))]).build(),
+          new ParquetWriteOptions().timestampUnit('NANOS'))
     }
-    Instant minimum = Instant.parse('-290308-12-21T19:59:05.224192Z')
-    assertEquals(minimum, MatrixParquetReader.read(MatrixParquetWriter.writeBytes(Matrix.builder().columns(ts: [minimum]).build()))[0, 'ts'])
-    assertThrows(IllegalArgumentException) { MatrixParquetWriter.writeBytes(Matrix.builder().columns(ts: [minimum.minusNanos(1000)]).build()) }
+    assertTrue(timestampFailure.message.contains('Timestamp') && timestampFailure.message.contains('row 0'), timestampFailure.message)
+  }
+
+  @Test
+  void nanosBoundaryHonorsThePinnedWriterZone() {
+    LocalDateTime boundary = LocalDateTime.ofInstant(Instant.parse('2262-04-11T23:47:16.854775807Z'), ZoneOffset.UTC)
+    def matrix = Matrix.builder().columns(ts: [boundary]).build()
+    byte[] bytes = MatrixParquetWriter.writeBytes(matrix, ParquetWriteOptions.fromMap([timestampUnit: 'NANOS', zoneId: 'UTC']))
+    assertEquals(boundary, MatrixParquetReader.builder().zoneId('UTC').read(bytes)[0, 'ts'])
+    def failure = assertThrows(IllegalArgumentException) {
+      MatrixParquetWriter.writeBytes(matrix, ParquetWriteOptions.fromMap([timestampUnit: 'NANOS', zoneId: 'Pacific/Honolulu']))
+    }
+    assertTrue(failure.message.contains('LocalDateTime'), failure.message)
   }
 }

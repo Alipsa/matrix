@@ -263,8 +263,8 @@ class ParquetWriteOptions {
     Set<String> unknown = new HashSet<>(normalized.keySet())
     unknown.removeAll(known)
     if (!unknown.empty) { throw new IllegalArgumentException("Unknown Parquet options: $unknown") }
-    if (normalized.containsKey('timestampunit')) { result.timestampUnit((String) normalized.timestampunit) }
     normalized = normalized.findAll { String key, Object value -> value != null }
+    if (normalized.containsKey('timestampunit')) { result.timestampUnit((String) normalized.timestampunit) }
     if (normalized.containsKey('inferprecisionandscale')) {
       Object inferPrecisionAndScale = normalized.inferprecisionandscale
       if (inferPrecisionAndScale != null) {

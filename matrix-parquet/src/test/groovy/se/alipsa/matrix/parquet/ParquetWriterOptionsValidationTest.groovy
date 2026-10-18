@@ -35,6 +35,14 @@ class ParquetWriterOptionsValidationTest {
   }
 
   @Test
+  void nullOptionValuesMeanDefaultsEverywhere() {
+    assertEquals('MICROS', ParquetWriteOptions.fromMap([timestampUnit: null]).timestampUnit)
+    assertEquals('NANOS', ParquetWriteOptions.fromMap([timestampUnit: ' nanos ']).timestampUnit)
+    assertEquals(CompressionCodecName.SNAPPY, ParquetWriteOptions.fromMap([compressionCodec: null]).compressionCodec)
+    assertEquals(java.math.RoundingMode.UNNECESSARY, ParquetWriteOptions.fromMap([roundingMode: null]).roundingMode)
+  }
+
+  @Test
   @SuppressWarnings('LocaleSetDefault') // Regression for locale independence; restored in finally.
   void codecNamesIgnoreDefaultLocaleAndWhitespace() {
     Locale previous = Locale.default

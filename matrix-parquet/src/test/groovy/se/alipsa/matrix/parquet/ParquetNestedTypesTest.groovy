@@ -76,4 +76,30 @@ class ParquetNestedTypesTest {
     assertEquals(Byte, MatrixParquetReader.read(dotted).type('a.b'))
   }
 
+  @Test
+  void dottedTopLevelColumnDoesNotCollideWithStructChildPath() {
+    def data = Matrix.builder().columns('s.a': [(short) 1000], s: [[a: (byte) 1, c: 'x']]).types(Short, Map).build()
+    byte[] bytes = MatrixParquetWriter.writeBytes(data)
+    assertEquals(['s.a': 'java.lang.Byte'],
+        MatrixParquetReader.parseNestedTypes(ParquetFixFixtures.footer(bytes).metadata['matrix.nestedTypes']))
+    def result = MatrixParquetReader.read(bytes)
+    assertEquals(Short, result.type('s.a'))
+    assertEquals((short) 1000, result[0, 's.a'])
+    assertEquals((byte) 1, result[0, 's'].a)
+    assertEquals(Byte, result[0, 's'].a.getClass())
+  }
+
+  @Test
+  void dottedStructKeyDoesNotCollideWithNestedStructPath() {
+    def data = Matrix.builder().columns(s: [['a.b': (short) 1000, a: [b: (byte) 1, c: 'x']]]).types(Map).build()
+    byte[] bytes = MatrixParquetWriter.writeBytes(data)
+    assertEquals(['s.a\\.b': 'java.lang.Short', 's.a.b': 'java.lang.Byte'],
+        MatrixParquetReader.parseNestedTypes(ParquetFixFixtures.footer(bytes).metadata['matrix.nestedTypes']))
+    def struct = MatrixParquetReader.read(bytes)[0, 's']
+    assertEquals((short) 1000, struct['a.b'])
+    assertEquals(Short, struct['a.b'].getClass())
+    assertEquals((byte) 1, struct.a.b)
+    assertEquals(Byte, struct.a.b.getClass())
+  }
+
 }

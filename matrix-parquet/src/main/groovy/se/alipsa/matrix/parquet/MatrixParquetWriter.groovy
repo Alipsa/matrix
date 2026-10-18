@@ -463,13 +463,12 @@ class MatrixParquetWriter {
     }
     options.validate()
     File file = determineTargetFile(matrix, fileOrDir)
-    WriteSchema schema = createSchema(matrix, options)
     if (options.zoneId != null) {
       return ParquetValueWriter.withZoneId(options.zoneId) {
-        writeInternal(matrix, file, schema, options.compressionCodec, options.roundingMode, options)
+        writeInternal(matrix, file, createSchema(matrix, options), options.compressionCodec, options.roundingMode, options)
       }
     }
-    return writeInternal(matrix, file, schema, options.compressionCodec, options.roundingMode, options)
+    return writeInternal(matrix, file, createSchema(matrix, options), options.compressionCodec, options.roundingMode, options)
   }
 
   /**
@@ -529,13 +528,12 @@ class MatrixParquetWriter {
       throw new IllegalArgumentException(ERR_OPTIONS_NULL)
     }
     options.validate()
-    WriteSchema schema = createSchema(matrix, options)
     if (options.zoneId != null) {
       return ParquetValueWriter.withZoneId(options.zoneId) {
-        writeBytesInternal(matrix, schema, options.compressionCodec, options.roundingMode, options)
+        writeBytesInternal(matrix, createSchema(matrix, options), options.compressionCodec, options.roundingMode, options)
       }
     }
-    return writeBytesInternal(matrix, schema, options.compressionCodec, options.roundingMode, options)
+    return writeBytesInternal(matrix, createSchema(matrix, options), options.compressionCodec, options.roundingMode, options)
   }
 
   private static File determineTargetFile(Matrix matrix, File fileOrDir) {
@@ -954,7 +952,13 @@ class MatrixParquetWriter {
 
   private static void recordNestedType(DecimalSchemaPolicy decimals, ColumnTypePolicy policy) {
     if (policy.metadata in [Instant, Date, Timestamp, java.sql.Date, Byte, Short, BigInteger]) {
-      decimals.nestedTypes[decimals.path] = policy.metadata.name
+      String existing = decimals.nestedTypes[decimals.path]
+      if (existing != null && existing != policy.metadata.name) {
+        // Same path recorded with different types; drop it rather than silently keeping one.
+        decimals.nestedTypes.remove(decimals.path)
+      } else {
+        decimals.nestedTypes[decimals.path] = policy.metadata.name
+      }
     }
   }
 

@@ -41,6 +41,12 @@ final class ColumnTypePolicy {
       if (value instanceof Instant) {
         try { TemporalUnits.epochUnits(value, unit) }
         catch (ArithmeticException failure) { throw new IllegalArgumentException("Column '$name', row $row: Instant overflows epoch $unit", failure) }
+      } else if (value instanceof LocalDateTime) {
+        try { TemporalUnits.epochUnits(((LocalDateTime) value).atZone(ParquetValueWriter.getZoneId()).toInstant(), unit) }
+        catch (ArithmeticException failure) { throw new IllegalArgumentException("Column '$name', row $row: LocalDateTime overflows epoch $unit", failure) }
+      } else if (value instanceof Timestamp) {
+        try { TemporalUnits.epochUnits(((Timestamp) value).toInstant(), unit) }
+        catch (ArithmeticException failure) { throw new IllegalArgumentException("Column '$name', row $row: Timestamp overflows epoch $unit", failure) }
       }
       Class current = policyType(value.getClass())
       if (current == null || (policy != null && policy != current)) {

@@ -32,7 +32,7 @@ final class ColumnMaterializer extends RecordMaterializer<Boolean> {
     schema.fields.eachWithIndex { Type field, int index ->
       Closure logicalSink = residual != null && residual.columns().contains(field.name) ? { Object value -> current[field.name] = value } : null
       children[index] = converter(field, types[index], binaryAsString,
-          { Object value -> columns[index].add(value) }, logicalSink, field.name, nestedTypes)
+          { Object value -> columns[index].add(value) }, logicalSink, NestedPaths.root(field.name), nestedTypes)
     }
     root = new GroupConverter() {
       @Override
@@ -72,7 +72,9 @@ final class ColumnMaterializer extends RecordMaterializer<Boolean> {
   private static Converter converter(Type type, Class expected, boolean binaryAsString, Closure sink, Closure logicalSink = null, String path = '', Map<String, Class> nestedTypes = [:],
       boolean parentIsMap = false, boolean wrapper = false, boolean mapWrapper = false) {
     if (type.primitive) {
-      return new ValueConverter(type.asPrimitiveType(), nestedTypes[path] ?: expected, binaryAsString, sink, logicalSink)
+      // Top-level converters carry their declared type; nestedTypes only applies to nested leaves.
+      Class leafExpected = expected != null ? expected : (nestedTypes[path] ?: expected)
+      return new ValueConverter(type.asPrimitiveType(), leafExpected, binaryAsString, sink, logicalSink)
     }
     GroupType group = type.asGroupType()
     Map<String, Object> values = [:]

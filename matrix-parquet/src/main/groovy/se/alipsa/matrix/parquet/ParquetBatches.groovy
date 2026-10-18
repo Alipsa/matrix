@@ -84,9 +84,9 @@ final class ParquetBatches implements MatrixBatchIterator {
     }
     Map<String, String> nested = MatrixParquetReader.parseNestedTypes(metadata[MatrixParquetReader.METADATA_NESTED_TYPES])
     requested.fields.each { Type field ->
-      NestedPaths.leaves(field, field.name).each { String path, Type leaf ->
+      NestedPaths.leaves(field, NestedPaths.root(field.name)).each { String path, Type leaf ->
         Class expected = ColumnTypePolicy.METADATA_TYPES[nested[path]]
-        if (path != field.name && compatibleMetadata(expected, leaf)) { nestedTypes[path] = expected }
+        if (path != NestedPaths.root(field.name) && compatibleMetadata(expected, leaf)) { nestedTypes[path] = expected }
       }
     }
     selected = options.rowGroups == null ? (0..<footer.blocks.size()).toList() : new ArrayList<>(options.rowGroups)

@@ -166,7 +166,6 @@ final class ParquetPredicate {
   private Object physicalValueExact(PrimitiveType field) {
     if (value == null) { return null }
     def logical = field.logicalTypeAnnotation
-    if (logical instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation && !logical.isSigned()) { return NOT_PUSHABLE }
     if (logical instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
       BigDecimal decimal = new BigDecimal(value.toString()).setScale(logical.scale, java.math.RoundingMode.UNNECESSARY)
       if (decimal.precision() > logical.precision) { throw new IllegalArgumentException("Decimal predicate overflows '${field.name}'") }

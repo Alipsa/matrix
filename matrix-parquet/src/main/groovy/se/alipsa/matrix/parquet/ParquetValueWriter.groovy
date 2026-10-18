@@ -73,8 +73,9 @@ final class ParquetValueWriter {
   /**
    * Gets the current timezone for timestamp conversion.
    * Returns the thread-local value if set, otherwise the system default.
+   * Package scope so schema-time validation ({@link ColumnTypePolicy}) sees the same zone as value writing.
    */
-  private static ZoneId getZoneId() {
+  static ZoneId getZoneId() {
     ZoneId zoneId = ZONE_ID_HOLDER.get()
     return zoneId != null ? zoneId : ZoneId.systemDefault()
   }
