@@ -22,10 +22,10 @@ Complete defaults, supported types and end-to-end examples are in [the module gu
 | FLOAT16 | Contextual unsupported-type error | No UTF-8 fallback; convert explicitly before reading |
 | External INT96 | Read-only UTC timestamp support, returned in reader zone or as compatible metadata type | Residual filters; writer never emits INT96 |
 | Unsigned integers | UINT8/16 → Integer, UINT32 → Long, UINT64 → BigInteger | Correct unsigned values; residual-only predicates |
-| Timestamp precision | LocalDateTime/Timestamp/Instant default to TIMESTAMP(MICROS), consistently truncating sub-microsecond digits; Instant.now() works on Linux/Windows | timestampUnit('NANOS') preserves precision within int64 range; intentional exception to lossless-decimal default, bounded below 1 µs |
+| Timestamp precision | LocalDateTime/Timestamp/Instant default to TIMESTAMP(MICROS), consistently truncating sub-microsecond digits; Instant.now() works on Linux/Windows | timestampUnit('NANOS') preserves precision within int64 range (1677-09-21 to 2262-04-11); out-of-range values of every temporal class fail before writing with column/row context; intentional exception to lossless-decimal default, bounded below 1 µs |
 | Dataset names | Directory name for directory reads; first filename without extension for lists/globs | matrixName overrides collected/batched names |
 | String-declared GString | CharSequence values accepted and converted to text | Other declared-type checks remain strict |
-| Nested type metadata | matrix.nestedTypes preserves canonical nested leaf classes | Older readers ignore key; missing/unknown/incompatible metadata retains inference |
+| Nested type metadata | matrix.nestedTypes preserves canonical nested leaf classes; path segments escape `.` and `\` (`\.`, `\\`) so dotted names cannot collide | Older readers ignore key; missing/unknown/incompatible metadata retains inference; `decimalMeta` keys remain raw dotted paths |
 | Byte / Short fallback | Signed INT32 with INT(8/16), restored as Byte/Short | Legacy unannotated text stays String; explicitly convert to String before writing to retain text output |
 | LocalTime fallback | TIME(NANOS), restored as LocalTime using new-format metadata | Legacy text stays String; explicit String conversion retains text output |
 | Instant fallback | TIMESTAMP(MICROS, adjusted=true), restored as Instant using new-format metadata | Legacy text stays String; truncate sub-microsecond digits under MICROS, reject int64 overflow; NANOS preserves precision |
@@ -68,6 +68,7 @@ October review fixes also add exact residual fallback for unrepresentable predic
 partial AND pruning, canonical container inference, full nested error paths, strict bloom/codec
 validation, secure read spooling, bounded cross-platform glob parsing, weak-ETag preconditions,
 legacy MAP layouts, and indexed column access in the write loop; dead reader/POJO paths were removed.
+A null `timestampUnit` option-map entry now means the MICROS default.
 
 Native CDC writing remains deferred to upstream parquet-java #3818; the Python rewrite preserves
 custom metadata. Hadoop stays as a runtime dependency because codec initialization still loads it.
