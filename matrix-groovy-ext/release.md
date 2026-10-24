@@ -1,7 +1,7 @@
 # Matrix-groovy-ext release history
 
 ## v0.4.1 (unreleased)
-- Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
+- Built with Groovy 6.0.0 and requires a Groovy 6 runtime.
 - Fixed `log`, `log10` and `log(x, base)` to retain DECIMAL64 relative accuracy for inputs just below 1. `2G.log(0.5G)` now returns `-1` instead of `-1.000000000000000`; only the scale changes.
 - Made `sin`, `cos` and `tan` reduce modulo π/2 with adaptive π precision, retaining DECIMAL64 relative accuracy near their zeros (including `sin(PI32)`, previously wrong at the third significant digit). Beyond the 512-digit cap results are best effort. The `1E+470` rejection boundary and its message are unchanged.
 - Made `tan` reduce its angle once instead of twice.
