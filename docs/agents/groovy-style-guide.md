@@ -755,7 +755,7 @@ return switch (type) {
 ```
 
 **Qualify enum constants in `case` labels.**
-Unlike Java, Groovy does not resolve bare enum constant names from the switch subject. Groovy 6 rejects them at compile time; Groovy 5 compiled them but threw `MissingPropertyException` at runtime.
+Unlike Java, Groovy does not resolve bare enum constant names from the switch subject. Groovy 6 rejects them at compile time; on Groovy 5 they worked under `@CompileStatic` but threw `MissingPropertyException` in dynamically compiled code (for example tests).
 ```groovy
 // Bad
 switch (normalization) {
@@ -785,7 +785,7 @@ Token punctuation = switch (ch) {
 ```
 
 **Code compiled with Groovy 6 requires a Groovy 6 runtime.**
-Groovy 6 adds new method overloads (for example `DefaultGroovyMethods.getAt(Map, String)` for `map[key]`), and classes compiled against them throw `NoSuchMethodError` on Groovy 5. Keep every Groovy pin (Gradle catalog, `matrix-bom/pom.xml`, consumer test builds) on the same version.
+Groovy 6 adds new method overloads (for example `DefaultGroovyMethods.getAt(Map, String)` for `map[key]`), and classes compiled against them throw `NoSuchMethodError` on Groovy 5. Keep every Groovy pin (Gradle catalog, `matrix-bom/pom.xml`, consumer test builds) on the same version, and keep the minimum-version check in the `Matrix` static initializer in step with the Groovy major version.
 
 ## When in Doubt
 

@@ -7,7 +7,7 @@ Integration between [Matrix](https://github.com/Alipsa/matrix) and [Smile](https
 - **JDK 21.** Smile 4.x is published as Java 21 bytecode (class file major version 65),
   so it will not load on an older JDK. matrix-smile itself compiles with
   `options.release = 21`. The module is built and tested on JDK 21.
-- **Groovy 5.0+** (required for the modern switch expression syntax).
+- **Groovy 6.0+** (matrix artifacts are compiled with Groovy 6 and require a Groovy 6 runtime).
 
 ## Installation
 

@@ -42,7 +42,7 @@ The Matrix project consists of the following modules:
 ## Setup
 Maintainers can use [`releaseAll.sh`](docs/releaseAll.md) to release eligible modules together in one Central bundle.
 
-Matrix targets Groovy 5 and JDK 21. Binary builds can be downloaded
+Matrix targets Groovy 6 and JDK 21. Binary builds can be downloaded
 from the [Matrix project release page](https://github.com/Alipsa/matrix/releases) but if you use a build system that 
 handles dependencies via maven central (gradle, maven ivy etc.) you can add your dependencies from there
 . The group name is se.alipsa.matrix. 

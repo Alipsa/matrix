@@ -797,7 +797,7 @@ Map<String, Matrix> legacy = grouped.toStringKeyMap()
 ## Matrix core 3.10.0: checked snapshots and data cleanup
 
 These examples require matrix-core 3.10.0 (development artifact
-`se.alipsa.matrix:matrix-core:3.10.0-SNAPSHOT`) and Groovy 5 on Java 21.
+`se.alipsa.matrix:matrix-core:3.10.0-SNAPSHOT`) and Groovy 6 on Java 21.
 Add that dependency to your Gradle `implementation` configuration, then run the
 examples as Groovy scripts with the imports below.
 
