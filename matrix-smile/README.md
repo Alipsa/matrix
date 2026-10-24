@@ -14,7 +14,7 @@ Integration between [Matrix](https://github.com/Alipsa/matrix) and [Smile](https
 Add the dependency to your build.gradle:
 
 ```groovy
-implementation 'org.apache.groovy:groovy:5.1.2'
+implementation 'org.apache.groovy:groovy:6.0.0'
 implementation 'se.alipsa.matrix:matrix-core:3.10.0-SNAPSHOT'
 implementation 'se.alipsa.matrix:matrix-smile:0.3.0-SNAPSHOT'
 ```

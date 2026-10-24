@@ -7,7 +7,7 @@ The Matrix Parquet module reads and writes Apache Parquet files using the native
 When you use the Matrix BOM, add `matrix-parquet` alongside `matrix-core`:
 
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.6'
+implementation 'org.apache.groovy:groovy:6.0.0'
 implementation platform('se.alipsa.matrix:matrix-bom:2.6.0')
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-parquet'
@@ -32,7 +32,7 @@ With Maven:
     <dependency>
       <groupId>org.apache.groovy</groupId>
       <artifactId>groovy</artifactId>
-      <version>5.0.6</version>
+      <version>6.0.0</version>
     </dependency>
     <dependency>
       <groupId>se.alipsa.matrix</groupId>

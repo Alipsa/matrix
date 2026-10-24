@@ -27,7 +27,7 @@ class MapCoord {
       case 'mercator', 'equirectangular', 'identity' -> requestedProjection
       default -> {
         log.warn("Unsupported map projection '${requestedProjection}', using identity")
-        'identity'
+        yield 'identity'
       }
     }
     List<LayerData> transformed = []

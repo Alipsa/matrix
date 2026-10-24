@@ -43,7 +43,7 @@ implementation 'se.alipsa.matrix:matrix-stats'
       <dependency>
          <groupId>org.apache.groovy</groupId>
          <artifactId>groovy</artifactId>
-         <version>5.0.2</version>
+         <version>6.0.0</version>
       </dependency>
       <dependency>
          <groupId>se.alipsa.matrix</groupId>

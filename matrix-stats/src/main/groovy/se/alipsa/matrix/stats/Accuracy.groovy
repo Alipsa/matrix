@@ -25,10 +25,10 @@ class Accuracy {
     validatePredictionInputs(actuals, predictions)
     validateNonZeroActuals(actuals, 'evaluatePredictions')
 
-    def sae = 0.0G
-    def sse = 0.0G
-    def m = 0.0G
-    def N = actuals.size() as BigDecimal
+    BigDecimal sae = 0.0G
+    BigDecimal sse = 0.0G
+    BigDecimal m = 0.0G
+    BigDecimal N = actuals.size() as BigDecimal
     actuals.eachWithIndex { Object entry, int i ->
       def act = entry as BigDecimal
       def pred = predictions[i] as BigDecimal

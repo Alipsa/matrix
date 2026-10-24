@@ -41,7 +41,7 @@ class SpreadsheetUtil {
       String colName = name.toUpperCase()
       int number = 0
       for (int i = 0; i < colName.length(); i++) {
-         number = number * RADIX + (colName.charAt(i) - ('A' as char - 1))
+         number = number * RADIX + ((int) colName.charAt(i) - (int) ('A' as char)) + 1
       }
       return number
    }

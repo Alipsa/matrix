@@ -92,10 +92,12 @@ class ValueConverter {
       case UtilDate -> (E) asDate(o, dateTimePattern, null, locale)
       case Number -> (E) asNumber(o)
       case ZonedDateTime -> (E) asZonedDateTime(o, dateTimeFormatter(dateTimePattern, locale))
-      default -> try {
-        type.cast(o)
-      } catch (ClassCastException ignored) {
-        o.asType(type)
+      default -> {
+        try {
+          yield type.cast(o)
+        } catch (ClassCastException ignored) {
+          yield o.asType(type)
+        }
       }
     }
   }
@@ -650,8 +652,8 @@ class ValueConverter {
       return YearMonth.of(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1)
     }
     if (o instanceof Number) {
-      def val = ((Number)o).intValue()
-      return YearMonth.of(val / MONTH_DIVISOR as int, val % MONTH_DIVISOR)
+      int yearMonth = ((Number)o).intValue()
+      return YearMonth.of(yearMonth.intdiv(MONTH_DIVISOR), yearMonth % MONTH_DIVISOR)
     }
     throw new IllegalArgumentException("Failed to convert ${o.class}, $o to a YearMonth")
   }
