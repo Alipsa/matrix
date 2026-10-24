@@ -622,7 +622,7 @@ Use the `return` keyword only when we need to return early, otherwise use implic
 
 ## Modern Switch Expressions (JDK 14+ / Groovy 5+)
 
-**IMPORTANT:** With Groovy 5.0.6 and JDK 21, always use modern switch expression syntax with arrow (`->`) instead of old-style colon (`:`) with `break` statements.
+**IMPORTANT:** With Groovy 6.0.0 and JDK 21, always use modern switch expression syntax with arrow (`->`) instead of old-style colon (`:`) with `break` statements.
 
 **Use modern switch expressions:**
 ```groovy
@@ -703,6 +703,89 @@ When you encounter old-style switch statements during code modifications:
 4. Ensure each case block is wrapped in `{ }` for multi-statement blocks (but don't use them for single statements)
 
 This applies to any switch statement you touch, even if the primary task is something else. Keeping the codebase modern and consistent is a continuous improvement goal.
+
+## Groovy 6 Pitfalls
+
+Groovy 6 is stricter than Groovy 5 in a few places. The patterns below compiled (or appeared to) on Groovy 5 but fail on Groovy 6. The fixes work on both versions.
+
+**`val` is a keyword — do not use it as a variable name.**
+Groovy 6 adds `val` for final local variables (like `final var`). Used as an identifier, it can break lexing far from the actual line: in `val / x`, the `/` is read as the start of a slashy string, and the parser then reports a misleading "Missing ')'" error hundreds of lines earlier.
+```groovy
+// Bad - fails on Groovy 6
+def val = ((Number) o).intValue()
+YearMonth.of(val / MONTH_DIVISOR as int, val % MONTH_DIVISOR)
+
+// Good
+int yearMonth = ((Number) o).intValue()
+YearMonth.of(yearMonth.intdiv(MONTH_DIVISOR), yearMonth % MONTH_DIVISOR)
+```
+
+**Block arms in a switch *expression* must `yield` their value.**
+When the switch produces a value (assigned or returned), a `{ }` arm must end with `yield`, and an arm cannot be a bare `try` expression. Switch *statements* (no value used) are unaffected.
+```groovy
+// Bad - "`yield` or `throw` is expected"
+String projection = switch (requested) {
+  case 'mercator' -> requested
+  default -> {
+    log.warn("Unsupported projection '${requested}'")
+    'identity'
+  }
+}
+return switch (type) {
+  default -> try { type.cast(o) } catch (ClassCastException ignored) { o.asType(type) }
+}
+
+// Good
+String projection = switch (requested) {
+  case 'mercator' -> requested
+  default -> {
+    log.warn("Unsupported projection '${requested}'")
+    yield 'identity'
+  }
+}
+return switch (type) {
+  default -> {
+    try {
+      yield type.cast(o)
+    } catch (ClassCastException ignored) {
+      yield o.asType(type)
+    }
+  }
+}
+```
+
+**Qualify enum constants in `case` labels.**
+Unlike Java, Groovy does not resolve bare enum constant names from the switch subject. Groovy 6 rejects them at compile time; on Groovy 5 they worked under `@CompileStatic` but threw `MissingPropertyException` in dynamically compiled code (for example tests).
+```groovy
+// Bad
+switch (normalization) {
+  case LOG -> logNorm(values)
+}
+
+// Good
+switch (normalization) {
+  case Normalization.LOG -> logNorm(values)
+}
+```
+
+**Cast `null` arms in typed switch expressions.**
+Under `@CompileStatic`, Groovy 6 infers the type of a switch expression with a `default -> null` arm as `Object`, so assigning or returning it as a specific type fails type checking. Cast the `null`.
+```groovy
+// Bad - "Cannot assign value of type java.lang.Object to variable of type Token"
+Token punctuation = switch (ch) {
+  case '(' as char -> new Token(TokenType.LPAREN, '(')
+  default -> null
+}
+
+// Good
+Token punctuation = switch (ch) {
+  case '(' as char -> new Token(TokenType.LPAREN, '(')
+  default -> (Token) null
+}
+```
+
+**Code compiled with Groovy 6 requires a Groovy 6 runtime.**
+Groovy 6 adds new method overloads (for example `DefaultGroovyMethods.getAt(Map, String)` for `map[key]`), and classes compiled against them throw `NoSuchMethodError` on Groovy 5. Keep every Groovy pin (Gradle catalog, `matrix-bom/pom.xml`, consumer test builds) on the same version, and keep the minimum-version check in the `Matrix` static initializer in step with the Groovy major version.
 
 ## When in Doubt
 

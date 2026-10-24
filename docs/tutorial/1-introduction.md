@@ -37,7 +37,7 @@ Whether you're performing data analysis, building data processing pipelines, or 
 
 ## Installation and Setup
 
-The Matrix library targets Groovy 5 and requires JDK 21. You can add the library to your project using your preferred build system.
+The Matrix library targets Groovy 6 and requires JDK 21. You can add the library to your project using your preferred build system.
 
 ### Gradle Configuration
 
@@ -98,7 +98,7 @@ If you're using the Matrix library from Java, you'll need to add the Groovy core
 
 ```groovy
 // For Gradle
-implementation('org.apache.groovy:groovy:5.0.5')
+implementation('org.apache.groovy:groovy:6.0.0')
 ```
 
 ```xml
@@ -106,7 +106,7 @@ implementation('org.apache.groovy:groovy:5.0.5')
 <dependency>
     <groupId>org.apache.groovy</groupId>
     <artifactId>groovy</artifactId>
-    <version>5.0.5</version>
+    <version>6.0.0</version>
 </dependency>
 ```
 

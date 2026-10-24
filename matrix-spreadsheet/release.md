@@ -1,5 +1,8 @@
 # Release history
 
+## v2.5.1 (unreleased)
+- Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
+
 ## v2.5.0, 2026-09-22
 
 ### Bug Fixes

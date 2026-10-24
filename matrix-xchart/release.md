@@ -1,5 +1,8 @@
 # Matrix XChart release history
 
+## v0.4.1 (unreleased)
+- Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
+
 ## v0.4.0, 2026-09-22
 - Add deferred Pict-like `builder(Matrix)` convenience APIs for Line, Area, Scatter, Bar, Stick, Box, Bubble, Histogram, Pie, Radar, Heatmap, CorrelationHeatmap, and OHLC charts.
   - Common chart builders support title, dimensions, mappings, and axis labels where XChart supports axes.

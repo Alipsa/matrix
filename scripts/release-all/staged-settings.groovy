@@ -14,7 +14,7 @@ File temporary
 try {
   // Namespace-unaware parsing preserves default xmlns while allowing ordinary child names.
   Node settings = input.exists() ? new XmlParser(false, false).parse(input) : new Node(null, 'settings')
-  Node profiles = settings.children().find { it instanceof Node && it.name().toString().tokenize(':').last() == 'profiles' } as Node
+  Node profiles = (Node) settings.children().find { it instanceof Node && it.name().toString().tokenize(':').last() == 'profiles' }
   if (profiles == null) profiles = settings.appendNode('profiles')
   if (profiles.children().any { it instanceof Node && it.children().any { child -> child instanceof Node && child.name().toString().tokenize(':').last() == 'id' && child.text() == repositoryId } }) {
     throw new IllegalArgumentException('Reserved staging profile already exists in input settings')
@@ -26,7 +26,7 @@ try {
   repository.appendNode('url', new File(args[1]).toURI().toString())
   repository.appendNode('releases').appendNode('enabled', 'true')
   repository.appendNode('snapshots').appendNode('enabled', 'false')
-  Node active = settings.children().find { it instanceof Node && it.name().toString().tokenize(':').last() == 'activeProfiles' } as Node
+  Node active = (Node) settings.children().find { it instanceof Node && it.name().toString().tokenize(':').last() == 'activeProfiles' }
   if (active == null) active = settings.appendNode('activeProfiles')
   active.appendNode('activeProfile', repositoryId)
   output.parentFile.mkdirs()

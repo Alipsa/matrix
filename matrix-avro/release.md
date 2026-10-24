@@ -1,6 +1,7 @@
 # Matrix-avro release history
 
 ## v0.3.2 (unreleased)
+- Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
 - Preserve interpolated and other non-String map keys through normalized lookup in record validation and writing. Reject null keys and normalized-key collisions in records and maps with column, row, and nested path diagnostics.
 - Read columns with schema-derived converted Java types instead of always Object, including empty/all-null columns. This changes `matrix.type(column)` and type comparisons. Read-then-write FLOAT and small-valued LONG schemas now remain FLOAT and LONG instead of DOUBLE and INT; downstream consumers with fixed reader schemas should account for the change. Original enum/fixed schemas are not preserved by converted Java types.
 - Write declared Byte/Short (and primitive byte/short) columns as INT, including nested values. Reads widen these values to Integer.

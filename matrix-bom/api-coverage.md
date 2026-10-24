@@ -8,7 +8,7 @@ list rather than a claim that one integration test replaces a module's unit-test
 ## Cross-cutting checks
 
 - [x] `BomResolutionIT.resolvesTheBomVersionForEveryModule` resolves one representative class per
-  module, checks its code-source version, rejects unexpected snapshots, and asserts Groovy 5.0.8.
+  module, checks its code-source version, rejects unexpected snapshots, and asserts Groovy 6.0.0.
 - [x] `CrossModuleWorkflowIT.importsTransformsModelsChartsAndExports` covers the documented
   import → core transform → statistics → chart → CSV export workflow.
 - [x] `JavaConsumerIT.javaMapApiRemainsSourceCompatible` compiles and runs the Java map-builder,

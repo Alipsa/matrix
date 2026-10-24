@@ -1,5 +1,8 @@
 # Release history
 
+## v2.2.2 (unreleased)
+- Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
+
 ## v2.2.1, 2026-09-22
 - Fix `FileUtil.checkFilePath()` and `FileUtil.getResourceFile()` for resources packaged inside a jar: they now throw the
   documented `FileNotFoundException` (with a message pointing to `getResourceUrl()`) instead of leaking

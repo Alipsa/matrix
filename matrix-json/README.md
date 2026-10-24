@@ -10,7 +10,7 @@ Binary builds can be downloaded
 from the [Matrix-json project release page](https://github.com/Alipsa/matrix-json/releases) but if you use a build system that
 handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.5'
+implementation 'org.apache.groovy:groovy:6.0.0'
 implementation 'se.alipsa.matrix:matrix-core:3.9.0'
 implementation 'se.alipsa.matrix:matrix-json:2.3.2'
 ```
@@ -20,7 +20,7 @@ implementation 'se.alipsa.matrix:matrix-json:2.3.2'
   <dependency>
     <groupId>org.apache.groovy</groupId>
     <artifactId>groovy</artifactId>
-    <version>5.0.5</version>
+    <version>6.0.0</version>
   </dependency>
   <dependency>
       <groupId>se.alipsa.matrix</groupId>

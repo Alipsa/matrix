@@ -361,7 +361,7 @@ class WktReader {
         case '(' as char -> new Token(TokenType.LPAREN, '(')
         case ')' as char -> new Token(TokenType.RPAREN, ')')
         case ',' as char -> new Token(TokenType.COMMA, ',')
-        default -> null
+        default -> (Token) null
       }
       if (punctuation != null) {
         index++
