@@ -2,6 +2,8 @@
 
 ## v2.3.3 (unreleased)
 - Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
+- Upgrade dependencies:
+  - tools.jackson:jackson-bom 3.2.2 -> 3.2.4
 
 ## v2.3.2, 2026-09-22
 - Upgrade dependencies:

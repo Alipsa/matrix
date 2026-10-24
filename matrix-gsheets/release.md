@@ -2,6 +2,11 @@
 
 ## 0.3.1 (unreleased)
 - Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
+- Upgrade dependencies:
+  - com.google.api-client:google-api-client 2.9.1 -> 2.9.2
+  - com.google.apis:google-api-services-drive v3-rev20260901-2.0.0 -> v3-rev20261011-2.0.0
+  - com.google.apis:google-api-services-sheets v4-rev20260610-2.0.0 -> v4-rev20260930-2.0.0
+  - com.google.auth:google-auth-library-bom 1.52.0 -> 1.54.0
 
 ## 0.3.0, 2026-09-22
 ### Behavior Changes
