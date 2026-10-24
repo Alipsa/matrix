@@ -1,5 +1,8 @@
 # Release history
 
+## 0.3.1 (unreleased)
+- Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
+
 ## 0.3.0, 2026-09-22
 ### Behavior Changes
 - `GsAuthenticator.authenticate()` now throws `SheetOperationException` when authentication

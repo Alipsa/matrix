@@ -2,6 +2,7 @@
 
 ## v0.8.0 (unreleased)
 
+- Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
 Add CDC/page-index interoperability fixtures; a column-oriented row-group reader; typed predicates,
 projection, limits and closeable batches; strict sharded datasets with bounded parallel decoding;
 HTTP range reads; Hub dataset URI resolution; and shared writer tuning. Local files and byte arrays

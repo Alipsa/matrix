@@ -1,5 +1,8 @@
 # Matrix Logging release history
 
+## v0.1.3 (unreleased)
+- Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
+
 ## v0.1.2, 2026-09-22
 - Document that Groovy scripts require `@GrabConfig(systemClassLoader=true)` for SLF4J provider and Log4j bridge discovery
 - Clarify that JPL/System.Logger routing requires dependencies on the JVM launch classpath and is unavailable through Grape or `groovy -cp`
