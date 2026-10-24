@@ -160,7 +160,7 @@ class GsUtil {
     }
     int number = 0
     for (int i = 0; i < colName.length(); i++) {
-      number = number * 26 + (colName.charAt(i) - ('A' as char - 1))
+      number = number * 26 + ((int) colName.charAt(i) - (int) ('A' as char)) + 1
     }
     number
   }
@@ -271,7 +271,7 @@ class GsUtil {
       return bd
     }
     if (v instanceof Long || v instanceof BigInteger) {
-      requireExactDouble(v instanceof BigInteger ? v : BigInteger.valueOf(v.longValue()), v)
+      requireExactDouble(v instanceof BigInteger ? (BigInteger) v : BigInteger.valueOf(((Number) v).longValue()), v)
       return v
     }
     if (v instanceof AtomicLong || v instanceof LongAdder || v instanceof LongAccumulator) {

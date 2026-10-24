@@ -39,7 +39,7 @@ the groovy core library as well e.g:
 <dependency>
     <groupId>org.apache.groovy</groupId>
     <artifactId>groovy</artifactId>
-    <version>5.0.4</version>
+    <version>6.0.0</version>
 </dependency>
 ```
 

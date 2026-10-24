@@ -470,10 +470,10 @@ class Normalize {
   private static List normalizeList(List values, Normalization normalization,
                                     MissingValueType missingValueType, int... decimals) {
     switch (normalization) {
-      case LOG -> logNorm(values, decimals)
-      case MIN_MAX -> minMaxNorm(values, missingValueType, decimals)
-      case MEAN -> meanNorm(values, missingValueType, decimals)
-      case STD_SCALE -> stdScaleNorm(values, decimals)
+      case Normalization.LOG -> logNorm(values, decimals)
+      case Normalization.MIN_MAX -> minMaxNorm(values, missingValueType, decimals)
+      case Normalization.MEAN -> meanNorm(values, missingValueType, decimals)
+      case Normalization.STD_SCALE -> stdScaleNorm(values, decimals)
       default -> throw new IllegalArgumentException("Unsupported normalization: $normalization")
     }
   }

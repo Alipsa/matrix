@@ -2,6 +2,7 @@
 
 ## Upcoming
 
+- Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
 - Ellipse statistics use the shared ggplot2-compatible robust/classical covariance, finite-sample radius, and corrected orientation. Groups with fewer than four observations are skipped.
 - Polynomial smooth confidence bands use the fitted centered/scaled basis.
 - KDE curves use unit-variance kernels and the corrected Scott bandwidth.

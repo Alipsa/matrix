@@ -3,6 +3,7 @@
 
 ## 3.10.0-SNAPSHOT (development)
 
+- Built with Groovy 6.0.0. A Groovy 6 runtime is now required: on Groovy 5, loading `Matrix` fails with `IllegalStateException`, and code paths that do not load `Matrix` first (e.g. `Stat.frequency(List)`) may fail with `NoSuchMethodError`.
 - Fix Row sublist assignment bounds and atomicity, and enforce Grid declared types through all row views.
 - Preserve unmatched outer-join keys across value families (e.g. integer 1 vs string '01'); only lossless numeric-to-numeric conversion is permitted.
 - Grid minima now support Comparable strings/dates by default. All list/grid/Matrix min/max paths reject Number/non-Number pairs, including one-character String/Number pairs. Other pairs retain Groovy comparison, including String/GString, Date/Timestamp, and constants of one enum; pass ignoreNonNumerics=true to retain numeric-only behavior (`Stat.min([[1], ['NA'], [3]], [0], true)` returns `[1]`).

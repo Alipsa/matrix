@@ -74,6 +74,6 @@ class BomResolutionIT implements ApiItSupport {
         assertFalse(artifact.contains('-SNAPSHOT'), "$property resolved a SNAPSHOT artifact: $location")
       }
     }
-    assertEquals('5.1.2', GroovySystem.version, 'the integration runtime must match the groovy-all pin')
+    assertEquals('6.0.0', GroovySystem.version, 'the integration runtime must match the groovy-all pin')
   }
 }

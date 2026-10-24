@@ -667,8 +667,10 @@ class FormulaModelFrameTest {
       .build()
 
     Map<String, Map<String, List<?>>> invalidEnvironments = [:]
-    invalidEnvironments['shortVector'] = [a: [1.0, 2.0], b: [3.0, 4.0, 5.0]]
-    invalidEnvironments['longVector'] = [a: [1.0, 2.0, 3.0, 4.0], b: [3.0, 4.0, 5.0]]
+    Map<String, List<?>> shortVector = [a: [1.0, 2.0], b: [3.0, 4.0, 5.0]]
+    Map<String, List<?>> longVector = [a: [1.0, 2.0, 3.0, 4.0], b: [3.0, 4.0, 5.0]]
+    invalidEnvironments['shortVector'] = shortVector
+    invalidEnvironments['longVector'] = longVector
     Map<String, List<?>> nullEnvironment = [b: [3.0, 4.0, 5.0]]
     nullEnvironment['a'] = null
     invalidEnvironments['nullVector'] = nullEnvironment

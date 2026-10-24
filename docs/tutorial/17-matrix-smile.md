@@ -26,7 +26,7 @@ the local repository automatically.
 ### Gradle Configuration
 
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.5'
+implementation 'org.apache.groovy:groovy:6.0.0'
 implementation "se.alipsa.matrix:matrix-core:3.10.0-SNAPSHOT"
 implementation "se.alipsa.matrix:matrix-smile:0.3.0-SNAPSHOT"
 ```
@@ -38,7 +38,7 @@ implementation "se.alipsa.matrix:matrix-smile:0.3.0-SNAPSHOT"
     <dependency>
         <groupId>org.apache.groovy</groupId>
         <artifactId>groovy</artifactId>
-        <version>5.0.5</version>
+        <version>6.0.0</version>
     </dependency>
     <dependency>
         <groupId>se.alipsa.matrix</groupId>

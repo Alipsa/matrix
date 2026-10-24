@@ -1,5 +1,8 @@
 # Matrix-bigquery Release History
 
+## v0.7.2 (unreleased)
+- Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
+
 ## v0.7.1, 2026-09-22
 - Add `insertRows(...)`, which reports the selected write mechanism and optional load-job metadata.
   Existing deprecated `insert(...)` methods remain source and binary compatible and return `null`

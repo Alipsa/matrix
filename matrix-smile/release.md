@@ -3,6 +3,7 @@
 
 ## v0.3.0-SNAPSHOT (development)
 
+- Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
 - Requires matrix-core 3.10.0 or later (development dependency 3.10.0-SNAPSHOT).
   Publish core as an API dependency because Smile is excluded from matrix-bom.
   Direct Maven core declarations must select 3.10.0+ to avoid nearest-wins downgrades.

@@ -42,7 +42,7 @@ The Matrix project consists of the following modules:
 ## Setup
 Maintainers can use [`releaseAll.sh`](docs/releaseAll.md) to release eligible modules together in one Central bundle.
 
-Matrix targets Groovy 5 and JDK 21. Binary builds can be downloaded
+Matrix targets Groovy 6 and JDK 21. Binary builds can be downloaded
 from the [Matrix project release page](https://github.com/Alipsa/matrix/releases) but if you use a build system that 
 handles dependencies via maven central (gradle, maven ivy etc.) you can add your dependencies from there
 . The group name is se.alipsa.matrix. 
@@ -77,7 +77,7 @@ implementation('se.alipsa.matrix:matrix-core')
       <dependency>
          <groupId>org.apache.groovy</groupId>
          <artifactId>groovy-all</artifactId>
-         <version>5.1.2</version>
+         <version>6.0.0</version>
       </dependency>
    </dependencies>
    ...
@@ -94,7 +94,7 @@ modules. It is simpler, but less flexible and brings in more dependencies.
 Groovy version your application uses explicitly:
 
 ```groovy
-implementation('org.apache.groovy:groovy-all:5.1.2') 
+implementation('org.apache.groovy:groovy-all:6.0.0') 
 implementation('se.alipsa.matrix:matrix-all:2.6.0')
 ```
 
@@ -105,7 +105,7 @@ implementation('se.alipsa.matrix:matrix-all:2.6.0')
       <dependency>
          <groupId>org.apache.groovy</groupId>
          <artifactId>groovy-all</artifactId>
-         <version>5.1.2</version>
+         <version>6.0.0</version>
       </dependency>
       <dependency>
          <groupId>se.alipsa.matrix</groupId>

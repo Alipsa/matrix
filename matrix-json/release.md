@@ -1,5 +1,8 @@
 # Matrix-Json Release history
 
+## v2.3.3 (unreleased)
+- Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
+
 ## v2.3.2, 2026-09-22
 - Upgrade dependencies:
   - com.fasterxml.jackson:jackson-bom 2.22.1 -> tools.jackson:jackson-bom 3.2.2

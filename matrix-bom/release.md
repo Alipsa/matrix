@@ -1,5 +1,8 @@
 # Maven-BOM release history
 
+## v2.6.1 (unreleased)
+- The managed Matrix modules are built with Groovy 6.0.0 and require a Groovy 6 runtime; declare `org.apache.groovy` 6.0.0 or later.
+
 ## v2.6.0, 2026-09-22
 
 ### Remove matrix-smile

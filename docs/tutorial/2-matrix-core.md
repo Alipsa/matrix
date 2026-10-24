@@ -639,7 +639,7 @@ Go to [previous section](1-introduction.md) | Go to [next section](3-matrix-stat
 
 ## Cleaning data and validating joins (3.10.0)
 
-For Java 21/Groovy 5 projects, add `implementation 'se.alipsa.matrix:matrix-core:3.10.0-SNAPSHOT'`
+For Java 21/Groovy 6 projects, add `implementation 'se.alipsa.matrix:matrix-core:3.10.0-SNAPSHOT'`
 to your Gradle dependencies. Null filtering, filling, and duplicate removal return
 new matrices; ignoring the result leaves the original unchanged:
 

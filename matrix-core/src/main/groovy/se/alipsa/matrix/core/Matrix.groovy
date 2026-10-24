@@ -96,9 +96,9 @@ class Matrix implements Iterable<Row>, Cloneable {
   static {
     int majorVersion = parseGroovyMajorVersion(GroovySystem.version)
 
-    if (majorVersion < 5) {
+    if (majorVersion < 6) {
       throw new IllegalStateException(
-          'Unsupported Groovy version! This library requires Groovy 5.0.0 or higher. ' +
+          'Unsupported Groovy version! This library requires Groovy 6.0.0 or higher. ' +
               "Current version: ${GroovySystem.version}"
       )
     }

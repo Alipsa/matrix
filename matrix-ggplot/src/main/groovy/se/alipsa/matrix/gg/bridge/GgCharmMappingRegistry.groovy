@@ -191,7 +191,7 @@ class GgCharmMappingRegistry {
     return switch (aesthetic) {
       case 'x', 'y' -> mapPositionalScale(scale)
       case 'color', 'fill' -> scale instanceof ScaleDiscrete ? CharmScale.discrete() : CharmScale.gradient()
-      default -> null
+      default -> (CharmScale) null
     }
   }
 

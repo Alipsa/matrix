@@ -2,6 +2,7 @@
 
 ## v0.3.1, (unreleased)
 
+- Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
 - Fix headers being ignored under locales with special casing rules, such as Turkish.
 - Validate the full write schema, cells and target encoding before opening a file; invalid options or contents leave
   existing files untouched. Writer I/O errors now reach the caller instead of being silently swallowed **(changed)**.

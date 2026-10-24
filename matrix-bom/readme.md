@@ -54,7 +54,7 @@ version (4.x or 5.x). Add the Groovy dependency explicitly in your build.
 
 Gradle:
 ```groovy
-implementation('org.apache.groovy:groovy-all:5.1.2')
+implementation('org.apache.groovy:groovy-all:6.0.0')
 implementation('se.alipsa.matrix:matrix-all:2.6.0')
 ```
 
@@ -63,7 +63,7 @@ Maven:
 <dependency>
   <groupId>org.apache.groovy</groupId>
   <artifactId>groovy-all</artifactId>
-  <version>5.1.2</version>
+  <version>6.0.0</version>
 </dependency>
 <dependency>
   <groupId>se.alipsa.matrix</groupId>
@@ -85,7 +85,7 @@ dependency with its own version rather than via the BOM or `matrix-all`.
 
 The BOM consumer suite verifies the resolved, published artifacts from an isolated Maven repository.
 The verification runner requires Bash 4+, JDK 21+, Maven 3.9.9+, grep, and the Groovy CLI on `PATH` (matching the
-project's Groovy version, currently 5.1.1). The Groovy CLI is a developer prerequisite; the Gradle
+project's Groovy version, currently 6.0.0). The Groovy CLI is a developer prerequisite; the Gradle
 Groovy dependency alone is not sufficient. On macOS, install Bash with
 `brew install bash`. Symlinked checkout and Maven Local paths are allowed for
 read-only path checks; repositories being written or deleted must have no symlink components.
