@@ -354,8 +354,11 @@ fi
 
 mvn "${MVN_ISOLATED[@]}" dependency:copy-dependencies \
   -DincludeGroupIds=se.alipsa.matrix -DincludeScope=test -DoutputDirectory=target/api-jars
+# Keep the report CLI on the same JaCoCo version as the agent that wrote jacoco-it.exec.
+jacoco_version=$(sed -n 's:.*<jacoco\.version>\([^<]*\)</jacoco\.version>.*:\1:p' pom.xml)
+[[ -n "$jacoco_version" ]] || { echo "jacoco.version is not set in pom.xml" >&2; exit 1; }
 mvn "${MVN_ISOLATED[@]}" dependency:copy \
-  -Dartifact=org.jacoco:org.jacoco.cli:0.8.14:jar:nodeps \
+  -Dartifact="org.jacoco:org.jacoco.cli:${jacoco_version}:jar:nodeps" \
   -DoutputDirectory=target -Dmdep.stripVersion=true
 java -jar target/org.jacoco.cli-nodeps.jar report target/jacoco-it.exec \
   --classfiles target/api-jars \

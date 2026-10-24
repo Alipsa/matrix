@@ -2,6 +2,11 @@
 
 ## v0.7.2 (unreleased)
 - Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
+- Upgrade dependencies:
+  - com.google.cloud:google-cloud-bigquery 2.71.0 -> 2.73.0
+  - com.google.cloud:google-cloud-bigquerystorage 3.33.0 -> 3.35.0
+  - com.google.cloud:google-cloud-resourcemanager 1.99.0 -> 1.101.0
+  - com.google.auth:google-auth-library-bom 1.52.0 -> 1.54.0
 
 ## v0.7.1, 2026-09-22
 - Add `insertRows(...)`, which reports the selected write mechanism and optional load-job metadata.
