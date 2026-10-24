@@ -338,7 +338,7 @@
             <version>3.6.0</version>
             <configuration>
               <includes>
-                <include>**/*IT.class</include>
+                <include>**/*IT.java</include>
               </includes>
               <failIfNoTests>${it.failIfNoTests}</failIfNoTests>
               <groups>${it.groups}</groups>
