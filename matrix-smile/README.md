@@ -16,16 +16,16 @@ Add the dependency to your build.gradle:
 ```groovy
 implementation 'org.apache.groovy:groovy:6.0.0'
 implementation 'se.alipsa.matrix:matrix-core:4.0.0-SNAPSHOT'
-implementation 'se.alipsa.matrix:matrix-smile:0.4.0-SNAPSHOT'
+implementation 'se.alipsa.matrix:matrix-smile:0.3.0-SNAPSHOT'
 ```
 
 ## Choosing the Smile version
 
-matrix-smile 0.4.0-SNAPSHOT is built and tested against **Smile 4.4.2**, which it declares as an
+matrix-smile 0.3.0-SNAPSHOT is built and tested against **Smile 4.4.2**, which it declares as an
 `api` dependency, so you get Smile transitively:
 
 ```
-se.alipsa.matrix:matrix-smile:0.4.0-SNAPSHOT
+se.alipsa.matrix:matrix-smile:0.3.0-SNAPSHOT
 └── com.github.haifengl:smile-core:4.4.2
     ├── com.github.haifengl:smile-base:4.4.2   (smile.data, smile.stat, smile.math)
     └── org.slf4j:slf4j-api:2.0.17
@@ -38,7 +38,7 @@ yourself, keep the two artifacts on the same version.
 
 ### Supported versions
 
-| Smile version | Status with matrix-smile 0.4.0-SNAPSHOT                                          |
+| Smile version | Status with matrix-smile 0.3.0-SNAPSHOT                                          |
 |---------------|-------------------------------------------------------------------------|
 | 4.4.2         | Built and tested against this version                                   |
 | Other 4.x     | Expected to work, not tested                                            |
@@ -50,7 +50,7 @@ Gradle resolves conflicts by picking the **highest** version, so declaring a new
 release is enough to upgrade:
 
 ```groovy
-implementation 'se.alipsa.matrix:matrix-smile:0.4.0-SNAPSHOT'
+implementation 'se.alipsa.matrix:matrix-smile:0.3.0-SNAPSHOT'
 // any 4.x newer than 4.4.2 wins over the transitive version
 implementation 'com.github.haifengl:smile-core:4.5.0'
 ```
@@ -89,7 +89,7 @@ Smile pulled into your dependency graph implicitly, exclude it and add the versi
 have vetted:
 
 ```groovy
-implementation('se.alipsa.matrix:matrix-smile:0.4.0-SNAPSHOT') {
+implementation('se.alipsa.matrix:matrix-smile:0.3.0-SNAPSHOT') {
   exclude group: 'com.github.haifengl'
 }
 implementation 'com.github.haifengl:smile-core:4.4.2'
@@ -99,7 +99,7 @@ implementation 'com.github.haifengl:smile-core:4.4.2'
 <dependency>
   <groupId>se.alipsa.matrix</groupId>
   <artifactId>matrix-smile</artifactId>
-  <version>0.4.0-SNAPSHOT</version>
+  <version>0.3.0-SNAPSHOT</version>
   <exclusions>
     <exclusion>
       <groupId>com.github.haifengl</groupId>
@@ -433,8 +433,8 @@ specific use case.
 
 ### Core compatibility
 
-matrix-smile 0.4.0 requires matrix-core 4.0.0 or later. The development pair is
-core 4.0.0-SNAPSHOT and smile 0.4.0-SNAPSHOT. Core is a published transitive API
+matrix-smile 0.3.0 requires matrix-core 4.0.0 or later. The development pair is
+core 4.0.0-SNAPSHOT and smile 0.3.0-SNAPSHOT. Core is a published transitive API
 dependency because Smile is intentionally excluded from matrix-bom. Maven users
 who also declare core directly must select 4.0.0 or later: Maven nearest-wins
 resolution can override the transitive version with an unsupported older core.

@@ -1,6 +1,6 @@
 # Matrix Logging release history
 
-## v0.2.0 (unreleased)
+## v0.1.3 (unreleased)
 - Upgrade dependencies:
   - org.slf4j:slf4j-bom 2.0.19 -> 2.0.20
 

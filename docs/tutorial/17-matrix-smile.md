@@ -28,7 +28,7 @@ the local repository automatically.
 ```groovy
 implementation 'org.apache.groovy:groovy:6.0.0'
 implementation "se.alipsa.matrix:matrix-core:4.0.0-SNAPSHOT"
-implementation "se.alipsa.matrix:matrix-smile:0.4.0-SNAPSHOT"
+implementation "se.alipsa.matrix:matrix-smile:0.3.0-SNAPSHOT"
 ```
 
 ### Maven Configuration
@@ -48,7 +48,7 @@ implementation "se.alipsa.matrix:matrix-smile:0.4.0-SNAPSHOT"
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-smile</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>0.3.0-SNAPSHOT</version>
     </dependency>
 </dependencies>
 ```

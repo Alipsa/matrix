@@ -12,7 +12,7 @@ repositories {
 }
 dependencies {
   implementation 'org.apache.groovy:groovy:6.0.0'
-  implementation 'se.alipsa.matrix:matrix-smile:0.4.0-SNAPSHOT'
+  implementation 'se.alipsa.matrix:matrix-smile:0.3.0-SNAPSHOT'
 }
 application { mainClass = 'Consumer' }
 tasks.register('verifyCore') {

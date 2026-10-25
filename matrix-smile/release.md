@@ -1,7 +1,7 @@
 # Matrix-smile release history
 
 
-## v0.4.0-SNAPSHOT (development)
+## v0.3.0-SNAPSHOT (development)
 
 - Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
 - Requires matrix-core 4.0.0 or later (development dependency 4.0.0-SNAPSHOT).

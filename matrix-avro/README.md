@@ -391,7 +391,7 @@ The map-key benchmark also covers scalar lists and lists of records:
 to 7 measured writes (`runs` must be at least 1). The task uses a 512 MiB heap and reports median, average, minimum,
 and maximum write times; timings do not determine test success.
 
-## Type and map-key behavior in 0.3.2
+## Type and map-key behavior in 0.4.0
 
 Imported columns carry the Java types returned by the reader, including empty and all-null
 columns. `matrix.type(column)` and comparisons with `Object` therefore change. Nullable
