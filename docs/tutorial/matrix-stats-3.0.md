@@ -1,7 +1,7 @@
-# Matrix-stats 2.6 usage and migration
+# Matrix-stats 3.0 usage and migration
 
-Use `se.alipsa.matrix:matrix-stats:2.6.0` with Java 21. Add that dependency to your Gradle build,
-then run these Groovy examples with the project's classpath. During development use `2.6.0-SNAPSHOT`.
+Use `se.alipsa.matrix:matrix-stats:3.0.0` with Java 21. Add that dependency to your Gradle build,
+then run these Groovy examples with the project's classpath. During development use `3.0.0-SNAPSHOT`.
 R is only used to regenerate reference fixtures, never by the library or tests.
 
 ## Fractional normalization

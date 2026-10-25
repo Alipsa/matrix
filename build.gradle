@@ -196,6 +196,8 @@ subprojects { Project p ->
   }
 
   tasks.withType(Test).configureEach {
+    // Suppress macOS Dock icons and focus stealing when tests initialize AWT.
+    systemProperty 'apple.awt.UIElement', 'true'
     addTestListener(new TestListener() {
       long totalDuration = 0
 

@@ -1,7 +1,7 @@
 # Matrix Core Release History
 
 
-## 3.10.0-SNAPSHOT (development)
+## 4.0.0-SNAPSHOT (development)
 
 - Built with Groovy 6.0.0. A Groovy 6 runtime is now required: on Groovy 5, loading `Matrix` fails with `IllegalStateException`, and code paths that do not load `Matrix` first (e.g. `Stat.frequency(List)`) may fail with `NoSuchMethodError`.
 - Fix Row sublist assignment bounds and atomicity, and enforce Grid declared types through all row views.

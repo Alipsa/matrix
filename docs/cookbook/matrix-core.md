@@ -794,10 +794,10 @@ Map<String, Matrix> legacy = grouped.toStringKeyMap()
 
 [Back to index](cookbook.md)  |  [Next (Matrix Stats)](matrix-stats.md)
 
-## Matrix core 3.10.0: checked snapshots and data cleanup
+## Matrix core 4.0.0: checked snapshots and data cleanup
 
-These examples require matrix-core 3.10.0 (development artifact
-`se.alipsa.matrix:matrix-core:3.10.0-SNAPSHOT`) and Groovy 6 on Java 21.
+These examples require matrix-core 4.0.0 (development artifact
+`se.alipsa.matrix:matrix-core:4.0.0-SNAPSHOT`) and Groovy 6 on Java 21.
 Add that dependency to your Gradle `implementation` configuration, then run the
 examples as Groovy scripts with the imports below.
 

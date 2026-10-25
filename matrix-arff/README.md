@@ -461,7 +461,7 @@ data.write([charset: 'ISO-8859-1', attributeTypesByColumn: [id: 'INTEGER']], fil
 `int` range or with a fractional part fail; values written outside that range require `Long` or `BigDecimal` to read
 back. NaN and infinite numeric cells continue to write as `?`.
 
-### Validation and compatibility changes in 0.3.1
+### Validation and compatibility changes in 0.4.0
 
 - Header matching is locale-independent. An initial BOM is ignored. Missing `@DATA`, unknown header keywords and
   stray pre-data lines fail even in lenient mode; empty/comment-only input still yields an empty Matrix.

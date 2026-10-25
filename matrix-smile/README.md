@@ -15,7 +15,7 @@ Add the dependency to your build.gradle:
 
 ```groovy
 implementation 'org.apache.groovy:groovy:6.0.0'
-implementation 'se.alipsa.matrix:matrix-core:3.10.0-SNAPSHOT'
+implementation 'se.alipsa.matrix:matrix-core:4.0.0-SNAPSHOT'
 implementation 'se.alipsa.matrix:matrix-smile:0.3.0-SNAPSHOT'
 ```
 
@@ -433,10 +433,10 @@ specific use case.
 
 ### Core compatibility
 
-matrix-smile 0.3.0 requires matrix-core 3.10.0 or later. The development pair is
-core 3.10.0-SNAPSHOT and smile 0.3.0-SNAPSHOT. Core is a published transitive API
+matrix-smile 0.3.0 requires matrix-core 4.0.0 or later. The development pair is
+core 4.0.0-SNAPSHOT and smile 0.3.0-SNAPSHOT. Core is a published transitive API
 dependency because Smile is intentionally excluded from matrix-bom. Maven users
-who also declare core directly must select 3.10.0 or later: Maven nearest-wins
+who also declare core directly must select 4.0.0 or later: Maven nearest-wins
 resolution can override the transitive version with an unsupported older core.
 `SmileFeatures.fillna` and `dropna` delegate to core null operations while retaining
 legacy declared-type behavior and returning results without index configuration.

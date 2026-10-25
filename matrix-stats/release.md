@@ -1,6 +1,6 @@
 # Matrix stats release history
 
-## v2.6.0 (unreleased)
+## v3.0.0 (unreleased)
 
 - Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
 - Correct Shapiro-Wilk, Shapiro-Francia, Lilliefors, Cramér-von Mises and D'Agostino K² statistics and p-values. K² count products no longer overflow at n ≥ 211.

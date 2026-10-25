@@ -1,6 +1,6 @@
 # Matrix-charts Release History
 
-## Upcoming
+## v0.7.0 (unreleased)
 
 - Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
 - Upgrade dependencies:

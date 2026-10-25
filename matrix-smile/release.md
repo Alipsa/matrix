@@ -4,9 +4,9 @@
 ## v0.3.0-SNAPSHOT (development)
 
 - Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
-- Requires matrix-core 3.10.0 or later (development dependency 3.10.0-SNAPSHOT).
+- Requires matrix-core 4.0.0 or later (development dependency 4.0.0-SNAPSHOT).
   Publish core as an API dependency because Smile is excluded from matrix-bom.
-  Direct Maven core declarations must select 3.10.0+ to avoid nearest-wins downgrades.
+  Direct Maven core declarations must select 4.0.0+ to avoid nearest-wins downgrades.
 - Share constant null-filling with core via Column.replaceNulls on a single copied Matrix, and delegate dropna to withoutNullRows; retain
   legacy declared types, empty selected-column dropna behavior, unknown-column
   checks, and results without index configuration. Existing calls remain valid:

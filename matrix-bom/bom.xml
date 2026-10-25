@@ -5,7 +5,7 @@
   <!-- deploy with mvn -Prelease -f bom.xml deploy -->
   <groupId>se.alipsa.matrix</groupId>
   <artifactId>matrix-bom</artifactId>
-  <version>2.6.1-SNAPSHOT</version>
+  <version>3.0.0-SNAPSHOT</version>
   <name>Matrix Bill of Materials</name>
   <description>bom file for simpler dependency management of Matrix libraries</description>
   <packaging>pom</packaging>
@@ -32,27 +32,27 @@
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
 
-    <matrixArffVersion>0.3.1-SNAPSHOT</matrixArffVersion>
-    <matrixAvroVersion>0.3.2-SNAPSHOT</matrixAvroVersion>
-    <matrixBigQueryVersion>0.7.2-SNAPSHOT</matrixBigQueryVersion>
-    <matrixChartsVersion>0.6.1-SNAPSHOT</matrixChartsVersion>
+    <matrixArffVersion>0.4.0-SNAPSHOT</matrixArffVersion>
+    <matrixAvroVersion>0.4.0-SNAPSHOT</matrixAvroVersion>
+    <matrixBigQueryVersion>0.8.0-SNAPSHOT</matrixBigQueryVersion>
+    <matrixChartsVersion>0.7.0-SNAPSHOT</matrixChartsVersion>
     <matrixCoreBaselineVersion>3.9.0</matrixCoreBaselineVersion>
-    <matrixCoreVersion>3.10.0-SNAPSHOT</matrixCoreVersion>
-    <matrixCsvVersion>2.5.1-SNAPSHOT</matrixCsvVersion>
-    <matrixDatasetsVersion>2.2.2-SNAPSHOT</matrixDatasetsVersion>
-    <matrixGgplotVersion>0.6.1-SNAPSHOT</matrixGgplotVersion>
-    <matrixGroovyExtVersion>0.4.1-SNAPSHOT</matrixGroovyExtVersion>
-    <matrixGsheetsVersion>0.3.1-SNAPSHOT</matrixGsheetsVersion>
-    <matrixJsonVersion>2.3.3-SNAPSHOT</matrixJsonVersion>
-    <matrixJupyterVersion>0.1.1-SNAPSHOT</matrixJupyterVersion>
+    <matrixCoreVersion>4.0.0-SNAPSHOT</matrixCoreVersion>
+    <matrixCsvVersion>3.0.0-SNAPSHOT</matrixCsvVersion>
+    <matrixDatasetsVersion>3.0.0-SNAPSHOT</matrixDatasetsVersion>
+    <matrixGgplotVersion>0.7.0-SNAPSHOT</matrixGgplotVersion>
+    <matrixGroovyExtVersion>0.5.0-SNAPSHOT</matrixGroovyExtVersion>
+    <matrixGsheetsVersion>0.4.0-SNAPSHOT</matrixGsheetsVersion>
+    <matrixJsonVersion>3.0.0-SNAPSHOT</matrixJsonVersion>
+    <matrixJupyterVersion>0.2.0-SNAPSHOT</matrixJupyterVersion>
     <matrixLoggingVersion>0.1.3-SNAPSHOT</matrixLoggingVersion>
     <matrixParquetVersion>0.8.0-SNAPSHOT</matrixParquetVersion>
     <matrixPictVersion>0.7.0-SNAPSHOT</matrixPictVersion>
-    <matrixSpreadsheetVersion>2.5.1-SNAPSHOT</matrixSpreadsheetVersion>
-    <matrixSqlVersion>2.5.1-SNAPSHOT</matrixSqlVersion>
-    <matrixStatsVersion>2.6.0-SNAPSHOT</matrixStatsVersion>
-    <matrixTablesawVersion>0.4.1-SNAPSHOT</matrixTablesawVersion>
-    <matrixXChartVersion>0.4.1-SNAPSHOT</matrixXChartVersion>
+    <matrixSpreadsheetVersion>3.0.0-SNAPSHOT</matrixSpreadsheetVersion>
+    <matrixSqlVersion>3.0.0-SNAPSHOT</matrixSqlVersion>
+    <matrixStatsVersion>3.0.0-SNAPSHOT</matrixStatsVersion>
+    <matrixTablesawVersion>0.5.0-SNAPSHOT</matrixTablesawVersion>
+    <matrixXChartVersion>0.5.0-SNAPSHOT</matrixXChartVersion>
   </properties>
   <dependencyManagement>
     <dependencies>

@@ -1,6 +1,6 @@
 # Matrix-bigquery Release History
 
-## v0.7.2 (unreleased)
+## v0.8.0 (unreleased)
 - Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
 - Upgrade dependencies:
   - com.google.cloud:google-cloud-bigquery 2.71.0 -> 2.73.0

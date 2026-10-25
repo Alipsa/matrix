@@ -13,13 +13,13 @@ For Maven:
 <dependency>
    <groupId>se.alipsa.matrix</groupId>
    <artifactId>matrix-groovy-ext</artifactId>
-   <version>0.4.1</version>
+   <version>0.5.0</version>
 </dependency>
 ```
 For Gradle:
 
 ```groovy
-implementation('se.alipsa.matrix:matrix-groovy-ext:0.4.1')
+implementation('se.alipsa.matrix:matrix-groovy-ext:0.5.0')
 ```
 
 ## Usage Examples

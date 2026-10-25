@@ -1,6 +1,6 @@
 # matrix-jupyter release history
 
-## v0.1.1 (unreleased)
+## v0.2.0 (unreleased)
 - Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
 
 ## v0.1.0, 2026-09-22

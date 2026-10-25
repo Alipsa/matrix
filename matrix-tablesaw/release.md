@@ -1,6 +1,6 @@
 # Matrix-Tablesaw Version history
 
-## v0.4.1 (unreleased)
+## v0.5.0 (unreleased)
 - Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
 - Upgrade dependencies:
   - org.apache.poi:poi-ooxml 5.5.1 -> 6.0.0
