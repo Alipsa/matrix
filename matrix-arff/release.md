@@ -1,6 +1,6 @@
 # Matrix-arff release history
 
-## v0.3.1, (unreleased)
+## v0.4.0, (unreleased)
 
 - Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
 - Fix headers being ignored under locales with special casing rules, such as Turkish.

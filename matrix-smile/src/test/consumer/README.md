@@ -1,7 +1,7 @@
 # Published dependency smoke test
 
 This standalone Gradle consumer declares only Smile and Groovy. It verifies that
-published metadata resolves core 3.10.0-SNAPSHOT transitively and that fillna and
+published metadata resolves core 4.0.0-SNAPSHOT transitively and that fillna and
 both dropna overloads execute without missing core APIs. It also checks lossless
 BigDecimal fills, legacy Smile replacement classes, mixed extrema rejection, and
 raw duplicate-key diagnostics, and String/GString and JDBC Date/Timestamp

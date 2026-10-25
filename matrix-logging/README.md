@@ -26,7 +26,7 @@ is required so SLF4J can discover the grabbed provider and Log4j bridge:
 ```groovy
 @GrabConfig(systemClassLoader=true)
 @Grab('se.alipsa.matrix:matrix-core:3.9.1')
-@Grab('se.alipsa.matrix:matrix-logging:0.1.3')
+@Grab('se.alipsa.matrix:matrix-logging:0.2.0')
 import se.alipsa.matrix.core.Matrix
 ```
 
@@ -44,7 +44,7 @@ classpath.
 
 ```groovy
 dependencies {
-  implementation(platform('se.alipsa.matrix:matrix-bom:2.6.1'))
+  implementation(platform('se.alipsa.matrix:matrix-bom:3.0.0'))
   implementation('se.alipsa.matrix:matrix-core')
   runtimeOnly('se.alipsa.matrix:matrix-logging')
 }

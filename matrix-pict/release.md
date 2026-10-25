@@ -1,6 +1,6 @@
 # Matrix-pict Release History
 
-## v0.7.0 (unreleased)
+## v0.8.0 (unreleased)
 
 - Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
 - SVG exports through `Plot` work without JavaFX on the runtime classpath.

@@ -1,6 +1,6 @@
 # Release history
 
-## 0.3.1 (unreleased)
+## 0.4.0 (unreleased)
 - Built with Groovy 6.0.0. A Groovy 6 runtime is now required; on Groovy 5 it fails with `IllegalStateException` (when `Matrix` is loaded) or `NoSuchMethodError`.
 - Upgrade dependencies:
   - com.google.api-client:google-api-client 2.9.1 -> 2.9.2

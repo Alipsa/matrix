@@ -27,8 +27,8 @@ the local repository automatically.
 
 ```groovy
 implementation 'org.apache.groovy:groovy:6.0.0'
-implementation "se.alipsa.matrix:matrix-core:3.10.0-SNAPSHOT"
-implementation "se.alipsa.matrix:matrix-smile:0.3.0-SNAPSHOT"
+implementation "se.alipsa.matrix:matrix-core:4.0.0-SNAPSHOT"
+implementation "se.alipsa.matrix:matrix-smile:0.4.0-SNAPSHOT"
 ```
 
 ### Maven Configuration
@@ -43,12 +43,12 @@ implementation "se.alipsa.matrix:matrix-smile:0.3.0-SNAPSHOT"
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-core</artifactId>
-        <version>3.10.0-SNAPSHOT</version>
+        <version>4.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-smile</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.0-SNAPSHOT</version>
     </dependency>
 </dependencies>
 ```
@@ -1022,10 +1022,10 @@ Combined with matrix-arff for data interchange, matrix-smile provides a complete
 
 Go to [previous section](16-matrix-arff.md) | Go to [next section](18-advanced-operations.md) | Back to [outline](outline.md)
 
-### Core 3.10.0 compatibility
+### Core 4.0.0 compatibility
 
-Smile 0.3.0 requires core 3.10.0 or later; the development pair above uses both
+Smile 0.3.0 requires core 4.0.0 or later; the development pair above uses both
 SNAPSHOT artifacts. Core is now a transitive API dependency. Maven consumers
-also declaring core directly must use 3.10.0+ because their direct declaration
+also declaring core directly must use 4.0.0+ because their direct declaration
 can override the transitive version. `fillna` and `dropna` delegate to core null
 operations while preserving their existing schema and empty-selection behavior.

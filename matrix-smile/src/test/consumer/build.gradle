@@ -12,7 +12,7 @@ repositories {
 }
 dependencies {
   implementation 'org.apache.groovy:groovy:6.0.0'
-  implementation 'se.alipsa.matrix:matrix-smile:0.3.0-SNAPSHOT'
+  implementation 'se.alipsa.matrix:matrix-smile:0.4.0-SNAPSHOT'
 }
 application { mainClass = 'Consumer' }
 tasks.register('verifyCore') {
@@ -20,7 +20,7 @@ tasks.register('verifyCore') {
     def core = configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts.find {
       it.moduleVersion.id.name == 'matrix-core'
     }
-    assert core.moduleVersion.id.version == '3.10.0-SNAPSHOT'
+    assert core.moduleVersion.id.version == '4.0.0-SNAPSHOT'
     println "Resolved core: ${core.moduleVersion.id}"
   }
 }
